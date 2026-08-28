@@ -32,11 +32,6 @@ class AppearanceSettingsPage extends ConsumerWidget {
       repository: repository,
       builder: (context, settings) => [
         const AppText('界面语言'),
-        const SizedBox(height: 4),
-        AppText(
-          '选择跟随系统或固定使用一种界面语言',
-          style: Theme.of(context).textTheme.bodySmall,
-        ),
         const SizedBox(height: 10),
         DropdownButtonFormField<AppLanguagePreference>(
           initialValue: settings.language,
@@ -79,7 +74,6 @@ class AppearanceSettingsPage extends ConsumerWidget {
         ),
         SettingsField(
           title: '标准视频列表布局',
-          description: '适用于 R34V、Hanime 首页和普通视频列表，以及搜索结果和本地分类库。',
           child: SegmentedButton<ContentLayout>(
             expandedInsets: EdgeInsets.zero,
             segments: ContentLayout.values
@@ -123,11 +117,6 @@ class AppearanceSettingsPage extends ConsumerWidget {
         ),
         const SizedBox(height: 12),
         AppText('底部导航顺序', style: Theme.of(context).textTheme.titleMedium),
-        const SizedBox(height: 4),
-        AppText(
-          '拖动调整；冷启动时默认进入第一项。',
-          style: Theme.of(context).textTheme.bodySmall,
-        ),
         _OrderEditor<AppDestination>(
           values: settings.navigationOrder,
           labelFor: _destinationLabel,
@@ -137,11 +126,6 @@ class AppearanceSettingsPage extends ConsumerWidget {
         ),
         const SizedBox(height: 12),
         AppText('媒体库范围顺序', style: Theme.of(context).textTheme.titleMedium),
-        const SizedBox(height: 4),
-        AppText(
-          '调整本机、R34V 与 Hanime 的显示顺序。',
-          style: Theme.of(context).textTheme.bodySmall,
-        ),
         _OrderEditor<LibraryScopePreference>(
           values: settings.libraryScopeOrder,
           labelFor: _libraryScopeLabel,

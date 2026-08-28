@@ -201,6 +201,35 @@ void main() {
     expect(artistItem.path, '/search?query=Example+Studio');
   });
 
+  test('单集系列也保留系列播放清单', () {
+    const html = '''
+      <h1 id="shareBtn-title">Single Episode</h1>
+      <div id="video-playlist-wrapper">
+        <h4>Only Episode Series</h4>
+        <div id="playlist-scroll" class="hover-video-playlist">
+          <div class="video-item-container" title="Only Episode">
+            <a href="/watch?v=single-series">
+              <img src="https://img.example/single.jpg">
+            </a>
+          </div>
+        </div>
+      </div>
+    ''';
+    final details = HanimePageParser.videoDetails(
+      source: html,
+      fallback: const VideoItem(
+        id: 'single-series',
+        title: 'Fallback',
+        slug: 'single-series',
+        siteId: 'hanime1',
+      ),
+    );
+
+    expect(details.seriesTitle, 'Only Episode Series');
+    expect(details.seriesVideos, hasLength(1));
+    expect(details.seriesVideos.single.id, 'single-series');
+  });
+
   test('详情简介按观看信息、标题、上传者和正文分层解析', () {
     const html = '''
       <div class="video-details-wrapper">

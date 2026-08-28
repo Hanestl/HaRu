@@ -117,6 +117,24 @@ void main() {
     expect(subscriptions.last.title, 'Example Category');
   });
 
+  test('解析没有实体链接的分类订阅表单项', () {
+    const source = '''
+      <form data-block-id="list_members_subscriptions_my_subscriptions">
+        <div class="item">
+          <a href="#" class="title wrap-item"><span class="name">Final Fantasy</span></a>
+          <input type="checkbox" name="delete[]" value="23518381">
+        </div>
+      </form>
+    ''';
+
+    final subscriptions = SiteParser.subscriptions(source);
+
+    expect(subscriptions, hasLength(1));
+    expect(subscriptions.single.kind, SubscriptionKind.category);
+    expect(subscriptions.single.title, 'Final Fantasy');
+    expect(subscriptions.single.path, '/categories/final-fantasy/');
+  });
+
   test('解析发现目录实体并去重', () {
     const source = '''
       <div class="item">

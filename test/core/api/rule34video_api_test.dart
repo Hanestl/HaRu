@@ -895,6 +895,38 @@ void main() {
     expect(videos.map((item) => item.id), ['2', '1']);
   });
 
+  test('上传者订阅视频第二页使用网站 AJAX 分页参数', () async {
+    final harness = TestSessionHarness.create();
+    addTearDown(harness.dispose);
+    await harness.sessionStore.load();
+    await harness.sessionStore.authenticate('2421071');
+    final requests = <RequestOptions>[];
+    final api = Rule34VideoApi(
+      sessionStore: harness.sessionStore,
+      httpClientAdapter: _TestAdapter((options) {
+        requests.add(options);
+        return _htmlResponse('<html></html>');
+      }),
+    );
+    addTearDown(api.close);
+
+    const subscription = SubscriptionItem(
+      title: 'Oppai3Dporn',
+      path: '/members/98965/',
+      kind: SubscriptionKind.member,
+    );
+    await api.loadSubscriptionVideos(subscription, 2);
+
+    expect(requests.single.uri.path, '/members/98965/videos/');
+    expect(requests.single.uri.queryParameters, {
+      'mode': 'async',
+      'function': 'get_block',
+      'block_id': 'list_videos_uploaded_videos',
+      'sort_by': '',
+      'from_videos': '2',
+    });
+  });
+
   test('订阅缓存按账号隔离，切换账号后必须重新请求', () async {
     final harness = TestSessionHarness.create();
     addTearDown(harness.dispose);

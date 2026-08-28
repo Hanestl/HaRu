@@ -8,6 +8,7 @@ import '../../core/logging/app_log_service.dart';
 import '../../core/models/content_source.dart';
 import '../../core/models/hanime_comment_models.dart';
 import '../../shared/site_avatar.dart';
+import '../../shared/scroll_to_top_overlay.dart';
 import '../auth/login_sheet.dart';
 
 class HanimeCommentsSection extends StatefulWidget {
@@ -15,10 +16,14 @@ class HanimeCommentsSection extends StatefulWidget {
     super.key,
     required this.api,
     required this.videoId,
+    required this.scrollToTopController,
+    required this.active,
   });
 
   final Rule34VideoApi api;
   final String videoId;
+  final ScrollToTopController scrollToTopController;
+  final bool active;
 
   @override
   State<HanimeCommentsSection> createState() => _HanimeCommentsSectionState();
@@ -34,6 +39,7 @@ class _HanimeCommentsSectionState extends State<HanimeCommentsSection> {
 
   final _composerController = TextEditingController();
   final _composerFocus = FocusNode();
+  ScrollPosition? _commentsPosition;
   final Map<String, List<HanimeComment>> _replies = {};
   final Set<String> _expandedReplies = {};
   final Set<String> _loadingReplies = {};
@@ -41,16 +47,30 @@ class _HanimeCommentsSectionState extends State<HanimeCommentsSection> {
   HanimeComment? _replyTarget;
   HanimeComment? _replyRoot;
   var _submitting = false;
+  double? _commentsOffsetBeforeKeyboard;
 
   @override
   void initState() {
     super.initState();
-    _future = _load();
     _composerFocus.addListener(_onComposerFocusChanged);
   }
 
   @override
+  void didUpdateWidget(covariant HanimeCommentsSection oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!widget.active && oldWidget.active && _composerFocus.hasFocus) {
+      _composerFocus.unfocus();
+    }
+    if (widget.active && !oldWidget.active && _future == null) {
+      setState(() => _future = _load());
+    }
+  }
+
+  @override
   void dispose() {
+    if (_composerFocus.hasFocus) {
+      widget.scrollToTopController.setSuppressed(false);
+    }
     _composerFocus.removeListener(_onComposerFocusChanged);
     _composerFocus.dispose();
     _composerController.dispose();
@@ -58,7 +78,46 @@ class _HanimeCommentsSectionState extends State<HanimeCommentsSection> {
   }
 
   void _onComposerFocusChanged() {
+    widget.scrollToTopController.setSuppressed(_composerFocus.hasFocus);
+    unawaited(
+      AppLogService.instance.info(
+        '评论输入焦点变化；site=hanime1；video=${widget.videoId}；'
+        'focused=${_composerFocus.hasFocus}；'
+        'suppressed=${widget.scrollToTopController.suppressed}',
+        component: 'scroll_to_top',
+      ),
+    );
     if (mounted) setState(() {});
+    if (_composerFocus.hasFocus) {
+      _restoreCommentsOffsetAfterKeyboard();
+    }
+  }
+
+  void _restoreCommentsOffsetAfterKeyboard() {
+    final savedOffset = _commentsOffsetBeforeKeyboard;
+    if (savedOffset == null) return;
+    void restore() {
+      if (!mounted || !_composerFocus.hasFocus || _commentsPosition == null) {
+        return;
+      }
+      final position = _commentsPosition!;
+      final target = savedOffset.clamp(
+        position.minScrollExtent,
+        position.maxScrollExtent,
+      );
+      if ((position.pixels - target).abs() > 0.5) {
+        position.jumpTo(target);
+        unawaited(
+          AppLogService.instance.info(
+            '评论列表位置恢复；site=hanime1；video=${widget.videoId}；saved=${savedOffset.toStringAsFixed(1)}；actual=${position.pixels.toStringAsFixed(1)}',
+            component: 'scroll_to_top',
+          ),
+        );
+      }
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) => restore());
+    Future<void>.delayed(const Duration(milliseconds: 450), restore);
   }
 
   Future<List<HanimeComment>> _load() =>
@@ -269,6 +328,7 @@ class _HanimeCommentsSectionState extends State<HanimeCommentsSection> {
 
   @override
   Widget build(BuildContext context) {
+    if (!widget.active) return const SizedBox.expand();
     final loggedIn = widget.api.sessionStore.isHanimeLoggedIn;
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
@@ -302,9 +362,19 @@ class _HanimeCommentsSectionState extends State<HanimeCommentsSection> {
         if (comments.isEmpty) return const Center(child: AppText('还没有评论。'));
         return RefreshIndicator(
           onRefresh: _refresh,
-          child: ListView.builder(
-            itemCount: comments.length,
-            itemBuilder: (context, index) => _buildComment(comments[index]),
+          child: NotificationListener<ScrollNotification>(
+            onNotification: (notification) {
+              final context = notification.context;
+              if (context != null) {
+                _commentsPosition = Scrollable.maybeOf(context)?.position;
+              }
+              return false;
+            },
+            child: ListView.builder(
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+              itemCount: comments.length,
+              itemBuilder: (context, index) => _buildComment(comments[index]),
+            ),
           ),
         );
       },
@@ -336,8 +406,33 @@ class _HanimeCommentsSectionState extends State<HanimeCommentsSection> {
               child: TextField(
                 controller: _composerController,
                 focusNode: _composerFocus,
+                onTap: () {
+                  final position = _commentsPosition;
+                  if (position != null && position.hasPixels) {
+                    _commentsOffsetBeforeKeyboard = position.pixels;
+                  }
+                  unawaited(
+                    AppLogService.instance.info(
+                      '评论输入框点击；site=hanime1；video=${widget.videoId}；'
+                      'focusBefore=${_composerFocus.hasFocus}；'
+                      'suppressed=${widget.scrollToTopController.suppressed}',
+                      component: 'scroll_to_top',
+                    ),
+                  );
+                },
+                onTapOutside: (_) {
+                  unawaited(
+                    AppLogService.instance.info(
+                      '评论输入框点击外部，主动释放焦点；site=hanime1；'
+                      'video=${widget.videoId}',
+                      component: 'scroll_to_top',
+                    ),
+                  );
+                  FocusScope.of(context).unfocus();
+                },
                 minLines: 1,
                 maxLines: expanded ? 4 : 1,
+                scrollPadding: EdgeInsets.zero,
                 textInputAction: TextInputAction.newline,
                 decoration: InputDecoration(
                   hintText: context.uiText(

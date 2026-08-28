@@ -58,6 +58,17 @@ void main() {
       expect(details.video.title, isNotEmpty);
       expect(details.tags, isNotEmpty);
       expect(details.video.siteId, 'hanime1');
+      // 该快照中的网站系列恰好包含 4 集；这不是解析器对系列长度的要求。
+      expect(
+        details.seriesVideos.map((item) => item.id),
+        containsAll(<String>['404990', '404989', '157878', '157877']),
+      );
+      expect(details.seriesVideos, hasLength(4));
+      expect(details.relatedVideos, isNotEmpty);
+      expect(
+        details.relatedVideos.map((item) => item.id),
+        isNot(contains('404989')),
+      );
     });
   });
 }

@@ -448,6 +448,19 @@ final class HanimePageParser {
     final likes = _inputInt(document, 'likes-count');
     final dislikes = _inputInt(document, 'unlikes-count');
     final ratingVotes = likes + dislikes;
+    final playlistWrapper = document.querySelector('#video-playlist-wrapper');
+    final playlistRoot =
+        document.querySelector('#playlist-scroll, .hover-video-playlist') ??
+        playlistWrapper;
+    final seriesVideos = playlistRoot == null
+        ? const <VideoItem>[]
+        : videoList(playlistRoot.outerHtml).toList(growable: false);
+    final seriesTitle = _clean(
+      (playlistWrapper ?? playlistRoot)?.querySelector('h4')?.text,
+    );
+    final relatedRoot = document.querySelector('#related-tabcontent');
+    final relatedSource = relatedRoot?.outerHtml ?? source;
+    final seriesIds = seriesVideos.map((item) => item.id).toSet();
     final video = fallback.copyWith(
       title: title,
       thumbnailUrl:
@@ -476,10 +489,12 @@ final class HanimePageParser {
       isFavorite: false,
       isSaved: _isSaved(document),
       metadataItems: List.unmodifiable(metadata),
-      relatedVideos: videoList(source)
+      relatedVideos: videoList(relatedSource)
           .where((item) => item.id != fallback.id)
-          .take(12)
+          .where((item) => !seriesIds.contains(item.id))
           .toList(growable: false),
+      seriesTitle: seriesTitle,
+      seriesVideos: List.unmodifiable(seriesVideos),
       ratingVotes: ratingVotes > 0 ? ratingVotes : null,
       uploader: _uploader(document),
       playlistIds: _playlistIds(document),
@@ -511,8 +526,16 @@ final class HanimePageParser {
 
   static Iterable<dom.Element> _videoLinks(dom.Document document) {
     final links = <dom.Element>[];
-    for (final link in document.querySelectorAll('a[href*="/watch?v="]')) {
-      if (!links.contains(link)) links.add(link);
+    for (final link in document.querySelectorAll('a[href]')) {
+      final href = link.attributes['href']?.trim() ?? '';
+      final uri = Uri.tryParse(href);
+      final videoId = uri?.queryParameters['v']?.trim();
+      if (videoId == null || videoId.isEmpty || !href.contains('watch')) {
+        continue;
+      }
+      if (!links.contains(link)) {
+        links.add(link);
+      }
     }
     return links;
   }

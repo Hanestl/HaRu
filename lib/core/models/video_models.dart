@@ -452,6 +452,8 @@ class VideoDetails {
     this.descriptionTitle,
     this.metadataItems = const [],
     this.relatedVideos = const [],
+    this.seriesTitle,
+    this.seriesVideos = const [],
     this.ratingVotes,
     this.uploader,
     this.playlistIds = const {},
@@ -473,6 +475,8 @@ class VideoDetails {
   final bool isSaved;
   final List<VideoMetadataItem> metadataItems;
   final List<VideoItem> relatedVideos;
+  final String? seriesTitle;
+  final List<VideoItem> seriesVideos;
   final int? ratingVotes;
   final UploaderSummary? uploader;
   final Set<String> playlistIds;
@@ -506,6 +510,8 @@ class VideoDetails {
       descriptionTitle: descriptionTitle,
       metadataItems: metadataItems,
       relatedVideos: relatedVideos,
+      seriesTitle: seriesTitle,
+      seriesVideos: seriesVideos,
       ratingVotes: ratingVotes,
       uploader: uploader,
       playlistIds: playlistIds ?? this.playlistIds,

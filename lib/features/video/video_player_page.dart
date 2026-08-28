@@ -671,6 +671,7 @@ class _VideoPlayerPageState extends ConsumerState<VideoPlayerPage>
               onSeek: _seekVerified,
               onVisibilityChanged: onVisibilityChanged,
               mediaVolume: ref.read(mediaVolumeServiceProvider),
+              showBackButton: widget.embedded,
             );
           },
         ),
@@ -1348,6 +1349,7 @@ class _FluleVideoControls extends StatefulWidget {
     required this.onSeek,
     required this.onVisibilityChanged,
     required this.mediaVolume,
+    required this.showBackButton,
   });
 
   final BetterPlayerController controller;
@@ -1358,6 +1360,7 @@ class _FluleVideoControls extends StatefulWidget {
   final Future<VerifiedSeekResult> Function(Duration target) onSeek;
   final ValueChanged<bool> onVisibilityChanged;
   final MediaVolumeService mediaVolume;
+  final bool showBackButton;
 
   @override
   State<_FluleVideoControls> createState() => _FluleVideoControlsState();
@@ -1912,6 +1915,25 @@ class _FluleVideoControlsState extends State<_FluleVideoControls>
                     Align(
                       alignment: Alignment.topCenter,
                       child: _buildTopRow(context),
+                    ),
+                  if (widget.showBackButton && !_useFullscreenLayout)
+                    Align(
+                      alignment: Alignment.topLeft,
+                      child: SafeArea(
+                        bottom: false,
+                        minimum: const EdgeInsets.only(left: 6, top: 4),
+                        child: IconButton(
+                          tooltip: context.uiText('返回'),
+                          onPressed: () => Navigator.of(context).maybePop(),
+                          icon: const Icon(
+                            Icons.arrow_back,
+                            color: Colors.white,
+                            shadows: [
+                              Shadow(color: Colors.black, blurRadius: 6),
+                            ],
+                          ),
+                        ),
+                      ),
                     ),
                   Align(
                     alignment: Alignment.bottomCenter,

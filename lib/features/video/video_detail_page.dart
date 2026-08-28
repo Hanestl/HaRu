@@ -1,10 +1,12 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flule34/l10n/ui_localization.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -22,6 +24,7 @@ import '../../core/services/translation_service.dart';
 import '../../core/services/predictive_prefetch_service.dart';
 import '../../shared/video_card.dart';
 import '../../shared/video_collection_layout.dart';
+import '../../shared/scroll_to_top_overlay.dart';
 import '../../shared/editable_translation.dart';
 import '../../shared/localized_translation_text.dart';
 import '../../shared/site_avatar.dart';
@@ -35,6 +38,7 @@ import '../library/local_library_picker.dart';
 import '../library/playlist_picker.dart';
 import '../settings/data/app_settings_repository.dart';
 import '../settings/domain/quality_selection.dart';
+import '../settings/domain/app_settings.dart';
 import 'video_player_page.dart';
 
 class VideoDetailPage extends ConsumerStatefulWidget {
@@ -132,30 +136,34 @@ class _VideoDetailPageState extends ConsumerState<VideoDetailPage>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const AppText('视频详情')),
-      body: FutureBuilder<VideoDetails>(
-        future: _detailsFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState != ConnectionState.done) {
-            return _DetailLoading(video: widget.video);
-          }
-          if (snapshot.hasError) {
-            return _DetailLoadError(
-              message: snapshot.error.toString(),
-              onRetry: _reload,
+      body: SafeArea(
+        top: true,
+        bottom: false,
+        child: FutureBuilder<VideoDetails>(
+          future: _detailsFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState != ConnectionState.done) {
+              return _DetailLoading(video: widget.video);
+            }
+            if (snapshot.hasError) {
+              return _DetailLoadError(
+                message: snapshot.error.toString(),
+                onRetry: _reload,
+              );
+            }
+            return _VideoDetailsBody(
+              api: widget.api,
+              details: snapshot.requireData,
+              downloads: ref.watch(downloadRepositoryProvider),
+              settings: ref.watch(appSettingsRepositoryProvider),
+              shareService: ref.watch(shareServiceProvider),
+              translationService: ref.read(translationServiceProvider),
+              playerHandle: _playerHandle,
+              localLibraryRepository: ref.watch(localLibraryRepositoryProvider),
+              scrollToTopController: ref.watch(scrollToTopControllerProvider),
             );
-          }
-          return _VideoDetailsBody(
-            api: widget.api,
-            details: snapshot.requireData,
-            downloads: ref.watch(downloadRepositoryProvider),
-            settings: ref.watch(appSettingsRepositoryProvider),
-            shareService: ref.watch(shareServiceProvider),
-            translationService: ref.read(translationServiceProvider),
-            playerHandle: _playerHandle,
-            localLibraryRepository: ref.watch(localLibraryRepositoryProvider),
-          );
-        },
+          },
+        ),
       ),
     );
   }
@@ -240,6 +248,7 @@ class _VideoDetailsBody extends StatefulWidget {
     required this.translationService,
     required this.playerHandle,
     required this.localLibraryRepository,
+    required this.scrollToTopController,
   });
 
   final Rule34VideoApi api;
@@ -250,6 +259,7 @@ class _VideoDetailsBody extends StatefulWidget {
   final TranslationService translationService;
   final VideoPlayerHandle playerHandle;
   final LocalLibraryRepository localLibraryRepository;
+  final ScrollToTopController scrollToTopController;
 
   @override
   State<_VideoDetailsBody> createState() => _VideoDetailsBodyState();
@@ -287,6 +297,7 @@ class _VideoDetailsBodyState extends State<_VideoDetailsBody>
   var _playerAutoExpanding = false;
   var _playerExpandGeneration = 0;
   var _lastCanCollapse = false;
+  AnimationController? _scrollToTopAnimation;
   DateTime? _lastLockedOverscrollLogAt;
   double _lockedOverscrollDistance = 0;
   ScrollHoldController? _playerExpandHold;
@@ -295,18 +306,20 @@ class _VideoDetailsBodyState extends State<_VideoDetailsBody>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _tabController.addListener(_onTabChanged);
     _playerExpandController = AnimationController.unbounded(vsync: this);
     _detailScrollController.addListener(_onDetailScroll);
+    widget.scrollToTopController.addListener(_onScrollToTopControllerChanged);
     widget.playerHandle.canCollapseDetailsListenable.addListener(
       _onPlayerCollapsePermissionChanged,
     );
     _details = widget.details;
+    widget.scrollToTopController.setHandler(_scrollDetailsToTop);
     _lastCanCollapse = widget.playerHandle.canCollapseDetails;
     _favorite = widget.details.isFavorite;
     _hanimeLiked = widget.details.hanimeLiked;
     _hanimeSaved = widget.details.isSaved;
     _syncHanimeDetails(widget.details);
-    widget.translationService.addListener(_onTranslationChanged);
     if (_details.video.site.capabilities.subscriptions &&
         widget.api.sessionStore.isLoggedIn) {
       _loadSubscriptions();
@@ -317,6 +330,8 @@ class _VideoDetailsBodyState extends State<_VideoDetailsBody>
   void dispose() {
     _playerExpandGeneration += 1;
     _playerExpandController.dispose();
+    _scrollToTopAnimation?.dispose();
+    _scrollToTopAnimation = null;
     _playerExpandHold?.cancel();
     _playerExpandHold = null;
     widget.playerHandle.canCollapseDetailsListenable.removeListener(
@@ -325,9 +340,19 @@ class _VideoDetailsBodyState extends State<_VideoDetailsBody>
     _detailScrollController
       ..removeListener(_onDetailScroll)
       ..dispose();
-    _tabController.dispose();
-    widget.translationService.removeListener(_onTranslationChanged);
+    widget.scrollToTopController.removeListener(
+      _onScrollToTopControllerChanged,
+    );
+    _tabController
+      ..removeListener(_onTabChanged)
+      ..dispose();
+    widget.scrollToTopController.setHandler(null);
     super.dispose();
+  }
+
+  void _onTabChanged() {
+    if (!mounted || _tabController.indexIsChanging) return;
+    setState(() {});
   }
 
   @override
@@ -356,9 +381,13 @@ class _VideoDetailsBodyState extends State<_VideoDetailsBody>
         _syncHanimeDetails(widget.details);
       }
     }
-    if (oldWidget.translationService != widget.translationService) {
-      oldWidget.translationService.removeListener(_onTranslationChanged);
-      widget.translationService.addListener(_onTranslationChanged);
+    if (oldWidget.scrollToTopController != widget.scrollToTopController) {
+      oldWidget.scrollToTopController.setHandler(null);
+      oldWidget.scrollToTopController.removeListener(
+        _onScrollToTopControllerChanged,
+      );
+      widget.scrollToTopController.addListener(_onScrollToTopControllerChanged);
+      widget.scrollToTopController.setHandler(_scrollDetailsToTop);
     }
   }
 
@@ -370,10 +399,116 @@ class _VideoDetailsBodyState extends State<_VideoDetailsBody>
     _hanimeUploaderSubscribed = details.isUploaderSubscribed;
   }
 
-  void _onTranslationChanged() {
-    if (mounted) {
-      setState(() {});
+  Future<void> _scrollDetailsToTop() async {
+    unawaited(
+      AppLogService.instance.info(
+        '置顶处理开始；video=${_details.video.id}；'
+        'outer=${_outerOffsetLabel()}；inner=${_innerOffsetLabel()}；'
+        'playing=${widget.playerHandle.isPlaying}；'
+        'canCollapse=${widget.playerHandle.canCollapseDetails}',
+        component: 'video_detail_scroll',
+      ),
+    );
+    _stopPlayerAutoExpand();
+    if (!_detailScrollController.hasClients) return;
+    final outer = _detailScrollController.position;
+    final outerStart = outer.pixels - outer.minScrollExtent;
+    final innerPosition = _activeInnerPosition();
+    final innerStart = innerPosition == null
+        ? 0.0
+        : innerPosition.pixels - innerPosition.minScrollExtent;
+
+    // While the player is active the header is deliberately locked. Animating
+    // both nested positions here makes NestedScrollView transfer deltas back
+    // and forth, producing the collapse/expand oscillation seen in diagnostics.
+    // Keep the header at its current unlocked position and animate only the
+    // visible tab's content.
+    if (widget.playerHandle.isPlaying || widget.playerHandle.isBuffering) {
+      if (outerStart > 0.5) {
+        outer.jumpTo(outer.minScrollExtent);
+      }
+      if (innerPosition != null && innerStart > 0.5) {
+        await innerPosition.animateTo(
+          innerPosition.minScrollExtent,
+          duration: const Duration(milliseconds: 360),
+          curve: Curves.easeOutCubic,
+        );
+      }
+      unawaited(
+        AppLogService.instance.info(
+          '置顶处理完成；video=${_details.video.id}；'
+          'outer=${_outerOffsetLabel()}；inner=${_innerOffsetLabel()}；'
+          'playing=${widget.playerHandle.isPlaying}；'
+          'canCollapse=${widget.playerHandle.canCollapseDetails}',
+          component: 'video_detail_scroll',
+        ),
+      );
+      return;
     }
+
+    final innerDistance = innerStart;
+    final totalDistance = innerDistance + outerStart;
+    if (totalDistance > 0.5) {
+      final oldAnimation = _scrollToTopAnimation;
+      final animation = AnimationController.unbounded(vsync: this);
+      _scrollToTopAnimation = animation;
+      oldAnimation?.dispose();
+      void applyOffsets() {
+        final travelled = animation.value;
+        if (innerPosition != null && innerPosition.hasPixels) {
+          final target = innerPosition.minScrollExtent +
+              math.max(0, innerStart - travelled);
+          if ((innerPosition.pixels - target).abs() >
+              precisionErrorTolerance) {
+            innerPosition.jumpTo(target);
+          }
+        }
+        if (!outer.hasPixels) return;
+        final outerTravelled = math.max(0, travelled - innerDistance);
+        final target =
+            outer.minScrollExtent + math.max(0, outerStart - outerTravelled);
+        if ((outer.pixels - target).abs() > precisionErrorTolerance) {
+          outer.jumpTo(target);
+        }
+      }
+
+      animation.addListener(applyOffsets);
+      final durationMs = (280 + totalDistance * 0.18).round().clamp(320, 650);
+      try {
+        await animation.animateTo(
+          totalDistance,
+          duration: Duration(milliseconds: durationMs),
+          curve: Curves.easeInOutCubic,
+        );
+        applyOffsets();
+      } on TickerCanceled {
+        return;
+      } finally {
+        animation.removeListener(applyOffsets);
+        if (identical(_scrollToTopAnimation, animation)) {
+          _scrollToTopAnimation = null;
+          animation.dispose();
+        }
+      }
+    }
+    unawaited(
+      AppLogService.instance.info(
+        '置顶处理完成；video=${_details.video.id}；'
+        'outer=${_outerOffsetLabel()}；inner=${_innerOffsetLabel()}；'
+        'playing=${widget.playerHandle.isPlaying}；'
+        'canCollapse=${widget.playerHandle.canCollapseDetails}',
+        component: 'video_detail_scroll',
+      ),
+    );
+  }
+
+  ScrollPosition? _activeInnerPosition() {
+    final controller = _detailScrollKey.currentState?.innerController;
+    if (controller == null || !controller.hasClients) return null;
+    final positions = controller.positions.toList(growable: false);
+    if (positions.isEmpty) return null;
+    final index = _tabController.index;
+    return index < positions.length ? positions[index] : positions.first;
   }
 
   void _onPlayerCollapsePermissionChanged() {
@@ -392,6 +527,9 @@ class _VideoDetailsBodyState extends State<_VideoDetailsBody>
     );
     if (canCollapse) {
       _stopPlayerAutoExpand();
+      return;
+    }
+    if (!widget.playerHandle.isPlaying && !widget.playerHandle.isBuffering) {
       return;
     }
     if (!wasCollapsible) return;
@@ -482,6 +620,13 @@ class _VideoDetailsBodyState extends State<_VideoDetailsBody>
 
   void _onDetailScroll() {
     if (!_detailScrollController.hasClients) return;
+    if (widget.scrollToTopController.suppressed) {
+      // Focus/keyboard changes must not change the player's current folded state.
+      // NestedScrollView may emit a metrics update while the composer is opening;
+      // treating it as a real user scroll would expand the header unexpectedly.
+      _stopPlayerAutoExpand();
+      return;
+    }
     final collapsed = _detailScrollController.offset > 96;
     if (collapsed == _playerRegionCollapsed) return;
     _playerRegionCollapsed = collapsed;
@@ -497,6 +642,13 @@ class _VideoDetailsBodyState extends State<_VideoDetailsBody>
         component: 'video_detail_scroll',
       ),
     );
+  }
+
+  void _onScrollToTopControllerChanged() {
+    if (!mounted) return;
+    if (widget.scrollToTopController.suppressed) {
+      _stopPlayerAutoExpand();
+    }
   }
 
   bool _onDetailScrollNotification(ScrollNotification notification) {
@@ -1253,7 +1405,9 @@ class _VideoDetailsBodyState extends State<_VideoDetailsBody>
           key: _detailScrollKey,
           controller: _detailScrollController,
           physics: _PlayerHeaderGatePhysics(
-            canCollapse: widget.playerHandle.canCollapseDetailsListenable,
+            playing: widget.playerHandle.playingListenable,
+            buffering: widget.playerHandle.bufferingListenable,
+            scrollToTopController: widget.scrollToTopController,
             parent: const ClampingScrollPhysics(),
           ),
           headerSliverBuilder: (context, innerBoxIsScrolled) => [
@@ -1298,17 +1452,20 @@ class _VideoDetailsBodyState extends State<_VideoDetailsBody>
                                 videoSlug: details.video.slug,
                                 siteId: details.video.siteId,
                               ),
-                              child: Align(
-                                alignment: Alignment.centerLeft,
-                                child: LocalizedTranslationText(
-                                  value: widget.translationService.resolveTitle(
-                                    details.video.id,
-                                    details.video.title,
-                                    siteId: details.video.siteId,
+                              child: ListenableBuilder(
+                                listenable: widget.translationService,
+                                builder: (context, _) => Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: LocalizedTranslationText(
+                                    value: widget.translationService.resolveTitle(
+                                      details.video.id,
+                                      details.video.title,
+                                      siteId: details.video.siteId,
+                                    ),
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.headlineSmall,
                                   ),
-                                  style: Theme.of(
-                                    context,
-                                  ).textTheme.headlineSmall,
                                 ),
                               ),
                             ),
@@ -1447,6 +1604,29 @@ class _VideoDetailsBodyState extends State<_VideoDetailsBody>
                               child: _CollapsibleDescription(
                                 text: details.description!,
                               ),
+                            ),
+                          ],
+                          if (details.video.site == ContentSite.hanime1 &&
+                              details.seriesVideos.isNotEmpty) ...[
+                            const SizedBox(height: 20),
+                            _HanimeSeriesSection(
+                              seriesTitle: details.seriesTitle ?? '未命名系列',
+                              videos: details.seriesVideos,
+                              layout: widget.settings.settings.videoLayout,
+                              currentVideoId: details.video.id,
+                              onTap: (video) async {
+                                await widget.playerHandle.pause();
+                                if (!context.mounted) return;
+                                context.pushNamed(
+                                  AppRouteNames.video,
+                                  pathParameters: {
+                                    'id': video.id,
+                                    'slug': video.slug,
+                                  },
+                                  queryParameters: {'site': video.siteId},
+                                  extra: video,
+                                );
+                              },
                             ),
                           ],
                           _MetadataSection(
@@ -1594,9 +1774,16 @@ class _VideoDetailsBodyState extends State<_VideoDetailsBody>
                 HanimeCommentsSection(
                   api: widget.api,
                   videoId: details.video.id,
+                  scrollToTopController: widget.scrollToTopController,
+                  active: _tabController.index == 1,
                 )
               else
-                Rule34CommentsSection(api: widget.api, video: details.video),
+                Rule34CommentsSection(
+                  api: widget.api,
+                  video: details.video,
+                  scrollToTopController: widget.scrollToTopController,
+                  active: _tabController.index == 1,
+                ),
             ],
           ),
         ),
@@ -1615,6 +1802,267 @@ class _VideoDetailsBodyState extends State<_VideoDetailsBody>
         child: child!,
       ),
     );
+  }
+}
+
+class _HanimeSeriesSection extends StatelessWidget {
+  const _HanimeSeriesSection({
+    required this.seriesTitle,
+    required this.videos,
+    required this.layout,
+    required this.currentVideoId,
+    required this.onTap,
+  });
+  final String seriesTitle;
+  final List<VideoItem> videos;
+  final ContentLayout layout;
+  final String currentVideoId;
+  final Future<void> Function(VideoItem) onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        AppText('系列视频', style: Theme.of(context).textTheme.titleMedium),
+        const SizedBox(height: 6),
+        Row(
+          children: [
+            Expanded(
+              child: AppText(
+                seriesTitle,
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+            ),
+          ],
+        ),
+        Row(
+          children: [
+            AppText(
+              '共${videos.length}集',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            const Spacer(),
+            OutlinedButton(
+              onPressed: () => _openSheet(context),
+              style: OutlinedButton.styleFrom(
+                minimumSize: Size.zero,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 5,
+                ),
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                shape: const StadiumBorder(),
+              ),
+              child: const AppText('展开'),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  void _openSheet(BuildContext context) {
+    final sheetHeight = MediaQuery.sizeOf(context).height * .63;
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (context) => _HanimeSeriesSheet(
+        seriesTitle: seriesTitle,
+        videos: videos,
+        layout: layout,
+        currentVideoId: currentVideoId,
+        sheetHeight: sheetHeight,
+        onTap: onTap,
+      ),
+    );
+  }
+}
+
+class _HanimeSeriesSheet extends StatefulWidget {
+  const _HanimeSeriesSheet({
+    required this.seriesTitle,
+    required this.videos,
+    required this.layout,
+    required this.currentVideoId,
+    required this.sheetHeight,
+    required this.onTap,
+  });
+
+  final String seriesTitle;
+  final List<VideoItem> videos;
+  final ContentLayout layout;
+  final String currentVideoId;
+  final double sheetHeight;
+  final Future<void> Function(VideoItem) onTap;
+
+  @override
+  State<_HanimeSeriesSheet> createState() => _HanimeSeriesSheetState();
+}
+
+class _HanimeSeriesSheetState extends State<_HanimeSeriesSheet> {
+  ScrollController? _scrollController;
+  final _currentItemKey = GlobalKey();
+  var _initialPositionCorrected = false;
+  var _initialPositionAttempts = 0;
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_scrollController != null) return;
+    final currentIndex = widget.videos.indexWhere(
+      (video) => video.id == widget.currentVideoId,
+    );
+    final row = currentIndex < 0
+        ? 0
+        : widget.layout == ContentLayout.doubleColumn
+        ? currentIndex ~/ 2
+        : currentIndex;
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final cardWidth = widget.layout == ContentLayout.doubleColumn
+        ? (screenWidth - 32) / 2
+        : screenWidth - 24;
+    final estimatedItemExtent =
+        cardWidth * 9 / 16 +
+        (widget.layout == ContentLayout.doubleColumn ? 92.0 : 112.0);
+    const estimatedHeaderExtent = 64.0;
+    final initialOffset = math.max(
+      0,
+      estimatedHeaderExtent +
+          row * estimatedItemExtent -
+          (widget.sheetHeight - 48) / 2 +
+          estimatedItemExtent / 2,
+    );
+    _scrollController = ScrollController(
+      initialScrollOffset: initialOffset.toDouble(),
+    );
+    WidgetsBinding.instance.addPostFrameCallback(_correctInitialPosition);
+  }
+
+  void _correctInitialPosition(Duration _) {
+    if (!mounted || _initialPositionCorrected) return;
+    final currentContext = _currentItemKey.currentContext;
+    if (currentContext == null) {
+      // Masonry layouts can defer the target child by one or two frames when
+      // opening a sheet from a cold cache. Retry without animating the sheet.
+      if (++_initialPositionAttempts >= 8) return;
+      WidgetsBinding.instance.addPostFrameCallback(_correctInitialPosition);
+      return;
+    }
+    _initialPositionCorrected = true;
+    Scrollable.ensureVisible(
+      currentContext,
+      alignment: 0.5,
+      duration: Duration.zero,
+      curve: Curves.linear,
+    );
+  }
+
+  @override
+  void dispose() {
+    _scrollController?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: SizedBox(
+        height: widget.sheetHeight,
+        child: CustomScrollView(
+          controller: _scrollController,
+          slivers: [
+            const SliverToBoxAdapter(child: SizedBox(height: 8)),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+                child: AppText(
+                  widget.seriesTitle,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ),
+            ),
+            if (widget.layout == ContentLayout.doubleColumn)
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                sliver: SliverMasonryGrid.count(
+                  crossAxisCount: 2,
+                  mainAxisSpacing: 2,
+                  crossAxisSpacing: 2,
+                  childCount: widget.videos.length,
+                  itemBuilder: (context, index) => _buildItem(
+                    context,
+                    index,
+                    compact: true,
+                  ),
+                ),
+              )
+            else
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(12, 0, 12, 16),
+                sliver: SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) => _buildItem(
+                      context,
+                      index,
+                      compact: false,
+                    ),
+                    childCount: widget.videos.length,
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildItem(
+    BuildContext context,
+    int index, {
+    required bool compact,
+  }) {
+    final video = widget.videos[index];
+    final item = Stack(
+      fit: StackFit.passthrough,
+      children: [
+        VideoCard(
+          video: video,
+          compact: compact,
+          onTap: () {
+            Navigator.pop(context);
+            if (video.id == widget.currentVideoId) return;
+            widget.onTap(video);
+          },
+        ),
+        if (video.id == widget.currentVideoId)
+          Positioned.fill(
+            child: IgnorePointer(
+              child: ColoredBox(
+                color: Color(0x99000000),
+                child: Center(
+                  child: AppText(
+                    '正在播放',
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+    final keyed = video.id == widget.currentVideoId
+        ? KeyedSubtree(key: _currentItemKey, child: item)
+        : item;
+    return RepaintBoundary(child: keyed);
   }
 }
 
@@ -1674,16 +2122,29 @@ class _VideoDetailHeaderDelegate extends SliverPersistentHeaderDelegate {
 }
 
 class _PlayerHeaderGatePhysics extends ScrollPhysics {
-  const _PlayerHeaderGatePhysics({required this.canCollapse, super.parent});
+  const _PlayerHeaderGatePhysics({
+    required this.playing,
+    required this.buffering,
+    required this.scrollToTopController,
+    super.parent,
+  });
 
-  final ValueListenable<bool> canCollapse;
+  final ValueListenable<bool> playing;
+  final ValueListenable<bool> buffering;
+  final ScrollToTopController scrollToTopController;
 
-  bool get _locked => !canCollapse.value;
+  bool get _locked =>
+      playing.value || buffering.value || scrollToTopController.suppressed;
+
+  @override
+  bool get allowImplicitScrolling => !_locked && super.allowImplicitScrolling;
 
   @override
   _PlayerHeaderGatePhysics applyTo(ScrollPhysics? ancestor) {
     return _PlayerHeaderGatePhysics(
-      canCollapse: canCollapse,
+      playing: playing,
+      buffering: buffering,
+      scrollToTopController: scrollToTopController,
       parent: buildParent(ancestor),
     );
   }
@@ -2038,14 +2499,16 @@ class _MetadataSection extends StatelessWidget {
     if (items.isEmpty && fallbackValues.isEmpty) {
       return const SizedBox.shrink();
     }
-    return Padding(
-      padding: const EdgeInsets.only(top: 24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          AppText(title, style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: 8),
-          Wrap(
+    return ListenableBuilder(
+      listenable: translationService,
+      builder: (context, _) => Padding(
+        padding: const EdgeInsets.only(top: 24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            AppText(title, style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 8),
+            Wrap(
             spacing: 8,
             runSpacing: 8,
             children: items.isEmpty
@@ -2129,8 +2592,9 @@ class _MetadataSection extends StatelessWidget {
                         );
                       })
                       .toList(growable: false),
-          ),
-        ],
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -1475,6 +1475,20 @@ class Rule34VideoApi {
     final basePath = subscription.kind == SubscriptionKind.member
         ? _memberVideosPath(subscription.path)
         : subscription.path;
+    if (subscription.kind == SubscriptionKind.member && page > 1) {
+      return _paginatedVideoList(
+        basePath,
+        page: page,
+        query: <String, String>{
+          'mode': 'async',
+          'function': 'get_block',
+          'block_id': 'list_videos_uploaded_videos',
+          'sort_by': '',
+          'from_videos': '$page',
+        },
+        cancelToken: cancelToken,
+      );
+    }
     final path = page > 1 ? '$basePath$page/' : basePath;
     return _paginatedVideoList(path, page: page, cancelToken: cancelToken);
   }

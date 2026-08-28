@@ -303,6 +303,23 @@ class SiteParser {
     final document = html_parser.parse(source);
     final result = <String, SubscriptionItem>{};
     for (final container in document.querySelectorAll('div.item')) {
+      // 分类订阅在“我的订阅”表单中没有实体链接（href="#"），
+      // 只能从名称和删除控件识别；名称 slug 与分类页面路径一致。
+      final formName = _clean(container.querySelector('.name')?.text);
+      if (formName != null &&
+          container.querySelector('input[name="delete[]"]') != null &&
+          container.querySelector('a[href="#"]') != null) {
+        final slug = _categorySlug(formName);
+        if (slug.isNotEmpty) {
+          final path = '/categories/$slug/';
+          result[path] = SubscriptionItem(
+            title: formName,
+            path: path,
+            kind: SubscriptionKind.category,
+          );
+          continue;
+        }
+      }
       for (final link in container.querySelectorAll('a[href]')) {
         final href = link.attributes['href'];
         final kind = _subscriptionKind(href);
@@ -331,6 +348,16 @@ class SiteParser {
       }
     }
     return result.values.toList(growable: false);
+  }
+
+  static String _categorySlug(String title) {
+    return title
+        .trim()
+        .toLowerCase()
+        .replaceAll(RegExp(r'[^a-z0-9]+'), '-')
+        .replaceAll(RegExp(r'-+'), '-')
+        .replaceFirst(RegExp(r'^-+'), '')
+        .replaceFirst(RegExp(r'-+$'), '');
   }
 
   static String? collectionAvatar(String source) {

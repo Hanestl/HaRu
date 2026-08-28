@@ -75,4 +75,50 @@ void main() {
       0,
     );
   });
+
+  testWidgets('输入框获得焦点时隐藏并阻止回到顶部按钮', (tester) async {
+    final scrollController = ScrollController();
+    final overlayController = ScrollToTopController();
+    final textController = TextEditingController();
+    addTearDown(scrollController.dispose);
+    addTearDown(overlayController.dispose);
+    addTearDown(textController.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: ScrollToTopOverlay(
+          controller: overlayController,
+          child: Scaffold(
+            body: Column(
+              children: [
+                Expanded(
+                  child: ListView.builder(
+                    controller: scrollController,
+                    itemExtent: 80,
+                    itemCount: 40,
+                    itemBuilder: (context, index) => Text('项目 $index'),
+                  ),
+                ),
+                TextField(controller: textController),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    scrollController.jumpTo(800);
+    await tester.pump();
+    expect(
+      tester.widget<AnimatedOpacity>(find.byType(AnimatedOpacity)).opacity,
+      1,
+    );
+
+    await tester.tap(find.byType(TextField));
+    await tester.pump();
+
+    expect(
+      tester.widget<AnimatedOpacity>(find.byType(AnimatedOpacity)).opacity,
+      0,
+    );
+  });
 }
