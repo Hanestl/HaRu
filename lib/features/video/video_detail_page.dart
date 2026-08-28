@@ -456,10 +456,10 @@ class _VideoDetailsBodyState extends State<_VideoDetailsBody>
       void applyOffsets() {
         final travelled = animation.value;
         if (innerPosition != null && innerPosition.hasPixels) {
-          final target = innerPosition.minScrollExtent +
+          final target =
+              innerPosition.minScrollExtent +
               math.max(0, innerStart - travelled);
-          if ((innerPosition.pixels - target).abs() >
-              precisionErrorTolerance) {
+          if ((innerPosition.pixels - target).abs() > precisionErrorTolerance) {
             innerPosition.jumpTo(target);
           }
         }
@@ -1457,11 +1457,12 @@ class _VideoDetailsBodyState extends State<_VideoDetailsBody>
                                 builder: (context, _) => Align(
                                   alignment: Alignment.centerLeft,
                                   child: LocalizedTranslationText(
-                                    value: widget.translationService.resolveTitle(
-                                      details.video.id,
-                                      details.video.title,
-                                      siteId: details.video.siteId,
-                                    ),
+                                    value: widget.translationService
+                                        .resolveTitle(
+                                          details.video.id,
+                                          details.video.title,
+                                          siteId: details.video.siteId,
+                                        ),
                                     style: Theme.of(
                                       context,
                                     ).textTheme.headlineSmall,
@@ -1996,11 +1997,8 @@ class _HanimeSeriesSheetState extends State<_HanimeSeriesSheet> {
                   mainAxisSpacing: 2,
                   crossAxisSpacing: 2,
                   childCount: widget.videos.length,
-                  itemBuilder: (context, index) => _buildItem(
-                    context,
-                    index,
-                    compact: true,
-                  ),
+                  itemBuilder: (context, index) =>
+                      _buildItem(context, index, compact: true),
                 ),
               )
             else
@@ -2008,11 +2006,8 @@ class _HanimeSeriesSheetState extends State<_HanimeSeriesSheet> {
                 padding: const EdgeInsets.fromLTRB(12, 0, 12, 16),
                 sliver: SliverList(
                   delegate: SliverChildBuilderDelegate(
-                    (context, index) => _buildItem(
-                      context,
-                      index,
-                      compact: false,
-                    ),
+                    (context, index) =>
+                        _buildItem(context, index, compact: false),
                     childCount: widget.videos.length,
                   ),
                 ),
@@ -2023,11 +2018,7 @@ class _HanimeSeriesSheetState extends State<_HanimeSeriesSheet> {
     );
   }
 
-  Widget _buildItem(
-    BuildContext context,
-    int index, {
-    required bool compact,
-  }) {
+  Widget _buildItem(BuildContext context, int index, {required bool compact}) {
     final video = widget.videos[index];
     final item = Stack(
       fit: StackFit.passthrough,
@@ -2049,9 +2040,9 @@ class _HanimeSeriesSheetState extends State<_HanimeSeriesSheet> {
                 child: Center(
                   child: AppText(
                     '正在播放',
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      color: Colors.white,
-                    ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.titleSmall?.copyWith(color: Colors.white),
                   ),
                 ),
               ),
@@ -2509,89 +2500,93 @@ class _MetadataSection extends StatelessWidget {
             AppText(title, style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 8),
             Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: items.isEmpty
-                ? fallbackValues
-                      .take(40)
-                      .map(
-                        (value) => EditableTranslationRegion(
-                          translationService: translationService,
-                          kind: kind,
-                          english: value,
-                          siteId: siteId,
-                          child: _AdaptiveMetadataChip(
-                            label: LocalizedTranslationText(
-                              value: translationService.resolveMetadata(
-                                kind,
-                                value,
-                                siteId: siteId,
+              spacing: 8,
+              runSpacing: 8,
+              children: items.isEmpty
+                  ? fallbackValues
+                        .take(40)
+                        .map(
+                          (value) => EditableTranslationRegion(
+                            translationService: translationService,
+                            kind: kind,
+                            english: value,
+                            siteId: siteId,
+                            child: _AdaptiveMetadataChip(
+                              label: LocalizedTranslationText(
+                                value: translationService.resolveMetadata(
+                                  kind,
+                                  value,
+                                  siteId: siteId,
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                      )
-                      .toList(growable: false)
-                : items
-                      .take(40)
-                      .map((item) {
-                        final subscribed = subscribedPaths.contains(item.path);
-                        final busy = updatingKeys.any(
-                          (key) => key.endsWith('${item.kind.name}:${item.id}'),
-                        );
-                        return EditableTranslationRegion(
-                          translationService: translationService,
-                          kind: item.kind,
-                          english: item.title,
-                          siteId: siteId,
-                          child: _AdaptiveMetadataChip(
-                            avatar: _metadataAvatar(
-                              context,
-                              item: item,
-                              subscribed: subscribed,
-                              busy: busy,
-                            ),
-                            label: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Flexible(
-                                  child: LocalizedTranslationText(
-                                    value: translationService.resolveMetadata(
-                                      item.kind,
-                                      item.title,
-                                      siteId: siteId,
+                        )
+                        .toList(growable: false)
+                  : items
+                        .take(40)
+                        .map((item) {
+                          final subscribed = subscribedPaths.contains(
+                            item.path,
+                          );
+                          final busy = updatingKeys.any(
+                            (key) =>
+                                key.endsWith('${item.kind.name}:${item.id}'),
+                          );
+                          return EditableTranslationRegion(
+                            translationService: translationService,
+                            kind: item.kind,
+                            english: item.title,
+                            siteId: siteId,
+                            child: _AdaptiveMetadataChip(
+                              avatar: _metadataAvatar(
+                                context,
+                                item: item,
+                                subscribed: subscribed,
+                                busy: busy,
+                              ),
+                              label: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Flexible(
+                                    child: LocalizedTranslationText(
+                                      value: translationService.resolveMetadata(
+                                        item.kind,
+                                        item.title,
+                                        siteId: siteId,
+                                      ),
+                                      suffix:
+                                          item.upScore == 0 &&
+                                              item.downScore == 0
+                                          ? ''
+                                          : ' · ↑${item.upScore} ↓${item.downScore}',
                                     ),
-                                    suffix:
-                                        item.upScore == 0 && item.downScore == 0
-                                        ? ''
-                                        : ' · ↑${item.upScore} ↓${item.downScore}',
                                   ),
-                                ),
-                                // 标签热度数字：仿 UI 的浅色括号，位于标签末尾
-                                // （如 “NTR（7）”），点击搜索时只使用纯标签文本。
-                                if (item.count != null) ...[
-                                  const SizedBox(width: 2),
-                                  Text(
-                                    '（${item.count}）',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .labelSmall
-                                        ?.copyWith(
-                                          color: Theme.of(
-                                            context,
-                                          ).colorScheme.outline,
-                                        ),
-                                  ),
+                                  // 标签热度数字：仿 UI 的浅色括号，位于标签末尾
+                                  // （如 “NTR（7）”），点击搜索时只使用纯标签文本。
+                                  if (item.count != null) ...[
+                                    const SizedBox(width: 2),
+                                    Text(
+                                      '（${item.count}）',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .labelSmall
+                                          ?.copyWith(
+                                            color: Theme.of(
+                                              context,
+                                            ).colorScheme.outline,
+                                          ),
+                                    ),
+                                  ],
                                 ],
-                              ],
+                              ),
+                              onPressed: busy || onTap == null
+                                  ? null
+                                  : () => onTap!(item),
                             ),
-                            onPressed: busy || onTap == null
-                                ? null
-                                : () => onTap!(item),
-                          ),
-                        );
-                      })
-                      .toList(growable: false),
+                          );
+                        })
+                        .toList(growable: false),
             ),
           ],
         ),
