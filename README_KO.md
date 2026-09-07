@@ -38,7 +38,7 @@ Android 7.0(API 24) 이상 ARM64 스마트폰과 태블릿을 지원합니다. A
 
 ## 로컬 빌드
 
-검증된 도구: Flutter 3.44.8, Dart 3.12.2, JDK 17, Android SDK 36.
+검증된 도구: Flutter 3.44.8, Dart 3.12.2, JDK 25, Android SDK 36.
 
 ```powershell
 flutter pub get

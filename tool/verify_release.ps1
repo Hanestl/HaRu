@@ -1,6 +1,6 @@
 param(
     [string]$ApkDirectory = 'build\app\outputs\flutter-apk',
-    [string]$AndroidSdk = 'D:\tools\android-sdk'
+    [string]$AndroidSdk = 'D:\Programs\Android\android-sdk'
 )
 
 $ErrorActionPreference = 'Stop'

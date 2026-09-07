@@ -5,26 +5,26 @@
 正式发布必须始终使用同一把私钥。密钥库、密码和 `android/key.properties` 不得提交到 Git，也不要通过聊天、Issue 或构建日志传递。
 
 ```powershell
-New-Item -ItemType Directory -Force -Path 'D:\secure\haru' | Out-Null
+New-Item -ItemType Directory -Force -Path 'D:\work\HaRu\secure' | Out-Null
 keytool -genkeypair `
-  -keystore 'D:\secure\haru\haru-release.jks' `
-  -alias haru `
+  -keystore 'D:\work\HaRu\secure\HaRu-release.jks' `
+  -alias flule34 `
   -keyalg RSA `
   -keysize 4096 `
   -validity 10000
 ```
 
-把密钥库复制到本地 `android\app\release-keystore.jks`，再从 `android\key.properties.example` 创建未跟踪的 `android\key.properties`。发布前至少保留两份加密离线备份；丢失私钥后，已安装用户将无法无缝升级到新签名。
+使用项目根目录下本地未跟踪的 `secure\HaRu-release.jks`，再从 `android\key.properties.example` 创建未跟踪的 `android\key.properties`，其中 `storeFile` 指向该密钥库。发布前至少保留两份加密离线备份；丢失私钥后，已安装用户将无法无缝升级到新签名。
 
 ## 2. 本地 Release 构建
 
 构建前先执行与 CI 一致的质量门：
 
 ```powershell
-& 'D:\tools\flutter\bin\dart.bat' format --output=none --set-exit-if-changed lib test tool
-& 'D:\tools\flutter\bin\flutter.bat' analyze --no-pub
-& 'D:\tools\flutter\bin\flutter.bat' test --no-pub
-& 'D:\tools\flutter\bin\dart.bat' run tool\check_sensitive_files.dart
+& 'D:\Programs\flutter\bin\dart.bat' format --output=none --set-exit-if-changed lib test tool
+& 'D:\Programs\flutter\bin\flutter.bat' analyze --no-pub
+& 'D:\Programs\flutter\bin\flutter.bat' test --no-pub
+& 'D:\Programs\flutter\bin\dart.bat' run tool\check_sensitive_files.dart
 $cronetDefine = [Convert]::ToBase64String(
   [Text.Encoding]::UTF8.GetBytes('cronetHttpNoPlay=true')
 )
@@ -34,7 +34,7 @@ Set-Location ..
 ```
 
 ```powershell
-$flutter = 'D:\tools\flutter\bin\flutter.bat'
+$flutter = 'D:\Programs\flutter\bin\flutter.bat'
 $version = '2.0.1'
 $buildNumber = '43'
 $commit = git rev-parse HEAD
@@ -61,7 +61,7 @@ $buildTime = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ')
 ## 3. 签名与完整性校验
 
 ```powershell
-$buildTools = Get-ChildItem 'D:\tools\android-sdk\build-tools' -Directory |
+$buildTools = Get-ChildItem 'D:\Programs\Android\android-sdk\build-tools' -Directory |
   Sort-Object Name -Descending |
   Select-Object -First 1
 
@@ -92,7 +92,7 @@ Windows 生成单行 Base64：
 
 ```powershell
 [Convert]::ToBase64String(
-  [IO.File]::ReadAllBytes('D:\secure\haru\haru-release.jks')
+  [IO.File]::ReadAllBytes('D:\work\HaRu\secure\HaRu-release.jks')
 ) | Set-Clipboard
 ```
 

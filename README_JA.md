@@ -38,7 +38,7 @@ Android 7.0（API 24）以降の ARM64 スマートフォンとタブレット�
 
 ## ローカルビルド
 
-確認済み環境：Flutter 3.44.8、Dart 3.12.2、JDK 17、Android SDK 36。
+確認済み環境：Flutter 3.44.8、Dart 3.12.2、JDK 25、Android SDK 36。
 
 ```powershell
 flutter pub get

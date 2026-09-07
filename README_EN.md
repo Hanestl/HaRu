@@ -38,7 +38,7 @@ Website account data remains under the control of each website. See [PRIVACY.md]
 
 ## Local build
 
-Verified toolchain: Flutter 3.44.8, Dart 3.12.2, JDK 17, and Android SDK 36.
+Verified toolchain: Flutter 3.44.8, Dart 3.12.2, JDK 25, and Android SDK 36.
 
 ```powershell
 flutter pub get

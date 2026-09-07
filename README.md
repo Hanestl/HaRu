@@ -38,7 +38,7 @@ HaRu 支持 Android 7.0（API 24）及以上的 ARM64 手机和平板。侧载 A
 
 ## 本地构建
 
-已验证环境：Flutter 3.44.8、Dart 3.12.2、JDK 17、Android SDK 36。
+已验证环境：Flutter 3.44.8、Dart 3.12.2、JDK 25、Android SDK 36。
 
 ```powershell
 flutter pub get
