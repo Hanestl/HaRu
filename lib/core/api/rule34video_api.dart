@@ -383,8 +383,7 @@ class Rule34VideoApi {
         'function': 'get_block',
         'block_id': 'custom_list_videos_videos_list_search',
         'q': normalizedQuery,
-        'from_videos': '$page',
-        'from_albums': '$page',
+        'from_videos+from_albums': '$page',
       });
       return _paginatedVideoList('/search/', page: page, query: parameters);
     }
@@ -945,10 +944,19 @@ class Rule34VideoApi {
     UploaderSummary uploader,
     int page,
   ) {
-    final path = page > 1
-        ? '${uploader.videosPath}$page/'
-        : uploader.videosPath;
-    return _paginatedVideoList(path, page: page);
+    return _paginatedVideoList(
+      uploader.videosPath,
+      page: page,
+      query: page > 1
+          ? <String, String>{
+              'mode': 'async',
+              'function': 'get_block',
+              'block_id': 'list_videos_uploaded_videos',
+              'sort_by': '',
+              'from_videos': '$page',
+            }
+          : null,
+    );
   }
 
   Future<void> login({
@@ -1171,8 +1179,19 @@ class Rule34VideoApi {
     int page,
   ) async {
     _requireLogin();
-    final path = page > 1 ? '${playlist.path}$page/' : playlist.path;
-    return _paginatedVideoList(path, page: page);
+    return _paginatedVideoList(
+      playlist.path,
+      page: page,
+      query: page > 1
+          ? <String, String>{
+              'mode': 'async',
+              'function': 'get_block',
+              'block_id': 'playlist_view_playlist_view',
+              'sort_by': 'added2fav_date',
+              'from': '$page',
+            }
+          : null,
+    );
   }
 
   Future<PlaylistFormData> loadPlaylistForm(String playlistId) async {
@@ -1488,6 +1507,33 @@ class Rule34VideoApi {
         },
         cancelToken: cancelToken,
       );
+    }
+    if (page > 1) {
+      final query = switch (subscription.kind) {
+        SubscriptionKind.category || SubscriptionKind.model => <String, String>{
+          'mode': 'async',
+          'function': 'get_block',
+          'block_id': 'custom_list_videos_common_videos',
+          'sort_by': 'post_date',
+          'from': '$page',
+        },
+        SubscriptionKind.playlist => <String, String>{
+          'mode': 'async',
+          'function': 'get_block',
+          'block_id': 'playlist_view_playlist_view',
+          'sort_by': 'added2fav_date',
+          'from': '$page',
+        },
+        SubscriptionKind.channel || SubscriptionKind.member => null,
+      };
+      if (query != null) {
+        return _paginatedVideoList(
+          basePath,
+          page: page,
+          query: query,
+          cancelToken: cancelToken,
+        );
+      }
     }
     final path = page > 1 ? '$basePath$page/' : basePath;
     return _paginatedVideoList(path, page: page, cancelToken: cancelToken);

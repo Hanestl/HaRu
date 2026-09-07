@@ -779,7 +779,7 @@ void main() {
       '/my/history/3/',
       '/my/subscriptions/',
       '/my/subscriptions/',
-      '/models/example-artist/2/',
+      '/models/example-artist/',
     ]);
     final nextSubscriptionsRequest = requests[2].uri.queryParameters;
     expect(nextSubscriptionsRequest, {
@@ -788,6 +788,13 @@ void main() {
       'block_id': 'list_members_subscriptions_my_subscriptions',
       'sort_by': 'added_date',
       'from_my_subscriptions': '2',
+    });
+    expect(requests[3].uri.queryParameters, {
+      'mode': 'async',
+      'function': 'get_block',
+      'block_id': 'custom_list_videos_common_videos',
+      'sort_by': 'post_date',
+      'from': '2',
     });
   });
 
@@ -1076,6 +1083,75 @@ void main() {
       requests.last.data,
       containsPair('action', 'delete_from_favourites'),
     );
+  });
+
+  test('播放列表视频第二页使用网站 AJAX Block 分页协议', () async {
+    final harness = TestSessionHarness.create();
+    addTearDown(harness.dispose);
+    await harness.sessionStore.load();
+    await harness.sessionStore.authenticate('2421071');
+    final requests = <RequestOptions>[];
+    final api = Rule34VideoApi(
+      sessionStore: harness.sessionStore,
+      httpClientAdapter: _TestAdapter((options) {
+        requests.add(options);
+        return _htmlResponse('<html></html>');
+      }),
+    );
+    addTearDown(api.close);
+    const playlist = PlaylistItem(
+      id: '42',
+      title: 'Example playlist',
+      path: '/playlists/42/example-playlist/',
+    );
+
+    await api.loadPlaylistVideos(playlist, 1);
+    await api.loadPlaylistVideos(playlist, 2);
+
+    expect(requests.map((request) => request.uri.path), [
+      '/playlists/42/example-playlist/',
+      '/playlists/42/example-playlist/',
+    ]);
+    expect(requests[0].uri.queryParameters, isEmpty);
+    expect(requests[1].uri.queryParameters, {
+      'mode': 'async',
+      'function': 'get_block',
+      'block_id': 'playlist_view_playlist_view',
+      'sort_by': 'added2fav_date',
+      'from': '2',
+    });
+  });
+
+  test('上传者视频第二页使用网站 AJAX 分页协议', () async {
+    final harness = TestSessionHarness.create();
+    addTearDown(harness.dispose);
+    await harness.sessionStore.load();
+    final requests = <RequestOptions>[];
+    final api = Rule34VideoApi(
+      sessionStore: harness.sessionStore,
+      httpClientAdapter: _TestAdapter((options) {
+        requests.add(options);
+        return _htmlResponse('<html></html>');
+      }),
+    );
+    addTearDown(api.close);
+    const uploader = UploaderSummary(id: '98965', name: 'Oppai3Dporn');
+
+    await api.loadUploaderVideos(uploader, 1);
+    await api.loadUploaderVideos(uploader, 2);
+
+    expect(requests.map((request) => request.uri.path), [
+      '/members/98965/videos/',
+      '/members/98965/videos/',
+    ]);
+    expect(requests[0].uri.queryParameters, isEmpty);
+    expect(requests[1].uri.queryParameters, {
+      'mode': 'async',
+      'function': 'get_block',
+      'block_id': 'list_videos_uploaded_videos',
+      'sort_by': '',
+      'from_videos': '2',
+    });
   });
 
   test('账号播放列表使用网站表单协议创建、编辑和删除', () async {
@@ -1468,11 +1544,9 @@ void main() {
       expect(request.queryParameters['model_ids'], 'all,87');
     }
     expect(requests[0].queryParameters['q'], '');
-    expect(requests[0].queryParameters['from_videos'], '2');
-    expect(requests[0].queryParameters['from_albums'], '2');
+    expect(requests[0].queryParameters['from_videos+from_albums'], '2');
     expect(requests[1].queryParameters['q'], 'tifa');
-    expect(requests[1].queryParameters['from_videos'], '3');
-    expect(requests[1].queryParameters['from_albums'], '3');
+    expect(requests[1].queryParameters['from_videos+from_albums'], '3');
   });
 
   test('标签、分类和艺术家自动补全使用各自的参数协议', () async {
