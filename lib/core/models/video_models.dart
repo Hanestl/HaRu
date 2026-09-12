@@ -94,6 +94,39 @@ enum DiscoveryKind {
   final String pathSegment;
 }
 
+class VideoDurationRange {
+  const VideoDurationRange({this.minSeconds, this.maxSeconds});
+
+  final int? minSeconds;
+  final int? maxSeconds;
+  bool get isEmpty => minSeconds == null && maxSeconds == null;
+  bool get isValid =>
+      (minSeconds == null || (minSeconds! >= 0 && minSeconds! <= 36000)) &&
+      (maxSeconds == null || (maxSeconds! >= 0 && maxSeconds! <= 36000)) &&
+      (minSeconds == null || maxSeconds == null || minSeconds! <= maxSeconds!);
+  String get key => '${minSeconds ?? ""}:${maxSeconds ?? ""}';
+  String get label => '${minSeconds ?? 0} - ${maxSeconds ?? "∞"} 秒';
+}
+
+class VideoDateRange {
+  const VideoDateRange({this.from, this.to});
+
+  final DateTime? from;
+  final DateTime? to;
+  bool get isEmpty => from == null && to == null;
+  bool get isValid => from == null || to == null || !from!.isAfter(to!);
+  String get key => '${formatDate(from)}:${formatDate(to)}';
+  String get label =>
+      '${formatDate(from).isEmpty ? "…" : formatDate(from)} - '
+      '${formatDate(to).isEmpty ? "…" : formatDate(to)}';
+
+  static String formatDate(DateTime? date) => date == null
+      ? ''
+      : '${date.year.toString().padLeft(4, "0")}-'
+            '${date.month.toString().padLeft(2, "0")}-'
+            '${date.day.toString().padLeft(2, "0")}';
+}
+
 class ContentCollectionItem {
   const ContentCollectionItem({
     required this.id,
@@ -177,6 +210,8 @@ class SearchFilters {
     this.orientation = ContentOrientation.all,
     this.uploadPeriod = UploadPeriod.anytime,
     this.duration = VideoDurationPreset.any,
+    this.customDateRange,
+    this.customDurationRange,
     this.verifiedOnly = false,
     this.tags = const [],
     this.categories = const [],
@@ -194,6 +229,18 @@ class SearchFilters {
   final ContentOrientation orientation;
   final UploadPeriod uploadPeriod;
   final VideoDurationPreset duration;
+  final VideoDateRange? customDateRange;
+  final VideoDurationRange? customDurationRange;
+
+  String get dateLabel => customDateRange?.label ?? uploadPeriod.label;
+  String get durationLabel => customDurationRange?.label ?? duration.label;
+  bool get hasDateFilter =>
+      customDateRange != null || uploadPeriod != UploadPeriod.anytime;
+  bool get hasDurationFilter =>
+      customDurationRange != null || duration != VideoDurationPreset.any;
+  String get rangeKey =>
+      '${uploadPeriod.name}:${duration.name}:'
+      '${customDateRange?.key ?? ""}:${customDurationRange?.key ?? ""}';
   final bool verifiedOnly;
   final List<SearchSuggestion> tags;
   final List<SearchSuggestion> categories;
@@ -207,8 +254,8 @@ class SearchFilters {
   bool get isEmpty =>
       sort == VideoSort.relevance &&
       orientation == ContentOrientation.all &&
-      uploadPeriod == UploadPeriod.anytime &&
-      duration == VideoDurationPreset.any &&
+      !hasDateFilter &&
+      !hasDurationFilter &&
       !verifiedOnly &&
       tags.isEmpty &&
       categories.isEmpty &&
@@ -222,8 +269,8 @@ class SearchFilters {
   bool get hasServerFilters =>
       sort != VideoSort.relevance ||
       orientation != ContentOrientation.all ||
-      uploadPeriod != UploadPeriod.anytime ||
-      duration != VideoDurationPreset.any ||
+      hasDateFilter ||
+      hasDurationFilter ||
       verifiedOnly ||
       tags.isNotEmpty ||
       categories.isNotEmpty ||
@@ -238,8 +285,8 @@ class SearchFilters {
     var count = 0;
     if (sort != VideoSort.relevance) count += 1;
     if (orientation != ContentOrientation.all) count += 1;
-    if (uploadPeriod != UploadPeriod.anytime) count += 1;
-    if (duration != VideoDurationPreset.any) count += 1;
+    if (hasDateFilter) count += 1;
+    if (hasDurationFilter) count += 1;
     if (verifiedOnly) count += 1;
     count += tags.length + categories.length + models.length;
     count +=
@@ -268,6 +315,8 @@ class SearchFilters {
     ContentOrientation? orientation,
     UploadPeriod? uploadPeriod,
     VideoDurationPreset? duration,
+    Object? customDateRange = _unset,
+    Object? customDurationRange = _unset,
     bool? verifiedOnly,
     List<SearchSuggestion>? tags,
     List<SearchSuggestion>? categories,
@@ -283,6 +332,12 @@ class SearchFilters {
       orientation: orientation ?? this.orientation,
       uploadPeriod: uploadPeriod ?? this.uploadPeriod,
       duration: duration ?? this.duration,
+      customDateRange: identical(customDateRange, _unset)
+          ? (uploadPeriod == null ? this.customDateRange : null)
+          : customDateRange as VideoDateRange?,
+      customDurationRange: identical(customDurationRange, _unset)
+          ? (duration == null ? this.customDurationRange : null)
+          : customDurationRange as VideoDurationRange?,
       verifiedOnly: verifiedOnly ?? this.verifiedOnly,
       tags: tags ?? this.tags,
       categories: categories ?? this.categories,
@@ -425,6 +480,25 @@ class VideoItem {
           : creatorLabel as String?,
     );
   }
+
+  /// 用 [fallback] 补全本对象缺失的元信息（时长、发布时间、评分、观看数等）。
+  /// 网站对 genre（里番/泡面番）搜索页与详情页相关视频只输出封面和标题，
+  /// 这些字段在响应里本就不存在，需由首页种子等更完整的来源按 ID 回填。
+  VideoItem mergeMissingFrom(VideoItem fallback) => VideoItem(
+    id: id,
+    title: title,
+    slug: slug,
+    siteId: siteId,
+    thumbnailUrl: thumbnailUrl ?? fallback.thumbnailUrl,
+    previewUrl: previewUrl ?? fallback.previewUrl,
+    duration: duration ?? fallback.duration,
+    publishedLabel: publishedLabel ?? fallback.publishedLabel,
+    views: views ?? fallback.views,
+    rating: rating ?? fallback.rating,
+    ratingVotes: ratingVotes ?? fallback.ratingVotes,
+    isFavorite: isFavorite ?? fallback.isFavorite,
+    creatorLabel: creatorLabel ?? fallback.creatorLabel,
+  );
 }
 
 class VideoSource {

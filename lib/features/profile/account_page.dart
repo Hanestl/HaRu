@@ -70,7 +70,9 @@ class _AccountPageState extends State<AccountPage> {
       if (!mounted || widget.api.sessionStore.currentUserId != userId) {
         return;
       }
-      setState(() => _profile = Future.value(fresh));
+      setState(() {
+        _profile = Future.value(fresh);
+      });
     } on Object {
       // 已显示本地缓存，后台刷新失败时保持现状。
     }

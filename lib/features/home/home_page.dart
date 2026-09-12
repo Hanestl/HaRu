@@ -10,6 +10,7 @@ import '../../core/models/video_models.dart';
 import '../../core/models/content_source.dart';
 import '../../core/services/predictive_prefetch_service.dart';
 import '../../shared/video_feed.dart';
+import '../../shared/video_range_filters.dart';
 import '../../shared/transient_focus.dart';
 import '../auth/login_sheet.dart';
 import '../settings/data/app_settings_repository.dart';
@@ -39,8 +40,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   var _channel = _HomeChannel.newest;
   late final AppSettingsRepository _settingsRepository;
   late ContentOrientation _orientation;
-  var _duration = VideoDurationPreset.any;
-  var _uploadPeriod = UploadPeriod.anytime;
+  var _rangeFilters = const SearchFilters();
 
   @override
   void initState() {
@@ -63,11 +63,8 @@ class _HomePageState extends ConsumerState<HomePage> {
     }
   }
 
-  SearchFilters get _filters => SearchFilters(
-    orientation: _orientation,
-    duration: _duration,
-    uploadPeriod: _uploadPeriod,
-  );
+  SearchFilters get _filters =>
+      _rangeFilters.copyWith(orientation: _orientation);
 
   @override
   Widget build(BuildContext context) {
@@ -127,24 +124,16 @@ class _HomePageState extends ConsumerState<HomePage> {
                     labelFor: (value) => value.label,
                     onSelected: (value) => setState(() => _orientation = value),
                   ),
-                  _FilterMenu<VideoDurationPreset>(
-                    label: _duration == VideoDurationPreset.any
-                        ? '时长'
-                        : _duration.label,
-                    value: _duration,
-                    values: VideoDurationPreset.values,
-                    labelFor: (value) => value.label,
-                    onSelected: (value) => setState(() => _duration = value),
+                  VideoRangeFilter(
+                    filters: _filters,
+                    compact: true,
+                    onChanged: (value) => setState(() => _rangeFilters = value),
                   ),
-                  _FilterMenu<UploadPeriod>(
-                    label: _uploadPeriod == UploadPeriod.anytime
-                        ? '发布时间'
-                        : _uploadPeriod.label,
-                    value: _uploadPeriod,
-                    values: UploadPeriod.values,
-                    labelFor: (value) => value.label,
-                    onSelected: (value) =>
-                        setState(() => _uploadPeriod = value),
+                  VideoRangeFilter(
+                    filters: _filters,
+                    compact: true,
+                    date: true,
+                    onChanged: (value) => setState(() => _rangeFilters = value),
                   ),
                 ],
               ),
@@ -203,22 +192,16 @@ class _HomePageState extends ConsumerState<HomePage> {
       );
     }
     final kind = _channel.feedKind!;
+    final feedKey =
+        'rule34video:${kind.name}:${_orientation.name}:${_filters.rangeKey}';
     return VideoFeed(
-      key: ValueKey(
-        'rule34video:${kind.name}:${_orientation.name}:${_duration.name}:${_uploadPeriod.name}',
-      ),
+      key: ValueKey(feedKey),
       loadPage: (page) => prefetch.runForeground(
-        PredictivePrefetchKey.feed(
-          'rule34video:${kind.name}:${_orientation.name}:${_duration.name}:${_uploadPeriod.name}',
-          page,
-        ),
+        PredictivePrefetchKey.feed(feedKey, page),
         () => widget.api.loadFeedForSite(kind, page, filters: _filters),
       ),
       refreshPage: (page) => prefetch.runForeground(
-        PredictivePrefetchKey.feed(
-          'rule34video:${kind.name}:${_orientation.name}:${_duration.name}:${_uploadPeriod.name}',
-          page,
-        ),
+        PredictivePrefetchKey.feed(feedKey, page),
         () => widget.api.loadFeedForSite(
           kind,
           page,

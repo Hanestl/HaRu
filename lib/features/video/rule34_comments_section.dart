@@ -51,7 +51,9 @@ class _Rule34CommentsSectionState extends State<Rule34CommentsSection> {
       _composerFocus.unfocus();
     }
     if (widget.active && !oldWidget.active && _future == null) {
-      setState(() => _future = _load());
+      setState(() {
+        _future = _load();
+      });
     }
   }
 
@@ -114,7 +116,9 @@ class _Rule34CommentsSectionState extends State<Rule34CommentsSection> {
 
   Future<void> _refresh() async {
     final future = _load();
-    setState(() => _future = future);
+    setState(() {
+      _future = future;
+    });
     await future;
   }
 

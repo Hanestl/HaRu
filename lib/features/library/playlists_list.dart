@@ -48,7 +48,9 @@ class _PlaylistsListState extends State<PlaylistsList>
   void didUpdateWidget(covariant PlaylistsList oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (!oldWidget.active && widget.active && _future == null) {
-      setState(() => _future = widget.api.loadMyPlaylists());
+      setState(() {
+        _future = widget.api.loadMyPlaylists();
+      });
     }
   }
 
@@ -60,7 +62,9 @@ class _PlaylistsListState extends State<PlaylistsList>
 
   Future<void> _reload() async {
     final future = widget.api.loadMyPlaylists(force: true);
-    setState(() => _future = future);
+    setState(() {
+      _future = future;
+    });
     try {
       await future;
     } on Object {

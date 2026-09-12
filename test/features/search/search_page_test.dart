@@ -136,12 +136,8 @@ void main() {
       300,
       scrollable: find.byType(Scrollable).last,
     );
-    final uploadPeriodDropdown = find.byType(
-      DropdownButtonFormField<UploadPeriod>,
-    );
-    await tester.ensureVisible(uploadPeriodDropdown);
-    await tester.pumpAndSettle();
-    await tester.tap(uploadPeriodDropdown);
+    // 发布时间筛选已由下拉改为 VideoRangeFilter（预设 + 自定义范围）。
+    await tester.tap(find.text('发布时间'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('过去 1 周').last);
     await tester.pumpAndSettle();

@@ -3,6 +3,7 @@ import 'package:flule34/l10n/ui_localization.dart';
 
 import '../core/models/video_models.dart';
 import 'transient_focus.dart';
+import 'video_range_filters.dart';
 
 enum VideoListSort {
   sourceOrder('默认顺序'),
@@ -27,6 +28,7 @@ class VideoListFilterOptions {
     this.showMinRating = true,
     this.showMinVotes = true,
     this.defaultSortLabel = '网站顺序',
+    this.allowCustomDuration = true,
   });
 
   const VideoListFilterOptions.hanime({
@@ -41,6 +43,7 @@ class VideoListFilterOptions {
     this.showMinRating = true,
     this.showMinVotes = false,
     this.defaultSortLabel = '网站顺序',
+    this.allowCustomDuration = false,
   });
 
   const VideoListFilterOptions.hanimeHistory({
@@ -56,6 +59,7 @@ class VideoListFilterOptions {
     this.showMinRating = true,
     this.showMinVotes = false,
     this.defaultSortLabel = '最近观看',
+    this.allowCustomDuration = false,
   });
 
   final List<VideoListSort> sorts;
@@ -63,36 +67,46 @@ class VideoListFilterOptions {
   final bool showMinRating;
   final bool showMinVotes;
   final String defaultSortLabel;
+  final bool allowCustomDuration;
 }
 
 class VideoListFilters {
   const VideoListFilters({
     this.sort = VideoListSort.sourceOrder,
     this.duration = VideoDurationPreset.any,
+    this.customDurationRange,
     this.minRating = 0,
     this.minVotes = 0,
   });
 
   final VideoListSort sort;
   final VideoDurationPreset duration;
+  final VideoDurationRange? customDurationRange;
+  static const _unset = Object();
   final int minRating;
   final int minVotes;
 
   int get activeCount =>
       (sort == VideoListSort.sourceOrder ? 0 : 1) +
-      (duration == VideoDurationPreset.any ? 0 : 1) +
+      (duration == VideoDurationPreset.any && customDurationRange == null
+          ? 0
+          : 1) +
       (minRating == 0 ? 0 : 1) +
       (minVotes == 0 ? 0 : 1);
 
   VideoListFilters copyWith({
     VideoListSort? sort,
     VideoDurationPreset? duration,
+    Object? customDurationRange = _unset,
     int? minRating,
     int? minVotes,
   }) {
     return VideoListFilters(
       sort: sort ?? this.sort,
       duration: duration ?? this.duration,
+      customDurationRange: identical(customDurationRange, _unset)
+          ? (duration == null ? this.customDurationRange : null)
+          : customDurationRange as VideoDurationRange?,
       minRating: minRating ?? this.minRating,
       minVotes: minVotes ?? this.minVotes,
     );
@@ -125,8 +139,12 @@ List<VideoItem> filterAndSortVideos(
           return false;
         }
         final duration = videoDurationSeconds(video.duration);
-        final minimum = filters.duration.minSeconds;
-        final maximum = filters.duration.maxSeconds;
+        final minimum = filters.customDurationRange != null
+            ? filters.customDurationRange!.minSeconds
+            : filters.duration.minSeconds;
+        final maximum = filters.customDurationRange != null
+            ? filters.customDurationRange!.maxSeconds
+            : filters.duration.maxSeconds;
         if (minimum != null && (duration == null || duration < minimum)) {
           return false;
         }
@@ -254,25 +272,41 @@ Future<VideoListFilters?> showVideoListFilters(
               ),
               if (options.showDuration) ...[
                 const SizedBox(height: 12),
-                DropdownButtonFormField<VideoDurationPreset>(
-                  initialValue: value.duration,
-                  decoration: InputDecoration(labelText: context.uiText('时长')),
-                  items: VideoDurationPreset.values
-                      .map(
-                        (item) => DropdownMenuItem(
-                          value: item,
-                          child: AppText(item.label),
-                        ),
-                      )
-                      .toList(growable: false),
-                  onChanged: (next) {
-                    if (next != null) {
-                      setModalState(
-                        () => value = value.copyWith(duration: next),
-                      );
-                    }
-                  },
-                ),
+                if (options.allowCustomDuration)
+                  VideoRangeFilter(
+                    filters: SearchFilters(
+                      duration: value.duration,
+                      customDurationRange: value.customDurationRange,
+                    ),
+                    onChanged: (next) => setModalState(
+                      () => value = value.copyWith(
+                        duration: next.duration,
+                        customDurationRange: next.customDurationRange,
+                      ),
+                    ),
+                  )
+                else
+                  DropdownButtonFormField<VideoDurationPreset>(
+                    initialValue: value.duration,
+                    decoration: InputDecoration(
+                      labelText: context.uiText('时长'),
+                    ),
+                    items: VideoDurationPreset.values
+                        .map(
+                          (item) => DropdownMenuItem(
+                            value: item,
+                            child: AppText(item.label),
+                          ),
+                        )
+                        .toList(growable: false),
+                    onChanged: (next) {
+                      if (next != null) {
+                        setModalState(
+                          () => value = value.copyWith(duration: next),
+                        );
+                      }
+                    },
+                  ),
               ],
               if (options.showMinRating) ...[
                 const SizedBox(height: 12),

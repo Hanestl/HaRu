@@ -10,6 +10,7 @@ import '../../shared/editable_translation.dart';
 import '../../shared/localized_translation_text.dart';
 import '../../shared/settings_controls.dart';
 import '../../shared/transient_focus.dart';
+import '../../shared/video_range_filters.dart';
 
 Future<SearchFilters?> showVideoFilterSheet({
   required BuildContext context,
@@ -134,21 +135,14 @@ class _VideoFilterSheetState extends State<_VideoFilterSheet> {
                   onChanged: (value) =>
                       _draft = _draft.copyWith(orientation: value),
                 ),
-                _dropdownTile<UploadPeriod>(
-                  title: '发布时间',
-                  value: _draft.uploadPeriod,
-                  values: UploadPeriod.values,
-                  label: (value) => value.label,
-                  onChanged: (value) =>
-                      _draft = _draft.copyWith(uploadPeriod: value),
+                VideoRangeFilter(
+                  filters: _draft,
+                  date: true,
+                  onChanged: (value) => setState(() => _draft = value),
                 ),
-                _dropdownTile<VideoDurationPreset>(
-                  title: '视频时长',
-                  value: _draft.duration,
-                  values: VideoDurationPreset.values,
-                  label: (value) => value.label,
-                  onChanged: (value) =>
-                      _draft = _draft.copyWith(duration: value),
+                VideoRangeFilter(
+                  filters: _draft,
+                  onChanged: (value) => setState(() => _draft = value),
                 ),
                 SettingsSwitchField(
                   title: '仅显示已验证上传者',

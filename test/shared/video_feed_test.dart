@@ -201,6 +201,63 @@ void main() {
     expect(find.text('第一条'), findsOneWidget);
     expect(find.text('第二条'), findsOneWidget);
   });
+
+  testWidgets('首屏用种子元信息回填缺失统计字段', (tester) async {
+    final settings = AppSettingsRepository(_MemorySettingsStore());
+    addTearDown(settings.dispose);
+    await settings.load();
+    final container = ProviderContainer(
+      overrides: [
+        appSettingsRepositoryProvider.overrideWithValue(settings),
+        translationServiceProvider.overrideWith(_memoryTranslationService),
+      ],
+    );
+    addTearDown(container.dispose);
+    List<VideoItem>? loaded;
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          home: Scaffold(
+            body: VideoFeed(
+              // 种子来自首页 section，带完整统计信息。
+              initialItems: const [
+                VideoItem(
+                  id: '1',
+                  title: '种子标题',
+                  slug: '1',
+                  duration: '12:34',
+                  publishedLabel: '• 3天前',
+                  rating: 95,
+                  ratingVotes: 100,
+                  views: 12345,
+                  creatorLabel: '作者A',
+                ),
+              ],
+              // 网络首屏（genre 页）只给封面和标题。
+              loadPage: (page) async => page == 1
+                  ? const [VideoItem(id: '1', title: '网络标题', slug: '1')]
+                  : const [],
+              onItemsLoaded: (items) => loaded = items,
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final merged = loaded!.first;
+    expect(merged.title, '网络标题');
+    expect(merged.duration, '12:34');
+    expect(merged.publishedLabel, '• 3天前');
+    expect(merged.rating, 95);
+    expect(merged.ratingVotes, 100);
+    expect(merged.views, 12345);
+    expect(merged.creatorLabel, '作者A');
+    // 网络结果自带的字段不回退为种子值。
+    expect(merged.id, '1');
+  });
 }
 
 TranslationService _memoryTranslationService(Ref ref) {

@@ -153,10 +153,24 @@ class _VideoFeedState extends ConsumerState<VideoFeed>
         if (!mounted) {
           return;
         }
+        // 首屏网络结果按 ID 回填种子元信息：网站的 genre/相关视频页只给
+        // 封面和标题，缺失的时长、发布时间、评分、观看数由种子补全。
+        var resolvedPage = page;
+        if (firstResetPage && widget.initialItems.isNotEmpty) {
+          final seedMetadata = <String, VideoItem>{
+            for (final item in widget.initialItems) item.id: item,
+          };
+          resolvedPage = page
+              .map((item) {
+                final seed = seedMetadata[item.id];
+                return seed == null ? item : item.mergeMissingFrom(seed);
+              })
+              .toList(growable: false);
+        }
         final existingIds = firstResetPage
             ? <String>{}
             : _videos.map((item) => item.id).toSet();
-        final newItems = page
+        final newItems = resolvedPage
             .where((item) => existingIds.add(item.id))
             .toList(growable: false);
         setState(() {

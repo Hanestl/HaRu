@@ -48,7 +48,7 @@ void main() {
     expect(find.widgetWithText(NavigationDestination, '搜索'), findsNothing);
     expect(find.text('订阅'), findsOneWidget);
     expect(find.text('内容取向'), findsOneWidget);
-    expect(find.text('时长'), findsOneWidget);
+    expect(find.text('视频时长'), findsOneWidget);
     expect(find.text('发布时间'), findsOneWidget);
     expect(find.text('HaRu'), findsNothing);
     expect(find.byIcon(Icons.verified_user_outlined), findsNothing);

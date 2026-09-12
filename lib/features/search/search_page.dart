@@ -538,20 +538,20 @@ class _SearchPageState extends State<SearchPage> {
         ),
       );
     }
-    if (_filters.uploadPeriod != UploadPeriod.anytime) {
+    if (_filters.hasDateFilter) {
       chips.add(
         InputChip(
-          label: AppText(_filters.uploadPeriod.label),
+          label: AppText(_filters.dateLabel),
           onDeleted: () => _applyFilters(
             _filters.copyWith(uploadPeriod: UploadPeriod.anytime),
           ),
         ),
       );
     }
-    if (_filters.duration != VideoDurationPreset.any) {
+    if (_filters.hasDurationFilter) {
       chips.add(
         InputChip(
-          label: AppText(_filters.duration.label),
+          label: AppText(_filters.durationLabel),
           onDeleted: () => _applyFilters(
             _filters.copyWith(duration: VideoDurationPreset.any),
           ),

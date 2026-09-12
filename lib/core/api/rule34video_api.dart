@@ -1106,50 +1106,100 @@ class Rule34VideoApi {
     _requireLogin();
     final userId = sessionStore.currentUserId!;
     if (!force && _playlistCache != null && _playlistCacheUserId == userId) {
+      unawaited(
+        AppLogService.instance.info(
+          'cache_hit count=${_playlistCache!.length}',
+          component: 'r34v_playlists',
+        ),
+      );
       return _playlistCache!;
     }
     if (!force && _playlistRequest != null) {
+      unawaited(
+        AppLogService.instance.info(
+          'request_join',
+          component: 'r34v_playlists',
+        ),
+      );
       return _playlistRequest!;
     }
     late final Future<List<PlaylistItem>> request;
     request =
         () async {
-          final result = <String, PlaylistItem>{};
-          var noProgressPages = 0;
-          for (var page = 1; page <= _accountPaginationLimit; page += 1) {
-            _throwIfCancelled(cancelToken);
-            final items = await _loadMyPlaylistsPage(
-              page,
-              cancelToken: cancelToken,
-            );
-            if (items.isEmpty) {
-              break;
-            }
-            final before = result.length;
-            for (final item in items) {
-              result[item.id] = item;
-            }
-            if (result.length == before) {
-              noProgressPages += 1;
-              if (noProgressPages >= _accountPaginationNoProgressLimit) {
-                break;
+              final result = <String, PlaylistItem>{};
+              unawaited(
+                AppLogService.instance.info(
+                  'load_start force=$force',
+                  component: 'r34v_playlists',
+                ),
+              );
+              var noProgressPages = 0;
+              for (var page = 1; ; page += 1) {
+                _throwIfCancelled(cancelToken);
+                if (sessionStore.currentUserId != userId) {
+                  throw const SessionExpiredException();
+                }
+                final items = await _loadMyPlaylistsPage(
+                  page,
+                  cancelToken: cancelToken,
+                );
+                if (items.isEmpty) {
+                  unawaited(
+                    AppLogService.instance.info(
+                      'load_complete end_page=$page total=${result.length}',
+                      component: 'r34v_playlists',
+                    ),
+                  );
+                  break;
+                }
+                final before = result.length;
+                for (final item in items) {
+                  result[item.id] = item;
+                }
+                unawaited(
+                  AppLogService.instance.info(
+                    'page=$page received=${items.length} added=${result.length - before} total=${result.length}',
+                    component: 'r34v_playlists',
+                  ),
+                );
+                if (result.length == before) {
+                  noProgressPages += 1;
+                  if (noProgressPages >= _accountPaginationNoProgressLimit) {
+                    unawaited(
+                      AppLogService.instance.warning(
+                        'no_progress page=$page total=${result.length}',
+                        component: 'r34v_playlists',
+                      ),
+                    );
+                    throw const ApiException('播放列表分页未取得进展，请刷新重试。');
+                  }
+                } else {
+                  noProgressPages = 0;
+                }
               }
-            } else {
-              noProgressPages = 0;
-            }
-          }
-          final value = result.values.toList(growable: false);
-          if (sessionStore.currentUserId == userId &&
-              identical(_playlistRequest, request)) {
-            _playlistCache = value;
-            _playlistCacheUserId = userId;
-          }
-          return value;
-        }().whenComplete(() {
-          if (identical(_playlistRequest, request)) {
-            _playlistRequest = null;
-          }
-        });
+              final value = result.values.toList(growable: false);
+              if (sessionStore.currentUserId == userId &&
+                  identical(_playlistRequest, request)) {
+                _playlistCache = value;
+                _playlistCacheUserId = userId;
+              }
+              return value;
+            }()
+            .catchError((Object error, StackTrace stack) {
+              unawaited(
+                AppLogService.instance.error(
+                  error,
+                  stack,
+                  component: 'r34v_playlists',
+                ),
+              );
+              Error.throwWithStackTrace(error, stack);
+            })
+            .whenComplete(() {
+              if (identical(_playlistRequest, request)) {
+                _playlistRequest = null;
+              }
+            });
     _playlistRequest = request;
     return request;
   }
@@ -1163,11 +1213,34 @@ class Rule34VideoApi {
     CancelToken? cancelToken,
   }) async {
     _requireLogin();
-    final path = page > 1 ? '/my/playlists/$page/' : '/my/playlists/';
+    const path = '/my/playlists/';
+    final query = page > 1
+        ? <String, String>{
+            'mode': 'async',
+            'function': 'get_block',
+            'block_id': 'list_playlists_my_created_playlists',
+            'sort_by': 'last_content_date',
+            'from_my_playlists': '$page',
+          }
+        : null;
     try {
-      return SiteParser.playlists(await _get(path, cancelToken: cancelToken));
+      unawaited(
+        AppLogService.instance.info(
+          'page_request page=$page ajax=${page > 1}',
+          component: 'r34v_playlists',
+        ),
+      );
+      return SiteParser.playlists(
+        await _get(path, query: query, cancelToken: cancelToken),
+      );
     } on HttpStatusException catch (error) {
       if (page > 1 && error.statusCode == 404) {
+        unawaited(
+          AppLogService.instance.info(
+            'page_end page=$page status=404',
+            component: 'r34v_playlists',
+          ),
+        );
         return const [];
       }
       rethrow;
@@ -1808,12 +1881,54 @@ class Rule34VideoApi {
     Map<String, String>? query,
     CancelToken? cancelToken,
   }) async {
+    final rangeParameters = <String, String>{
+      for (final name in const [
+        'post_date_from',
+        'post_date_to',
+        'duration_from',
+        'duration_to',
+      ])
+        if (query?[name] != null) name: query![name]!,
+    };
+    // Do not log search text, account identifiers, cookies or full request URLs.
+    final scope = path.startsWith('/search/') ? 'search' : 'video_list';
+    unawaited(
+      AppLogService.instance.info(
+        'request scope=$scope page=$page ranges=$rangeParameters',
+        component: 'r34v_filters',
+      ),
+    );
     try {
-      return await _videoList(path, query: query, cancelToken: cancelToken);
+      final items = await _videoList(
+        path,
+        query: query,
+        cancelToken: cancelToken,
+      );
+      unawaited(
+        AppLogService.instance.info(
+          'response scope=$scope page=$page count=${items.length} ranges=$rangeParameters',
+          component: 'r34v_filters',
+        ),
+      );
+      return items;
     } on HttpStatusException catch (error) {
+      unawaited(
+        AppLogService.instance.warning(
+          'response scope=$scope page=$page status=${error.statusCode} ranges=$rangeParameters',
+          component: 'r34v_filters',
+        ),
+      );
       if (page > 1 && error.statusCode == 404) {
         return const [];
       }
+      rethrow;
+    } catch (error) {
+      unawaited(
+        AppLogService.instance.warning(
+          'failed scope=$scope page=$page type=${error.runtimeType} ranges=$rangeParameters',
+          component: 'r34v_filters',
+        ),
+      );
       rethrow;
     }
   }
@@ -2006,6 +2121,10 @@ class Rule34VideoApi {
 
   Map<String, String>? _searchQuery(SearchFilters filters) {
     final result = <String, String>{};
+    if (filters.customDateRange?.isValid == false ||
+        filters.customDurationRange?.isValid == false) {
+      throw const ApiException('自定义筛选范围无效。');
+    }
     final sort = filters.sort.parameter;
     if (sort != null) {
       result['sort_by'] = sort;
@@ -2015,15 +2134,23 @@ class Rule34VideoApi {
       result['flag1'] = orientation;
     }
     final uploadDuration = filters.uploadPeriod.duration;
-    if (uploadDuration != null) {
+    if (filters.customDateRange != null) {
+      final range = filters.customDateRange!;
+      if (range.from != null) result['post_date_from'] = _date(range.from!);
+      if (range.to != null) result['post_date_to'] = _date(range.to!);
+    } else if (uploadDuration != null) {
       final from = DateTime.now().subtract(uploadDuration);
       result['post_date_from'] = _date(from);
     }
-    final durationFrom = filters.duration.minSeconds;
+    final durationFrom = filters.customDurationRange != null
+        ? filters.customDurationRange!.minSeconds
+        : filters.duration.minSeconds;
     if (durationFrom != null) {
       result['duration_from'] = '$durationFrom';
     }
-    final durationTo = filters.duration.maxSeconds;
+    final durationTo = filters.customDurationRange != null
+        ? filters.customDurationRange!.maxSeconds
+        : filters.duration.maxSeconds;
     if (durationTo != null) {
       result['duration_to'] = '$durationTo';
     }

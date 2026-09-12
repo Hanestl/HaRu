@@ -12,6 +12,130 @@ import 'package:flule34/core/models/video_models.dart';
 import '../../helpers/test_session_harness.dart';
 
 void main() {
+  test('播放列表跨越 50 页并去重，完整结果才缓存', () async {
+    final harness = TestSessionHarness.create();
+    addTearDown(harness.dispose);
+    await harness.sessionStore.load();
+    await harness.sessionStore.authenticate('12345');
+    var requests = 0;
+    final api = Rule34VideoApi(
+      sessionStore: harness.sessionStore,
+      httpClientAdapter: _TestAdapter((options) {
+        requests++;
+        expect(options.uri.path, '/my/playlists/');
+        final page = int.parse(
+          options.queryParameters['from_my_playlists'] as String? ?? '1',
+        );
+        if (page > 52) return ResponseBody.fromString('', 404);
+        if (page > 1) {
+          expect(
+            options.queryParameters['block_id'],
+            'list_playlists_my_created_playlists',
+          );
+          expect(options.queryParameters['sort_by'], 'last_content_date');
+        }
+        return _htmlResponse('''
+          <div class="item"><a href="/playlists/$page/test/" title="Test"></a></div>
+          <div class="item"><a href="/playlists/1/test/" title="Test"></a></div>
+        ''');
+      }),
+    );
+    addTearDown(api.close);
+    final result = await api.loadMyPlaylists();
+    expect(result.length, 52);
+    expect(result.last.id, '52');
+    expect(requests, 53);
+    expect(await api.loadMyPlaylists(), same(result));
+    expect(requests, 53);
+    await api.loadMyPlaylists(force: true);
+    expect(requests, 106);
+  });
+
+  test('播放列表重复页不应缓存成完整结果，重试可以恢复', () async {
+    final harness = TestSessionHarness.create();
+    addTearDown(harness.dispose);
+    await harness.sessionStore.load();
+    await harness.sessionStore.authenticate('12345');
+    var repeat = true;
+    final api = Rule34VideoApi(
+      sessionStore: harness.sessionStore,
+      httpClientAdapter: _TestAdapter((options) {
+        final page = options.queryParameters['from_my_playlists'] ?? '1';
+        if (!repeat && page != '1') return _htmlResponse('');
+        return _htmlResponse(
+          '<div class="item"><a href="/playlists/1/test/" title="Test"></a></div>',
+        );
+      }),
+    );
+    addTearDown(api.close);
+    await expectLater(api.loadMyPlaylists(), throwsA(isA<ApiException>()));
+    repeat = false;
+    expect((await api.loadMyPlaylists()).length, 1);
+  });
+
+  test('自定义日期和时长传给首页及搜索后续页，单边界不继承预设', () async {
+    final harness = TestSessionHarness.create();
+    addTearDown(harness.dispose);
+    await harness.sessionStore.load();
+    final requests = <RequestOptions>[];
+    final api = Rule34VideoApi(
+      sessionStore: harness.sessionStore,
+      httpClientAdapter: _TestAdapter((options) {
+        requests.add(options);
+        return _htmlResponse('');
+      }),
+    );
+    addTearDown(api.close);
+    final filters = SearchFilters(
+      uploadPeriod: UploadPeriod.pastWeek,
+      duration: VideoDurationPreset.medium,
+      customDateRange: VideoDateRange(
+        from: DateTime(2026, 1, 2),
+        to: DateTime(2026, 2, 3),
+      ),
+      customDurationRange: const VideoDurationRange(
+        minSeconds: 60,
+        maxSeconds: 180,
+      ),
+    );
+    await api.loadFeed(FeedKind.newest, 1, filters: filters);
+    await api.loadFeed(FeedKind.newest, 2, filters: filters);
+    await api.searchVideos('example', 1, filters: filters);
+    await api.searchVideos('example', 2, filters: filters);
+    for (final request in requests) {
+      expect(request.queryParameters['post_date_from'], '2026-01-02');
+      expect(request.queryParameters['post_date_to'], '2026-02-03');
+      expect(request.queryParameters['duration_from'], '60');
+      expect(request.queryParameters['duration_to'], '180');
+    }
+    final oneSided = filters.copyWith(
+      customDateRange: VideoDateRange(to: DateTime(2026, 3, 1)),
+      customDurationRange: const VideoDurationRange(minSeconds: 60),
+    );
+    await api.loadFeed(FeedKind.newest, 1, filters: oneSided);
+    expect(requests.length, 5);
+    expect(
+      requests.last.queryParameters.containsKey('post_date_from'),
+      isFalse,
+    );
+    expect(requests.last.queryParameters.containsKey('duration_to'), isFalse);
+    await api.searchVideos(
+      '',
+      1,
+      filters: filters.copyWith(
+        customDurationRange: const VideoDurationRange(maxSeconds: 0),
+      ),
+    );
+    expect(requests.last.queryParameters['duration_to'], '0');
+    expect(requests.last.queryParameters.containsKey('duration_from'), isFalse);
+    final cleared = filters.copyWith(
+      uploadPeriod: UploadPeriod.anytime,
+      duration: VideoDurationPreset.any,
+    );
+    await api.loadFeed(FeedKind.newest, 1, filters: cleared);
+    expect(requests.last.queryParameters, isEmpty);
+  });
+
   test('Hanime 详情预取走正确站点并与正式加载共用缓存', () async {
     final harness = TestSessionHarness.create();
     addTearDown(harness.dispose);
@@ -1043,7 +1167,8 @@ void main() {
       sessionStore: harness.sessionStore,
       httpClientAdapter: _TestAdapter((options) {
         requests.add(options);
-        if (options.uri.path == '/my/playlists/') {
+        if (options.uri.path == '/my/playlists/' &&
+            !options.queryParameters.containsKey('from_my_playlists')) {
           return _htmlResponse('''
             <div class="item">
               <a href="/my/playlists/42/example/" title="Example playlist">
@@ -1052,7 +1177,7 @@ void main() {
             </div>
           ''');
         }
-        if (options.uri.path == '/my/playlists/2/') {
+        if (options.queryParameters['from_my_playlists'] == '2') {
           return _htmlResponse('<html></html>');
         }
         return _htmlResponse('<success/>');
@@ -1072,11 +1197,18 @@ void main() {
 
     expect(requests.map((item) => item.uri.path), [
       '/my/playlists/',
-      '/my/playlists/2/',
+      '/my/playlists/',
       '/video/123/example/',
       '/video/123/example/',
     ]);
     expect(requests.last.method, 'POST');
+    expect(requests[1].queryParameters, {
+      'mode': 'async',
+      'function': 'get_block',
+      'block_id': 'list_playlists_my_created_playlists',
+      'sort_by': 'last_content_date',
+      'from_my_playlists': '2',
+    });
     expect(requests.last.data, containsPair('fav_type', '10'));
     expect(requests.last.data, containsPair('playlist_id', '42'));
     expect(
