@@ -102,6 +102,8 @@ class Rule34VideoApi {
   final Map<String, int> _hanimeMutationRevisions = {};
   final Map<String, _VideoPageCacheEntry> _videoPageCache = {};
   final Map<String, Future<List<VideoItem>>> _videoPageRequests = {};
+  final Map<String, _FeedCacheEntry> _followingPageCache = {};
+  final Map<String, Future<List<VideoItem>>> _followingPageRequests = {};
   final Map<String, bool> _favoriteStatusByVideoId = {};
   String? _favoriteCacheUserId;
   MemberProfile? _currentUserProfileCache;
@@ -159,6 +161,7 @@ class Rule34VideoApi {
   }
 
   static const _feedCacheTtl = Duration(minutes: 30);
+  static const _followingCacheTtl = Duration(minutes: 5);
   final Map<String, _FeedCacheEntry> _feedPageCache = {};
   final Map<String, Future<List<VideoItem>>> _feedPageRequests = {};
 
@@ -258,21 +261,67 @@ class Rule34VideoApi {
     }
   }
 
+  /// 关注流直接读取站点的聚合区块
+  /// `list_videos_videos_from_my_subscriptions`：站点已把全部订阅的视频
+  /// 汇成一个按发布时间倒序的列表，一页一次请求即可。
+  ///
+  /// 以前是客户端逐个订阅各抓一页再自行合并，订阅多时要发几十个请求，
+  /// 首屏因此明显偏慢；聚合区块把这个成本降到每页一个请求。
   Future<List<VideoItem>> loadFollowingFeed(
     int page, {
     bool force = false,
     CancelToken? cancelToken,
-  }) {
+  }) async {
     _requireLogin();
-    return subscriptionActivity.loadFollowingPage(
-      page,
-      force: force,
-      cancelToken: cancelToken,
-    );
+    final userId = sessionStore.currentUserId;
+    final cacheKey = '$userId:$page';
+    if (!force) {
+      final cached = _followingPageCache[cacheKey];
+      if (cached != null &&
+          DateTime.now().difference(cached.createdAt) < _followingCacheTtl) {
+        return cached.items;
+      }
+    }
+    final pending = _followingPageRequests[cacheKey];
+    if (pending != null) {
+      return pending;
+    }
+    late final Future<List<VideoItem>> request;
+    request =
+        () async {
+          final items = await _paginatedVideoList(
+            '/my/subscriptions/',
+            page: page,
+            query: <String, String>{
+              'mode': 'async',
+              'function': 'get_block',
+              'block_id': 'list_videos_videos_from_my_subscriptions',
+              'sort_by': '',
+              'from': '$page',
+            },
+            cancelToken: cancelToken,
+          );
+          if (sessionStore.currentUserId == userId) {
+            _followingPageCache[cacheKey] = _FeedCacheEntry(
+              items: items,
+              createdAt: DateTime.now(),
+            );
+          }
+          return items;
+        }().whenComplete(() {
+          if (identical(_followingPageRequests[cacheKey], request)) {
+            _followingPageRequests.remove(cacheKey);
+          }
+        });
+    _followingPageRequests[cacheKey] = request;
+    return request;
   }
 
   Future<void> prefetchFollowingFeed({required CancelToken cancelToken}) async {
-    await subscriptionActivity.refresh(cancelToken: cancelToken);
+    if (!sessionStore.isLoggedIn) {
+      return;
+    }
+    await loadFollowingFeed(1, cancelToken: cancelToken);
   }
 
   Future<Map<String, int?>> loadSubscriptionUpdatedAges({
@@ -1021,6 +1070,7 @@ class Rule34VideoApi {
     } finally {
       _resetSubscriptionCache();
       _clearPlaylistCache();
+      _resetFollowingCache();
       _videoPageCache.clear();
       _videoPageRequests.clear();
       _videoDetailsCache.clear();
@@ -1301,23 +1351,13 @@ class Rule34VideoApi {
 
   Future<void> deletePlaylist(String playlistId) async {
     _requireLogin();
-    final body = await _get(
+    await _postPlaylistMutation(
       '/my/playlists/',
-      query: <String, String>{
-        'mode': 'async',
-        'format': 'json',
+      data: <String, String>{
         'action': 'delete_playlists',
         'delete[]': playlistId,
       },
     );
-    try {
-      final response = jsonDecode(body);
-      if (response is! Map || response['status'] != 'success') {
-        throw const ApiException('删除播放列表失败。');
-      }
-    } on FormatException {
-      throw const ApiException('删除播放列表时服务器返回了无效响应。');
-    }
     _clearPlaylistCache();
   }
 
@@ -1733,19 +1773,111 @@ class Rule34VideoApi {
     required bool add,
   }) async {
     _requireLogin();
-    await _post(
+    await _postPlaylistMutation(
       video.detailPath,
-      query: const <String, String>{'mode': 'async'},
       data: <String, String>{
         'action': add ? 'add_to_favourites' : 'delete_from_favourites',
         'video_id': video.id,
+        'album_id': '',
         'fav_type': '10',
         'playlist_id': playlistId,
       },
-      ajax: true,
     );
     _clearPlaylistCache();
     _videoDetailsCache.removeWhere((key, _) => key.endsWith(':${video.id}'));
+  }
+
+  /// 播放列表增删改需要站点签发的安全令牌：先向 `/playlist_security.php`
+  /// 申请（该接口要求同源请求，故附带 Origin），再以 `X-Playlist-CSRF` 头
+  /// 随写请求发送。令牌为 64 位十六进制，失效时作废并重新申请。
+  String? _playlistCsrfToken;
+
+  Future<String> _playlistSecurityToken({bool force = false}) async {
+    final cached = _playlistCsrfToken;
+    if (!force && cached != null) {
+      return cached;
+    }
+    final response = await _dio.get<String>(
+      '/playlist_security.php',
+      queryParameters: {'_': '${DateTime.now().millisecondsSinceEpoch}'},
+      options: Options(
+        headers: const {
+          'Accept': 'application/json',
+          'Origin': 'https://rule34video.com',
+        },
+      ),
+    );
+    final body = _readResponse(
+      await _followRedirects(response, detectSessionExpiry: false),
+    );
+    final token = _playlistSecurityTokenFrom(body);
+    if (token == null) {
+      throw const ApiException('获取播放列表安全令牌失败，请刷新后重试。');
+    }
+    _playlistCsrfToken = token;
+    return token;
+  }
+
+  static String? _playlistSecurityTokenFrom(String body) {
+    try {
+      final decoded = jsonDecode(body);
+      if (decoded is! Map) {
+        return null;
+      }
+      final token = decoded['csrf_token'];
+      return token is String && RegExp(r'^[a-f0-9]{64}$').hasMatch(token)
+          ? token
+          : null;
+    } on FormatException {
+      return null;
+    }
+  }
+
+  /// 发送播放列表写请求：自动附带安全令牌，令牌失效时重新申请并重试一次。
+  Future<String> _postPlaylistMutation(
+    String path, {
+    required Map<String, String> data,
+  }) async {
+    for (var attempt = 0; ; attempt += 1) {
+      final token = await _playlistSecurityToken(force: attempt > 0);
+      try {
+        final body = await _post(
+          path,
+          data: <String, String>{...data, 'mode': 'async', 'format': 'json'},
+          extraHeaders: <String, String>{'X-Playlist-CSRF': token},
+          ajax: true,
+        );
+        final error = _playlistActionError(body);
+        if (error != null) {
+          throw ApiException(error);
+        }
+        return body;
+      } on HttpStatusException catch (error) {
+        if (error.statusCode == 403 && attempt == 0) {
+          continue;
+        }
+        rethrow;
+      }
+    }
+  }
+
+  static String? _playlistActionError(String body) {
+    try {
+      final decoded = jsonDecode(body);
+      if (decoded is! Map || decoded['status'] == 'success') {
+        return null;
+      }
+      final errors = decoded['errors'];
+      if (errors is List && errors.isNotEmpty) {
+        final first = errors.first;
+        if (first is Map && first['message'] is String) {
+          return first['message'] as String;
+        }
+      }
+      return '播放列表操作失败。';
+    } on FormatException {
+      return null;
+    }
   }
 
   Future<void> toggleUploaderSubscription({
@@ -1763,6 +1895,7 @@ class Rule34VideoApi {
       ajax: true,
     );
     _resetSubscriptionCache();
+    _resetFollowingCache();
     subscriptionActivity.invalidate();
   }
 
@@ -1863,6 +1996,7 @@ class Rule34VideoApi {
       ajax: true,
     );
     _resetSubscriptionCache();
+    _resetFollowingCache();
     subscriptionActivity.invalidate();
   }
 
@@ -2202,11 +2336,16 @@ class Rule34VideoApi {
     String path, {
     required Map<String, String> data,
     Map<String, String>? query,
+    Map<String, String>? extraHeaders,
     bool ajax = false,
     bool followRedirects = false,
     bool retryExpiredSession = true,
   }) async {
     try {
+      final headers = <String, String>{
+        if (ajax) 'X-Requested-With': 'XMLHttpRequest',
+        ...?extraHeaders,
+      };
       final response = await _dio.post<String>(
         path,
         queryParameters: query,
@@ -2214,7 +2353,7 @@ class Rule34VideoApi {
         options: Options(
           contentType: Headers.formUrlEncodedContentType,
           followRedirects: false,
-          headers: ajax ? const {'X-Requested-With': 'XMLHttpRequest'} : null,
+          headers: headers.isEmpty ? null : headers,
         ),
       );
       final body = _readResponse(
@@ -2231,6 +2370,7 @@ class Rule34VideoApi {
           path,
           data: data,
           query: query,
+          extraHeaders: extraHeaders,
           ajax: ajax,
           followRedirects: followRedirects,
           retryExpiredSession: false,
@@ -2323,6 +2463,7 @@ class Rule34VideoApi {
   Future<void> _clearExpiredSession() async {
     _resetSubscriptionCache();
     _clearPlaylistCache();
+    _resetFollowingCache();
     try {
       await sessionStore.clear(cookieScope: ContentSite.rule34video.origin);
     } on Object {
@@ -2386,6 +2527,11 @@ class Rule34VideoApi {
     _subscriptionPageCache.clear();
     _subscriptionResolutionRequests.clear();
     _subscriptionRequest = null;
+  }
+
+  void _resetFollowingCache() {
+    _followingPageCache.clear();
+    _followingPageRequests.clear();
   }
 
   void _clearPlaylistCache() {

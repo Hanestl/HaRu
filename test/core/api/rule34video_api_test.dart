@@ -985,45 +985,85 @@ void main() {
     expect(firstPageRequests, 3);
   });
 
-  test('关注视频按发布时间从新到旧返回', () async {
+  test('关注流直接读取站点聚合区块，首屏只发一次请求', () async {
     final harness = TestSessionHarness.create();
     addTearDown(harness.dispose);
     await harness.sessionStore.load();
     await harness.sessionStore.authenticate('2421071');
+    final requests = <RequestOptions>[];
     final api = Rule34VideoApi(
       sessionStore: harness.sessionStore,
       httpClientAdapter: _TestAdapter((options) {
-        return switch (options.uri.path) {
-          '/my/subscriptions/' => _htmlResponse('''
-              <div class="item"><a href="/models/older/">较旧来源</a></div>
-              <div class="item"><a href="/models/newer/">较新来源</a></div>
-            '''),
-          '/my/subscriptions/2/' => _htmlResponse('<html></html>'),
-          '/models/older/' => _htmlResponse(
+        requests.add(options);
+        final from = options.queryParameters['from'];
+        if (options.uri.path == '/my/subscriptions/' && from == '2') {
+          return _htmlResponse(
             _videoListItem(
-              id: '1',
-              slug: 'older-video',
-              title: '较旧视频',
-              published: '3 days ago',
+              id: '3',
+              slug: 'third-video',
+              title: '第二页视频',
+              published: '5 days ago',
             ),
-          ),
-          '/models/newer/' => _htmlResponse(
-            _videoListItem(
-              id: '2',
-              slug: 'newer-video',
-              title: '较新视频',
-              published: '2 hours ago',
-            ),
-          ),
-          _ => _htmlResponse('<html></html>'),
-        };
+          );
+        }
+        if (options.uri.path == '/my/subscriptions/') {
+          return _htmlResponse('''
+            ${_videoListItem(id: '2', slug: 'newer-video', title: '较新视频', published: '2 hours ago')}
+            ${_videoListItem(id: '1', slug: 'older-video', title: '较旧视频', published: '3 days ago')}
+          ''');
+        }
+        return _htmlResponse('<html></html>');
       }),
     );
     addTearDown(api.close);
 
-    final videos = await api.loadFollowingFeed(1);
+    final first = await api.loadFollowingFeed(1);
+    final cached = await api.loadFollowingFeed(1);
+    final second = await api.loadFollowingFeed(2);
 
-    expect(videos.map((item) => item.id), ['2', '1']);
+    expect(first.map((item) => item.id), ['2', '1']);
+    expect(cached.map((item) => item.id), ['2', '1']);
+    expect(second.map((item) => item.id), ['3']);
+    // 命中缓存时不再重复请求，第 2 页各请求一次。
+    expect(requests.length, 2);
+    expect(requests[0].uri.path, '/my/subscriptions/');
+    expect(requests[0].uri.queryParameters, {
+      'mode': 'async',
+      'function': 'get_block',
+      'block_id': 'list_videos_videos_from_my_subscriptions',
+      'sort_by': '',
+      'from': '1',
+    });
+    expect(requests[1].uri.queryParameters['from'], '2');
+  });
+
+  test('关注流强制刷新会绕过缓存重新请求', () async {
+    final harness = TestSessionHarness.create();
+    addTearDown(harness.dispose);
+    await harness.sessionStore.load();
+    await harness.sessionStore.authenticate('2421071');
+    var requests = 0;
+    final api = Rule34VideoApi(
+      sessionStore: harness.sessionStore,
+      httpClientAdapter: _TestAdapter((options) {
+        requests += 1;
+        return _htmlResponse(
+          _videoListItem(
+            id: '1',
+            slug: 'a-video',
+            title: '视频',
+            published: '1 hour ago',
+          ),
+        );
+      }),
+    );
+    addTearDown(api.close);
+
+    await api.loadFollowingFeed(1);
+    await api.loadFollowingFeed(1);
+    expect(requests, 1);
+    await api.loadFollowingFeed(1, force: true);
+    expect(requests, 2);
   });
 
   test('上传者订阅视频第二页使用网站 AJAX 分页参数', () async {
@@ -1180,7 +1220,22 @@ void main() {
         if (options.queryParameters['from_my_playlists'] == '2') {
           return _htmlResponse('<html></html>');
         }
-        return _htmlResponse('<success/>');
+        if (options.uri.path == '/playlist_security.php') {
+          return ResponseBody.fromString(
+            '{"status":"success","csrf_token":"${'c' * 64}"}',
+            200,
+            headers: {
+              Headers.contentTypeHeader: ['application/json; charset=utf-8'],
+            },
+          );
+        }
+        return ResponseBody.fromString(
+          '{"status":"success"}',
+          200,
+          headers: {
+            Headers.contentTypeHeader: ['application/json; charset=utf-8'],
+          },
+        );
       }),
     );
     addTearDown(api.close);
@@ -1198,6 +1253,7 @@ void main() {
     expect(requests.map((item) => item.uri.path), [
       '/my/playlists/',
       '/my/playlists/',
+      '/playlist_security.php',
       '/video/123/example/',
       '/video/123/example/',
     ]);
@@ -1209,6 +1265,8 @@ void main() {
       'sort_by': 'last_content_date',
       'from_my_playlists': '2',
     });
+    expect(requests[2].headers['Origin'], 'https://rule34video.com');
+    expect(requests.last.headers['X-Playlist-CSRF'], 'c' * 64);
     expect(requests.last.data, containsPair('fav_type', '10'));
     expect(requests.last.data, containsPair('playlist_id', '42'));
     expect(
@@ -1304,8 +1362,15 @@ void main() {
             <input type="radio" name="is_private" value="1" checked>
           ''');
         }
-        if (options.method == 'GET' && options.uri.path == '/my/playlists/') {
-          return _htmlResponse('{"status":"success"}');
+        if (options.method == 'GET' &&
+            options.uri.path == '/playlist_security.php') {
+          return ResponseBody.fromString(
+            '{"status":"success","csrf_token":"${'a' * 64}"}',
+            200,
+            headers: {
+              Headers.contentTypeHeader: ['application/json; charset=utf-8'],
+            },
+          );
         }
         return _htmlResponse('<html></html>');
       }),
@@ -1337,6 +1402,7 @@ void main() {
       '/edit-playlist/42/',
       '/create-playlist/',
       '/edit-playlist/42/',
+      '/playlist_security.php',
       '/my/playlists/',
     ]);
     expect(_requestFields(requests[1].data), {
@@ -1351,13 +1417,17 @@ void main() {
       'is_private': '1',
       'action': 'change_complete',
     });
-    expect(requests[3].uri.queryParameters, containsPair('mode', 'async'));
-    expect(requests[3].uri.queryParameters, containsPair('format', 'json'));
-    expect(
-      requests[3].uri.queryParameters,
-      containsPair('action', 'delete_playlists'),
-    );
-    expect(requests[3].uri.queryParametersAll['delete[]'], ['42']);
+    // 删除播放列表需要站点安全令牌：先申请令牌，再带 X-Playlist-CSRF 发 POST。
+    expect(requests[3].method, 'GET');
+    expect(requests[3].headers['Origin'], 'https://rule34video.com');
+    expect(requests[4].method, 'POST');
+    expect(requests[4].headers['X-Playlist-CSRF'], 'a' * 64);
+    expect(_requestFields(requests[4].data), {
+      'action': 'delete_playlists',
+      'delete[]': '42',
+      'mode': 'async',
+      'format': 'json',
+    });
   });
 
   test('发现目录和集合视频使用正确的路径与排序参数', () async {
@@ -2009,6 +2079,78 @@ void main() {
         ),
       ),
     );
+  });
+
+  test('播放列表增删带安全令牌，令牌失效时重新申请并重试', () async {
+    final harness = TestSessionHarness.create();
+    addTearDown(harness.dispose);
+    await harness.sessionStore.load();
+    await harness.sessionStore.authenticate('2421071');
+    final requests = <RequestOptions>[];
+    var securityRequests = 0;
+    var rejectFirstMutation = true;
+    final api = Rule34VideoApi(
+      sessionStore: harness.sessionStore,
+      httpClientAdapter: _TestAdapter((options) {
+        requests.add(options);
+        if (options.uri.path == '/playlist_security.php') {
+          securityRequests += 1;
+          return ResponseBody.fromString(
+            '{"status":"success","csrf_token":"${'b' * 64}"}',
+            200,
+            headers: {
+              Headers.contentTypeHeader: ['application/json; charset=utf-8'],
+            },
+          );
+        }
+        if (options.method == 'POST' && rejectFirstMutation) {
+          rejectFirstMutation = false;
+          return ResponseBody.fromString(
+            '{"status":"failure","errors":[{"code":"invalid_playlist_csrf",'
+            '"message":"无效令牌"}]}',
+            403,
+            headers: {
+              Headers.contentTypeHeader: ['application/json; charset=utf-8'],
+            },
+          );
+        }
+        return ResponseBody.fromString(
+          '{"status":"success","data":{"favourites_playlist":1}}',
+          200,
+          headers: {
+            Headers.contentTypeHeader: ['application/json; charset=utf-8'],
+          },
+        );
+      }),
+    );
+    addTearDown(api.close);
+
+    await api.toggleVideoInPlaylist(
+      video: const VideoItem(
+        id: '123',
+        title: 't',
+        slug: 't',
+        siteId: 'rule34video',
+      ),
+      playlistId: '42',
+      add: true,
+    );
+
+    final mutations = requests.where((item) => item.method == 'POST').toList();
+    expect(mutations, hasLength(2));
+    expect(mutations.first.headers['X-Playlist-CSRF'], 'b' * 64);
+    expect(mutations.last.headers['X-Playlist-CSRF'], 'b' * 64);
+    // 首次 403 后令牌作废并重新申请。
+    expect(securityRequests, 2);
+    expect(_requestFields(mutations.first.data), {
+      'action': 'add_to_favourites',
+      'video_id': '123',
+      'album_id': '',
+      'fav_type': '10',
+      'playlist_id': '42',
+      'mode': 'async',
+      'format': 'json',
+    });
   });
 }
 

@@ -152,43 +152,21 @@ class _HomePageState extends ConsumerState<HomePage> {
           onLogin: () => showLoginSheet(context, widget.api),
         );
       }
-      final activity = widget.api.subscriptionActivity;
-      return ListenableBuilder(
-        listenable: activity,
-        builder: (context, _) => Stack(
-          children: [
-            VideoFeed(
-              key: ValueKey(
-                'following:${widget.api.sessionStore.currentUserId}',
-              ),
-              initialItems: activity.cachedVideos
-                  .take(30)
-                  .toList(growable: false),
-              loadPage: (page) => prefetch.runForeground(
-                PredictivePrefetchKey.following,
-                () => widget.api.loadFollowingFeed(page),
-              ),
-              refreshPage: (page) => prefetch.runForeground(
-                PredictivePrefetchKey.following,
-                () => widget.api.loadFollowingFeed(page, force: true),
-              ),
-              emptyMessage: '订阅的分类、艺术家或用户暂时没有可展示的视频。',
-              sortNewest: true,
-              onItemsLoaded: prefetch.offerLikelyVideos,
-              prefetchService: prefetch,
-            ),
-            if (activity.isScanning && activity.totalSources > 0)
-              Positioned(
-                left: 16,
-                right: 16,
-                top: 8,
-                child: _FollowingProgress(
-                  scanned: activity.scannedSources,
-                  total: activity.totalSources,
-                ),
-              ),
-          ],
+      // 关注流读取站点聚合区块，每页一次请求，不再逐个订阅抓取后在本地合并。
+      return VideoFeed(
+        key: ValueKey('following:${widget.api.sessionStore.currentUserId}'),
+        loadPage: (page) => prefetch.runForeground(
+          PredictivePrefetchKey.following,
+          () => widget.api.loadFollowingFeed(page),
         ),
+        refreshPage: (page) => prefetch.runForeground(
+          PredictivePrefetchKey.following,
+          () => widget.api.loadFollowingFeed(page, force: true),
+        ),
+        emptyMessage: '订阅的分类、艺术家或用户暂时没有可展示的视频。',
+        sortNewest: true,
+        onItemsLoaded: prefetch.offerLikelyVideos,
+        prefetchService: prefetch,
       );
     }
     final kind = _channel.feedKind!;
@@ -211,37 +189,6 @@ class _HomePageState extends ConsumerState<HomePage> {
       ),
       onItemsLoaded: prefetch.offerLikelyVideos,
       prefetchService: prefetch,
-    );
-  }
-}
-
-class _FollowingProgress extends StatelessWidget {
-  const _FollowingProgress({required this.scanned, required this.total});
-
-  final int scanned;
-  final int total;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Material(
-      color: theme.colorScheme.surfaceContainerHigh,
-      borderRadius: BorderRadius.circular(14),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            AppText(
-              '正在整理订阅内容 $scanned/$total',
-              style: theme.textTheme.labelMedium,
-            ),
-            const SizedBox(height: 6),
-            LinearProgressIndicator(value: total == 0 ? null : scanned / total),
-          ],
-        ),
-      ),
     );
   }
 }

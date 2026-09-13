@@ -397,10 +397,21 @@ class SiteParser {
           _clean(link.attributes['title']) ??
           '未命名播放列表';
       final resolved = Uri.parse(_baseUri).resolve(href!).path;
+      final path = resolved.endsWith('/') ? resolved : '$resolved/';
+      // 「我的播放列表」页每张卡片先给内容页链接 /playlists/<id>/<slug>/，随后
+      // 再给编辑页链接 /my/playlists/<id>/。按 id 去重时后者会覆盖前者，导致后续
+      // 按内容页协议翻页却请求到编辑页，第二页起拿不到数据、列表只显示开头一小段。
+      // 这里始终保留更具体的内容页链接。
+      final existing = result[match.group(1)!];
+      if (existing != null &&
+          _isPlaylistEditPath(path) &&
+          !_isPlaylistEditPath(existing.path)) {
+        continue;
+      }
       result[match.group(1)!] = PlaylistItem(
         id: match.group(1)!,
         title: title,
-        path: resolved.endsWith('/') ? resolved : '$resolved/',
+        path: path,
         thumbnailUrl: _imageUrl(image),
         videoCount:
             _number(
@@ -422,6 +433,11 @@ class SiteParser {
     }
     return result.values.toList(growable: false);
   }
+
+  /// 编辑页链接形如 `/my/playlists/<id>/`；内容页形如 `/playlists/<id>/<slug>/`
+  /// 或 `/my/playlists/<id>/<slug>/`。
+  static bool _isPlaylistEditPath(String path) =>
+      RegExp(r'^/my/playlists/\d+/$').hasMatch(path);
 
   static PlaylistFormData playlistForm(String source) {
     final document = html_parser.parse(source);

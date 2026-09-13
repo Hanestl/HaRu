@@ -315,6 +315,40 @@ void main() {
     expect(playlists.single.views, 345);
   });
 
+  test('播放列表内容页链接不被其后的编辑页链接覆盖', () {
+    // 真实「我的播放列表」页每张卡片先给内容页 /playlists/<id>/<slug>/，
+    // 再给编辑页 /my/playlists/<id>/；按 id 去重时编辑页会覆盖内容页，
+    // 导致列表内视频无法翻页。
+    const source = '''
+      <div class="item thumb">
+        <a class="th" href="/playlists/2907071/test1104/">
+          <div class="thumb_title">test1</div>
+        </a>
+        <div class="item-control headline_panel">
+          <a class="toggle-button btn" href="/my/playlists/2907071/">Edit</a>
+        </div>
+      </div>
+    ''';
+
+    final playlist = SiteParser.playlists(source).single;
+
+    expect(playlist.id, '2907071');
+    expect(playlist.path, '/playlists/2907071/test1104/');
+  });
+
+  test('只有编辑页链接时仍按编辑页解析', () {
+    const source = '''
+      <div class="item thumb">
+        <a class="toggle-button btn" href="/my/playlists/2907071/">Edit</a>
+        <div class="thumb_title">test1</div>
+      </div>
+    ''';
+
+    final playlist = SiteParser.playlists(source).single;
+
+    expect(playlist.path, '/my/playlists/2907071/');
+  });
+
   test('播放列表名称优先于封面中的首个视频名称', () {
     const source = '''
       <div class="item">
