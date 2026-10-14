@@ -896,7 +896,15 @@ class SiteParser {
     if (image == null) {
       return null;
     }
-    for (final attribute in const ['data-webp', 'data-original', 'src']) {
+    // rd-src 是站点对首屏之后卡片延迟加载时放置真实封面的属性：
+    // 这些卡片初次渲染的 src 是 data: 占位图，真实地址在 data-rd-src，
+    // 移动端不执行站点脚本，必须自行读取，否则封面上全是黑屏。
+    for (final attribute in const [
+      'data-webp',
+      'data-original',
+      'data-rd-src',
+      'src',
+    ]) {
       final value = _url(image.attributes[attribute]);
       if (value != null) {
         return value;

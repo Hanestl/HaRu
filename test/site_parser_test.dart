@@ -38,6 +38,32 @@ void main() {
     expect(videos.single.views, 1200);
   });
 
+  test('解析列表首屏之后延迟加载卡片的封面', () {
+    const source = '''
+      <div class="item thumb video_4665858">
+        <a class="th" href="https://rule34video.com/video/4665858/lazy-video/"
+           title="Lazy video">
+          <div class="img wrap_image" data-preview="/preview.mp4">
+            <img class="thumb rd-lz"
+                 src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+                 data-rd-src="https://rule34video.com/contents/videos_screenshots/4665000/4665858/336x189/1.jpg"
+                 data-rd-jpg="https://rule34video.com/contents/videos_screenshots/4665000/4665858/320x180/1.jpg"
+                 alt="Lazy video" loading="lazy">
+          </div>
+        </a>
+        <div class="thumb_title">Lazy video</div>
+      </div>
+    ''';
+
+    final videos = SiteParser.videoList(source);
+
+    expect(videos, hasLength(1));
+    expect(
+      videos.single.thumbnailUrl,
+      'https://rule34video.com/contents/videos_screenshots/4665000/4665858/336x189/1.jpg',
+    );
+  });
+
   test('解析播放列表编辑表单', () {
     const source = '''
       <form action="/edit-playlist/42/">
