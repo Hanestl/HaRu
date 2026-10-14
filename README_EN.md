@@ -4,20 +4,21 @@
 
 <h1 align="center">HaRu</h1>
 
-<p align="center">An independent Android client for Rule34Video and Hanime</p>
+<p align="center">An independent Android client for Rule34Video, Hanime, and 91porn</p>
 
 <p align="center"><a href="README.md">简体中文</a> · <strong>English</strong> · <a href="README_JA.md">日本語</a> · <a href="README_KO.md">한국어</a></p>
 
-HaRu uses the existing pages, endpoints, and media sources of both websites to provide equal but independent browsing, account, library, and playback experiences in one app.
+HaRu uses the existing pages, endpoints, and media sources of these websites to provide equal but independent browsing, account, library, and playback experiences in one app.
 
 > [!IMPORTANT]
-> This project is not affiliated with Rule34Video or Hanime. It is intended only for users who are of legal age and may lawfully access this content where they live.
+> This project is not affiliated with Rule34Video, Hanime, or 91porn. It is intended only for users who are of legal age and may lawfully access this content where they live.
 
 ## Core experience
 
-- R34V and Hanime are equal top-level sources with separate home feeds, search, filters, and account state;
-- The library is organized by Local, R34V, and Hanime, covering history, favorites or likes, playlists, subscriptions, watch later, local collections, and downloads;
+- R34V, Hanime, and 91porn are equal top-level sources with their own home and search entry points (91porn has no account system);
+- The library is organized by Local, R34V, and Hanime, covering history, favorites or likes, playlists, subscriptions, watch later, local collections, and downloads; 91porn has no account, so its downloads and playback progress appear under Local;
 - Hanime supports sign-in and Cloudflare verification, category browsing, advanced filters, ratings, watch later, creator subscriptions, playlists, and comment interactions;
+- 91porn offers category browsing and search, and plays or downloads the free primary source the site provides;
 - Video pages support multiple qualities, downloads, playback memory, speed control, background and loop playback, plus a collapsible player while paused;
 - Feeds use caching, adjacent-content prefetching, failure recovery, one- or two-column layouts, and persistent scroll and filter state;
 - Local collections work without an account, and the multilingual content translation library can be edited, imported, and exported;
@@ -53,8 +54,8 @@ Release signing and publishing are documented in [docs/release.md](docs/release.
 ## Known boundaries
 
 - Features depend on the websites' current HTML, endpoints, and sign-in flows; parser updates may be required after site changes;
-- The app does not bypass permissions, paywalls, regional restrictions, or Cloudflare verification;
-- Video URLs may expire, so playback and downloads refresh their sources when necessary.
+- The app does not bypass permissions, paywalls, regional restrictions, or Cloudflare verification; 91porn's HD entry point is members-only and is not offered in the app;
+- Video URLs may expire, so playback and downloads refresh their sources when necessary; 91porn URLs expire after roughly 15 minutes, so they are re-fetched for every playback.
 
 ## License
 
