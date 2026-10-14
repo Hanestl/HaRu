@@ -29,8 +29,6 @@ import 'rule34video_api.dart';
 final class Porn91Api {
   static const _warmupPath = '/v.php';
   static const _warmupQuery = {'category': 'rf'};
-  static const _detailsTtl = Duration(minutes: 5);
-  static const _detailsCacheLimit = 60;
 
   static const browserUserAgent =
       'Mozilla/5.0 (Linux; Android 13; Mobile) AppleWebKit/537.36 '
@@ -81,8 +79,6 @@ final class Porn91Api {
   final SessionStore sessionStore;
   late final Dio _dio;
   late final String _transportLabel;
-  final Map<String, _Porn91DetailsCacheEntry> _detailsCache = {};
-  final Map<String, Future<VideoDetails>> _detailsRequests = {};
   bool _sessionWarmed = false;
 
   Future<String?> sessionCookieHeader() {
@@ -135,33 +131,12 @@ final class Porn91Api {
     return Porn91Parser.videoList(body);
   }
 
+  /// 详情只在「预热 → 抓取 → 解析」三步里实时产出，**不在这里缓存**。
+  ///
+  /// 门面 [Rule34VideoApi] 已经按站点做过详情缓存与在途去重，而本站的直链
+  /// 带约 15 分钟过期的 `e=` 参数，播放失败时必须由 `refreshVideoDetails`
+  /// 真正重新抓取。这里再加一层缓存会让那次强制刷新失效。
   Future<VideoDetails> loadVideoDetails(
-    VideoItem video, {
-    CancelToken? cancelToken,
-  }) {
-    final key = '${sessionStore.currentUserId ?? 'public'}:${video.id}';
-    final cached = _detailsCache[key];
-    if (cached != null &&
-        DateTime.now().difference(cached.createdAt) < _detailsTtl) {
-      return Future.value(cached.details);
-    }
-    final pending = _detailsRequests[key];
-    if (pending != null) return pending;
-    final request = _fetchVideoDetails(video, cancelToken: cancelToken)
-        .then((details) {
-          _detailsCache[key] = _Porn91DetailsCacheEntry(
-            details: details,
-            createdAt: DateTime.now(),
-          );
-          _pruneDetailsCache();
-          return details;
-        })
-        .whenComplete(() => _detailsRequests.remove(key));
-    _detailsRequests[key] = request;
-    return request;
-  }
-
-  Future<VideoDetails> _fetchVideoDetails(
     VideoItem video, {
     CancelToken? cancelToken,
   }) async {
@@ -194,18 +169,6 @@ final class Porn91Api {
           component: 'porn91_network',
         ),
       );
-    }
-  }
-
-  void _pruneDetailsCache() {
-    if (_detailsCache.length <= _detailsCacheLimit) return;
-    final entries = _detailsCache.entries.toList()
-      ..sort(
-        (left, right) => left.value.createdAt.compareTo(right.value.createdAt),
-      );
-    for (final entry in entries) {
-      if (_detailsCache.length <= _detailsCacheLimit) break;
-      _detailsCache.remove(entry.key);
     }
   }
 
@@ -251,14 +214,4 @@ final class Porn91Api {
 
   /// 预热状态仅用于测试断言。
   bool get isSessionWarmed => _sessionWarmed;
-}
-
-final class _Porn91DetailsCacheEntry {
-  const _Porn91DetailsCacheEntry({
-    required this.details,
-    required this.createdAt,
-  });
-
-  final VideoDetails details;
-  final DateTime createdAt;
 }
