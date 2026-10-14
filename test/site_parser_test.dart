@@ -610,4 +610,137 @@ void main() {
     expect(comments.single.username, 'Bob');
     expect(comments.single.content, 'valid');
   });
+
+  test('解析采用 rd-lz 懒加载属性的视频卡片封面', () {
+    const source = '''
+      <div class="item thumb video_6">
+        <a class="th js-open-popup"
+           href="https://rule34video.com/video/4665842/nurse-futa/"
+           title="Nurse Futa">
+          <div class="img wrap_image" data-preview="/preview.mp4">
+            <img class="thumb rd-lz"
+                 src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+                 data-rd-src="https://rule34video.com/contents/videos_screenshots/4665000/4665842/336x189/2.jpg"
+                 data-rd-jpg="https://rule34video.com/contents/videos_screenshots/4665000/4665842/320x180/2.jpg"
+                 alt="Nurse Futa">
+          </div>
+        </a>
+        <div class="time">3:04</div>
+        <div class="thumb_title">Nurse Futa</div>
+      </div>
+    ''';
+
+    final videos = SiteParser.videoList(source);
+
+    expect(videos, hasLength(1));
+    expect(videos.single.id, '4665842');
+    expect(
+      videos.single.thumbnailUrl,
+      'https://rule34video.com/contents/videos_screenshots/4665000/4665842/336x189/2.jpg',
+    );
+  });
+
+  test('解析全新 Member Area 个人中心视频卡片 (item ma-v)', () {
+    const source = '''
+      <div class="ma-grid" id="list_videos_favourite_videos_items">
+        <div class="item ma-v video_1"
+             data-video-card-id="3051501"
+             data-title="Tifa x Cloud 7th Heaven POV"
+             data-dur="21"
+             data-views="277348"
+             data-rating="4.8795"
+             data-url="https://rule34video.com/video/3051501/tifa-x-cloud/">
+          <a class="ma-thumb"
+             href="https://rule34video.com/video/3051501/tifa-x-cloud/"
+             data-preview="https://rule34video.com/preview.mp4">
+            <img class="thumb rd-lz"
+                 src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+                 data-rd-src="https://rule34video.com/contents/videos_screenshots/3051000/3051501/336x189/3.jpg">
+            <span class="ma-dur">0:21</span>
+          </a>
+          <div class="ma-v__row">
+            <a class="ma-v__t" href="https://rule34video.com/video/3051501/tifa-x-cloud/">Tifa x Cloud 7th Heaven POV</a>
+          </div>
+          <div class="ma-v__m">
+            <span>277K views</span>
+            <span>6 years ago</span>
+            <span>97%</span>
+          </div>
+        </div>
+      </div>
+    ''';
+
+    final videos = SiteParser.videoList(source);
+
+    expect(videos, hasLength(1));
+    expect(videos.single.id, '3051501');
+    expect(videos.single.slug, 'tifa-x-cloud');
+    expect(videos.single.title, 'Tifa x Cloud 7th Heaven POV');
+    expect(videos.single.duration, '0:21');
+    expect(
+      videos.single.thumbnailUrl,
+      'https://rule34video.com/contents/videos_screenshots/3051000/3051501/336x189/3.jpg',
+    );
+    expect(videos.single.previewUrl, 'https://rule34video.com/preview.mp4');
+    expect(videos.single.publishedLabel, '6 years ago');
+    expect(videos.single.views, 277348);
+    expect(videos.single.rating, 97);
+  });
+
+  test('解析全新 Member Area 个人资料 (ma-hero)', () {
+    const source = '''
+      <section class="ma-hero ma-hero--pub" aria-labelledby="rdp-name" data-user-id="2486813">
+        <div class="ma-hero__body">
+          <span class="ma-av ma-av--xl">
+            <img src="https://rule34video.com/contents/avatars/2486000/2486813.jpg">
+          </span>
+          <div class="ma-hero__id">
+            <h1 id="rdp-name">bayo987<svg class="rdm-i ma-verified"></svg></h1>
+          </div>
+        </div>
+      </section>
+      <div class="ma-stats ma-stats--pub">
+        <a class="ma-stat" href="/members/2486813/videos/"><b>25</b><span>Videos</span></a>
+        <a class="ma-stat" href="/members/2486813/favourites/videos/"><b>17</b><span>Favourites</span></a>
+        <div class="ma-stat"><b data-rdp-subs-count="244">244</b><span>Subscribers</span></div>
+      </div>
+    ''';
+
+    final profile = SiteParser.memberProfile(source, '2486813');
+
+    expect(profile, isNotNull);
+    expect(profile!.id, '2486813');
+    expect(profile.displayName, 'bayo987');
+    expect(
+      profile.avatarUrl,
+      'https://rule34video.com/contents/avatars/2486000/2486813.jpg',
+    );
+    expect(profile.verified, isTrue);
+    expect(profile.subscribersLabel, '244 Subscribers');
+    expect(profile.details['Videos'], '25');
+    expect(profile.details['Favourites'], '17');
+  });
+
+  test('解析全新 Member Area 播放列表 (item ma-pl)', () {
+    const source = '''
+      <div class="ma-grid ma-grid--pl" id="list_playlists_created_playlists_items">
+        <div class="item ma-pl" data-id="2907071" data-title="test1" data-count="15" data-views="23">
+          <a class="ma-thumb" href="https://rule34video.com/playlists/2907071/test1104/" title="test1">
+            <img class="thumb" src="https://rule34video.com/contents/videos_screenshots/4605000/4605223/320x180/3.jpg">
+            <span class="ma-pl__n">15<small>videos</small></span>
+          </a>
+          <div class="ma-v__row">
+            <a class="ma-v__t" href="https://rule34video.com/playlists/2907071/test1104/">test1</a>
+          </div>
+        </div>
+      </div>
+    ''';
+
+    final playlists = SiteParser.playlists(source);
+
+    expect(playlists, hasLength(1));
+    expect(playlists.single.id, '2907071');
+    expect(playlists.single.title, 'test1');
+    expect(playlists.single.videoCount, 15);
+  });
 }

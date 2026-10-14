@@ -432,7 +432,7 @@ class Rule34VideoApi {
         'function': 'get_block',
         'block_id': 'custom_list_videos_videos_list_search',
         'q': normalizedQuery,
-        'from_videos+from_albums': '$page',
+        'from_videos': '$page',
       });
       return _paginatedVideoList('/search/', page: page, query: parameters);
     }

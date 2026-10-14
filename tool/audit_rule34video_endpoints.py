@@ -1,0 +1,107 @@
+#!/usr/bin/env python3
+"""
+Rule34Video (R34V) 全量接口健康探测与自动化巡检脚本
+
+用途：
+  对 HaRu 客户端中用到的所有 Rule34Video 接口进行自动化网络探测与结构特征断言。
+  包含首页流、搜索分页、JSON 自动补全、发现目录、视频详情、个人中心等全量链路。
+
+运行方式：
+  python tool/audit_rule34video_endpoints.py
+"""
+
+import sys
+import urllib.request
+import urllib.parse
+import json
+import time
+
+# 兼容 Windows 控制台 UTF-8 输出
+if sys.platform == "win32" and hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8')
+
+UA = 'HaRu Android/2.0.1'
+BASE = 'https://rule34video.com'
+
+def fetch(path, query=None, data=None, retries=2):
+    url = BASE + path
+    if query:
+        url += '?' + urllib.parse.urlencode(query)
+    req = urllib.request.Request(url, headers={'User-Agent': UA})
+    if data:
+        req.data = urllib.parse.urlencode(data).encode('utf-8')
+    for attempt in range(retries + 1):
+        try:
+            resp = urllib.request.urlopen(req, timeout=15)
+            return resp.getcode(), resp.read().decode('utf-8', errors='replace'), resp.headers
+        except urllib.error.HTTPError as e:
+            return e.code, e.read().decode('utf-8', errors='replace'), e.headers
+        except Exception as e:
+            if attempt == retries:
+                return 0, str(e), {}
+            time.sleep(1)
+
+tests = [
+    # 1. 首页流媒体
+    ("首页最新 (第1页)", "/", None, lambda c, b: c == 200 and 'item' in b and 'data-rd-src' in b),
+    ("首页最新 (第2页异步)", "/", {"mode": "async", "function": "get_block", "block_id": "custom_list_videos_most_recent_videos", "from": "2"}, lambda c, b: c == 200 and 'item' in b),
+    ("首页热门 (第1页)", "/most-popular/", None, lambda c, b: c == 200 and 'item' in b),
+    ("首页高评分 (第1页)", "/top-rated/", None, lambda c, b: c == 200 and 'item' in b),
+
+    # 2. 搜索与异步翻页
+    ("搜索内容 (第1页)", "/search/overwatch/", None, lambda c, b: c == 200 and 'item' in b),
+    ("搜索分页 (第2页异步 from_videos)", "/search/", {"mode": "async", "function": "get_block", "block_id": "custom_list_videos_videos_list_search", "q": "overwatch", "from_videos": "2"}, lambda c, b: c == 200 and 'item' in b),
+
+    # 3. 自动补全建议 JSON
+    ("标签建议 JSON", "/tags_json.php", {"id": "true", "q": "over"}, lambda c, b: c == 200 and b.startswith('{')),
+    ("分类建议 JSON", "/categories_json.php", {"id": "true", "q": "3d"}, lambda c, b: c == 200 and b.startswith('{')),
+    ("Model建议 JSON", "/models_json.php", {"q": "jack"}, lambda c, b: c == 200 and b.startswith('{') and 'items' in b),
+
+    # 4. 发现目录
+    ("分类列表", "/categories/", None, lambda c, b: c == 200 and 'item' in b),
+    ("分类详情 (Virt-A-Mate)", "/categories/virt-a-mate/", None, lambda c, b: c == 200 and 'item' in b),
+    ("标签列表", "/tags/", None, lambda c, b: c == 200 and 'tag' in b),
+    ("标签详情 (/tags/25496/)", "/tags/25496/", None, lambda c, b: c == 200 and 'item' in b),
+    ("Model列表", "/models/", None, lambda c, b: c == 200 and 'item' in b),
+    ("Model详情 (/models/jackerman/)", "/models/jackerman/", None, lambda c, b: c == 200 and 'item' in b),
+    ("频道列表", "/channels/", None, lambda c, b: c == 200 and 'item' in b),
+
+    # 5. 视频详情与播放源
+    ("视频详情 (/video/4666214/)", "/video/4666214/medusa6/", None, lambda c, b: c == 200 and 'flashvars' in b and 'video_url' in b),
+
+    # 6. 播放列表
+    ("公开播放列表详情", "/playlists/2907071/test1104/", None, lambda c, b: c == 200 and ('item' in b or 'headline' in b)),
+
+    # 7. 用户中心 Member Area (新版 ma- 结构)
+    ("公开用户主页 (新版 ma-hero)", "/members/2421071/", None, lambda c, b: c == 200 and 'ma-hero' in b),
+    ("公开用户收藏 (新版 ma-v 容器)", "/members/2421071/favourites/videos/", None, lambda c, b: c == 200 and 'ma-v' in b),
+    ("公开用户播放列表", "/members/2421071/playlists/", None, lambda c, b: c == 200 and ('ma-pl' in b or 'ma-section' in b)),
+
+    # 8. 认证与安全
+    ("登录入口", "/login/", None, lambda c, b: c == 200 and 'login' in b),
+]
+
+def main():
+    print(f"正在启动 Rule34Video 全量接口健康巡检 (目标: {BASE})...\n")
+    print(f"{'测试项':<36} | {'HTTP':<5} | {'返回大小':<8} | {'断言结果'}")
+    print("-" * 75)
+
+    failed = 0
+    for name, path, query, check in tests:
+        code, body, _ = fetch(path, query)
+        passed = check(code, body)
+        status_text = "PASS" if passed else "FAIL"
+        if not passed:
+            failed += 1
+        print(f"{name:<36} | {code:<5} | {len(body):<8} | {status_text}")
+
+    print("-" * 75)
+    if failed == 0:
+        print("[SUCCESS] 全部测试项均通过，Rule34Video 接口与解析特征健康！")
+        sys.exit(0)
+    else:
+        print(f"[WARNING] 存在 {failed} 个测试项断言失败，请检查站点是否发生结构变动！")
+        sys.exit(1)
+
+if __name__ == '__main__':
+    main()

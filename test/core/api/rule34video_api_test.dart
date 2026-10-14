@@ -1746,9 +1746,9 @@ void main() {
       expect(request.queryParameters['model_ids'], 'all,87');
     }
     expect(requests[0].queryParameters['q'], '');
-    expect(requests[0].queryParameters['from_videos+from_albums'], '2');
+    expect(requests[0].queryParameters['from_videos'], '2');
     expect(requests[1].queryParameters['q'], 'tifa');
-    expect(requests[1].queryParameters['from_videos+from_albums'], '3');
+    expect(requests[1].queryParameters['from_videos'], '3');
   });
 
   test('标签、分类和艺术家自动补全使用各自的参数协议', () async {

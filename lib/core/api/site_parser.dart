@@ -15,47 +15,90 @@ class SiteParser {
     final document = html_parser.parse(source);
     final result = <String, VideoItem>{};
 
-    for (final card in document.querySelectorAll('div.item.thumb')) {
+    for (final card in document.querySelectorAll(
+      'div.item.thumb, div.item.ma-v',
+    )) {
       final link =
           card.querySelector('a.th.js-open-popup') ??
-          card.querySelector('a.th[href*="/video/"]');
-      final href = link?.attributes['href'];
+          card.querySelector('a.th[href*="/video/"]') ??
+          card.querySelector('a.ma-thumb') ??
+          card.querySelector('a[href*="/video/"]');
+      final href = link?.attributes['href'] ?? card.attributes['data-url'];
       final match = RegExp(r'/video/(\d+)/([^/]+)/?').firstMatch(href ?? '');
       if (match == null) {
         continue;
       }
 
-      final image = card.querySelector('img.thumb');
+      final image =
+          card.querySelector('img.thumb') ?? card.querySelector('img');
       final title =
+          _clean(card.attributes['data-title']) ??
           _clean(card.querySelector('.thumb_title')?.text) ??
+          _clean(card.querySelector('.ma-v__t')?.text) ??
           _clean(link?.attributes['title']) ??
           _clean(image?.attributes['alt']) ??
           '未命名视频';
       final thumbnail = _imageUrl(image);
       final preview = _url(
-        card.querySelector('[data-preview]')?.attributes['data-preview'],
+        card.querySelector('[data-preview]')?.attributes['data-preview'] ??
+            link?.attributes['data-preview'],
       );
+
+      final metaSpans = card.querySelectorAll('.ma-v__m span');
+      String? publishedLabel = _clean(
+        card.querySelector('.thumb_info .added')?.text,
+      );
+      int? views = _compactNumber(
+        _clean(card.querySelector('.thumb_info .views')?.text) ??
+            card.attributes['data-views'],
+      );
+      int? rating = _number(
+        RegExp(r'(\d{1,3})\s*%')
+            .firstMatch(card.querySelector('.thumb_info .rating')?.text ?? '')
+            ?.group(1),
+      );
+      int? ratingVotes = _compactNumber(
+        RegExp(r'\(([\d,.]+\s*[KMB]?)\)', caseSensitive: false)
+            .firstMatch(card.querySelector('.thumb_info .rating')?.text ?? '')
+            ?.group(1),
+      );
+
+      if (metaSpans.isNotEmpty) {
+        for (final span in metaSpans) {
+          final text = _clean(span.text);
+          if (text == null) continue;
+          if (text.contains('views') && views == null) {
+            views = _compactNumber(text.replaceFirst('views', '').trim());
+          } else if (text.contains('ago') && publishedLabel == null) {
+            publishedLabel = text;
+          } else if (text.endsWith('%') && rating == null) {
+            rating = _number(
+              RegExp(r'(\d{1,3})\s*%').firstMatch(text)?.group(1),
+            );
+          }
+        }
+      }
+
+      if (rating == null && card.attributes['data-rating'] != null) {
+        final floatRating = double.tryParse(card.attributes['data-rating']!);
+        if (floatRating != null) {
+          rating = (floatRating / 5.0 * 100).round();
+        }
+      }
+
       result[match.group(1)!] = VideoItem(
         id: match.group(1)!,
         slug: match.group(2)!,
         title: title,
         thumbnailUrl: thumbnail,
         previewUrl: preview,
-        duration: _clean(card.querySelector('.time')?.text),
-        publishedLabel: _clean(card.querySelector('.thumb_info .added')?.text),
-        views: _compactNumber(
-          _clean(card.querySelector('.thumb_info .views')?.text),
-        ),
-        rating: _number(
-          RegExp(r'(\d{1,3})\s*%')
-              .firstMatch(card.querySelector('.thumb_info .rating')?.text ?? '')
-              ?.group(1),
-        ),
-        ratingVotes: _compactNumber(
-          RegExp(r'\(([\d,.]+\s*[KMB]?)\)', caseSensitive: false)
-              .firstMatch(card.querySelector('.thumb_info .rating')?.text ?? '')
-              ?.group(1),
-        ),
+        duration:
+            _clean(card.querySelector('.ma-dur')?.text) ??
+            _clean(card.querySelector('.time')?.text),
+        publishedLabel: publishedLabel,
+        views: views,
+        rating: rating,
+        ratingVotes: ratingVotes,
       );
     }
 
@@ -65,6 +108,46 @@ class SiteParser {
   static MemberProfile? memberProfile(String source, String userId) {
     final document = html_parser.parse(source);
     final header = document.querySelector('.channel_logo');
+    final maHero = document.querySelector('.ma-hero');
+
+    if (header == null && maHero == null) {
+      return null;
+    }
+
+    if (maHero != null) {
+      final displayName =
+          _clean(document.querySelector('#rdp-name')?.text) ??
+          _clean(maHero.querySelector('.ma-hero__id h1')?.text);
+      if (displayName == null) {
+        return null;
+      }
+      final details = <String, String>{};
+      for (final stat in document.querySelectorAll(
+        '.ma-stats a.ma-stat, .ma-stats div.ma-stat',
+      )) {
+        final label = _clean(stat.querySelector('span')?.text);
+        final value = _clean(stat.querySelector('b')?.text);
+        if (label != null && value != null) {
+          details[label] = value;
+        }
+      }
+      final subscribersCount = _clean(
+        document.querySelector('[data-rdp-subs-count]')?.text,
+      );
+      final subscribersLabel = subscribersCount != null
+          ? '$subscribersCount Subscribers'
+          : null;
+      return MemberProfile(
+        id: userId,
+        displayName: displayName,
+        avatarUrl: _imageUrl(maHero.querySelector('.ma-av img')),
+        subscribersLabel: subscribersLabel,
+        coverUrl: _imageUrl(document.querySelector('.ma-hero__bg img')),
+        verified: maHero.querySelector('.ma-verified') != null,
+        details: Map.unmodifiable(details),
+      );
+    }
+
     final displayName = _clean(header?.querySelector('h2.title')?.text);
     if (displayName == null) {
       return null;
@@ -387,10 +470,11 @@ class SiteParser {
       final image =
           container?.querySelector('img') ?? link.querySelector('img');
       final title =
+          _clean(container?.attributes['data-title']) ??
           _clean(
             container
                 ?.querySelector(
-                  '.thumb_title, .playlist-title, .title, .headline',
+                  '.thumb_title, .playlist-title, .title, .headline, .ma-v__t',
                 )
                 ?.text,
           ) ??
@@ -896,13 +980,15 @@ class SiteParser {
     if (image == null) {
       return null;
     }
-    // rd-src 是站点对首屏之后卡片延迟加载时放置真实封面的属性：
-    // 这些卡片初次渲染的 src 是 data: 占位图，真实地址在 data-rd-src，
+    // rd-src/rd-jpg/rd-webp 是站点对首屏之后卡片延迟加载时放置真实封面的属性：
+    // 这些卡片初次渲染的 src 是 data: 占位图，真实地址在 data-rd-src / data-rd-jpg / data-rd-webp，
     // 移动端不执行站点脚本，必须自行读取，否则封面上全是黑屏。
     for (final attribute in const [
+      'data-rd-src',
+      'data-rd-jpg',
+      'data-rd-webp',
       'data-webp',
       'data-original',
-      'data-rd-src',
       'src',
     ]) {
       final value = _url(image.attributes[attribute]);
