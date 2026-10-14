@@ -18,6 +18,17 @@ enum ContentSite {
     label: 'Hanime',
     baseUrl: 'https://hanime1.me',
     capabilities: ContentSiteCapabilities(videoPreviews: true),
+  ),
+  // 91porn 只提供匿名浏览与直接 MP4 播放，没有任何账号级能力，
+  // 因此能力位全部保持 false：现有 UI 会据此隐藏收藏、播放列表、
+  // 订阅、筛选和预览等入口，无需为此删除界面。
+  porn91(
+    id: 'porn91',
+    label: '91porn',
+    // 裸域 9p47q.com 不可直接列取内容（实测返回 0 条目）；
+    // 91porn.com 与 w0200~w0209.9p47q.com 是同一后端的品牌域。
+    baseUrl: 'https://91porn.com',
+    capabilities: ContentSiteCapabilities(),
   );
 
   const ContentSite({

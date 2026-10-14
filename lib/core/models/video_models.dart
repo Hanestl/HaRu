@@ -412,13 +412,24 @@ class VideoItem {
   String get legacyCompatibleStorageId =>
       site == ContentSite.rule34video ? id : contentKey;
 
-  String get detailPath => site == ContentSite.hanime1
-      ? '/watch?v=${Uri.encodeQueryComponent(id)}'
-      : '/video/$id/$slug/';
+  String get detailPath => switch (site) {
+    ContentSite.hanime1 => '/watch?v=${Uri.encodeQueryComponent(id)}',
+    ContentSite.porn91 =>
+      '/view_video.php?viewkey=${Uri.encodeQueryComponent(id)}',
+    ContentSite.rule34video => '/video/$id/$slug/',
+  };
 
-  Uri get canonicalUri => site == ContentSite.hanime1
-      ? site.origin.replace(path: '/watch', queryParameters: {'v': id})
-      : site.origin.replace(path: detailPath);
+  Uri get canonicalUri => switch (site) {
+    ContentSite.hanime1 => site.origin.replace(
+      path: '/watch',
+      queryParameters: {'v': id},
+    ),
+    ContentSite.porn91 => site.origin.replace(
+      path: '/view_video.php',
+      queryParameters: {'viewkey': id},
+    ),
+    ContentSite.rule34video => site.origin.replace(path: detailPath),
+  };
 
   String? get highResolutionThumbnailUrl {
     final value = thumbnailUrl;
