@@ -5,6 +5,7 @@ import '../../core/api/rule34video_api.dart';
 import '../../core/models/content_source.dart';
 import '../../core/services/external_link_service.dart';
 import '../../shared/site_badge.dart';
+import 'hanime_web_login_page.dart';
 
 Future<bool> showLoginSheet(
   BuildContext context,
@@ -176,6 +177,14 @@ class _LoginSheetState extends State<_LoginSheet> {
                       )
                     : const AppText('登录'),
               ),
+              if (_isHanime) ...[
+                const SizedBox(height: 8),
+                OutlinedButton.icon(
+                  onPressed: _submitting ? null : _openHanimeWebLogin,
+                  icon: const Icon(Icons.language, size: 20),
+                  label: const AppText('网页 / Google 账号登入'),
+                ),
+              ],
               const SizedBox(height: 4),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -190,20 +199,17 @@ class _LoginSheetState extends State<_LoginSheet> {
                           ),
                     child: const AppText('注册账号'),
                   ),
-                  TextButton(
-                    onPressed: _submitting
-                        ? null
-                        : () => _openWebsite(
-                            _isHanime
-                                ? Uri.parse(
-                                    '${widget.site.baseUrl}/password/reset',
-                                  )
-                                : Uri.parse(
-                                    'https://rule34video.com/reset-password/',
-                                  ),
-                          ),
-                    child: const AppText('忘记密码'),
-                  ),
+                  if (!_isHanime)
+                    TextButton(
+                      onPressed: _submitting
+                          ? null
+                          : () => _openWebsite(
+                              Uri.parse(
+                                'https://rule34video.com/reset-password/',
+                              ),
+                            ),
+                      child: const AppText('忘记密码'),
+                    ),
                 ],
               ),
             ],
@@ -211,6 +217,13 @@ class _LoginSheetState extends State<_LoginSheet> {
         ),
       ),
     );
+  }
+
+  Future<void> _openHanimeWebLogin() async {
+    final success = await HanimeWebLoginPage.show(context, api: widget.api);
+    if (success == true && mounted) {
+      Navigator.of(context).pop(true);
+    }
   }
 
   Future<void> _openWebsite(Uri uri) async {

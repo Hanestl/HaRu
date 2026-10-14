@@ -2,11 +2,14 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flule34/l10n/ui_localization.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../app/router/route_names.dart';
 import '../../core/api/rule34video_api.dart';
 import '../../core/models/video_models.dart';
 import '../../core/services/translation_service.dart';
 import '../../shared/localized_translation_text.dart';
+import '../../shared/site_avatar.dart';
 import '../video/video_player_page.dart';
 
 enum PlaylistPlaybackMode {
@@ -342,62 +345,301 @@ class _PlaylistPlaybackPageState extends State<PlaylistPlaybackPage> {
                       ),
                   ],
                 ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                  child: Row(
+                Expanded(
+                  child: ListView(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
                     children: [
-                      Expanded(
-                        child: LocalizedTranslationText(
-                          value: widget.translationService.resolveTitle(
-                            details.video.id,
-                            details.video.title,
-                            siteId: details.video.siteId,
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: LocalizedTranslationText(
+                              value: widget.translationService.resolveTitle(
+                                details.video.id,
+                                details.video.title,
+                                siteId: details.video.siteId,
+                              ),
+                              style: Theme.of(context).textTheme.titleMedium,
+                            ),
                           ),
+                          const SizedBox(width: 12),
+                          Text(
+                            '${_index + 1}/${_videos.length}',
+                            style: Theme.of(context).textTheme.labelLarge,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      SegmentedButton<PlaylistPlaybackMode>(
+                        segments: PlaylistPlaybackMode.values
+                            .map(
+                              (mode) => ButtonSegment(
+                                value: mode,
+                                label: AppText(mode.label),
+                              ),
+                            )
+                            .toList(growable: false),
+                        selected: {_mode},
+                        onSelectionChanged: (selection) {
+                          setState(() => _mode = selection.single);
+                          unawaited(_preloadNext());
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          IconButton.filledTonal(
+                            tooltip: context.uiText('上一个'),
+                            onPressed: _index > 0 ? _previous : null,
+                            icon: const Icon(Icons.skip_previous),
+                          ),
+                          const SizedBox(width: 24),
+                          IconButton.filledTonal(
+                            tooltip: context.uiText('下一个'),
+                            onPressed: _next,
+                            icon: const Icon(Icons.skip_next),
+                          ),
+                        ],
+                      ),
+                      if (details.video.duration != null ||
+                          details.video.views != null ||
+                          details.video.rating != null ||
+                          details.video.publishedLabel != null) ...[
+                        const SizedBox(height: 16),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            if (details.video.duration != null)
+                              _PlaylistStatChip(
+                                icon: Icons.schedule,
+                                label: details.video.duration!,
+                              ),
+                            if (details.video.views != null)
+                              _PlaylistStatChip(
+                                icon: Icons.visibility_outlined,
+                                label: '${details.video.views} 次观看',
+                              ),
+                            if (details.video.rating != null)
+                              _PlaylistStatChip(
+                                icon: Icons.thumb_up_alt_outlined,
+                                label: details.ratingVotes == null
+                                    ? '${details.video.rating}%'
+                                    : '${details.video.rating}% · ${details.ratingVotes} 票',
+                              ),
+                            if (details.video.publishedLabel != null)
+                              _PlaylistStatChip(
+                                icon: Icons.calendar_today_outlined,
+                                label: details.video.publishedLabel!,
+                              ),
+                          ],
+                        ),
+                      ],
+                      if (details.description != null &&
+                          details.description!.trim().isNotEmpty) ...[
+                        const SizedBox(height: 16),
+                        Text(
+                          details.description!.trim(),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
+                              ),
+                        ),
+                      ],
+                      if (_metadataOf(
+                        details,
+                        DiscoveryKind.category,
+                      ).isNotEmpty) ...[
+                        const SizedBox(height: 16),
+                        _PlaylistMetadataSection(
+                          title: '分类',
+                          items: _metadataOf(details, DiscoveryKind.category),
+                          translationService: widget.translationService,
+                          siteId: details.video.siteId,
+                          onTap: _openMetadata,
+                        ),
+                      ],
+                      if (_metadataOf(
+                        details,
+                        DiscoveryKind.tag,
+                      ).isNotEmpty) ...[
+                        const SizedBox(height: 16),
+                        _PlaylistMetadataSection(
+                          title: '标签',
+                          items: _metadataOf(details, DiscoveryKind.tag),
+                          translationService: widget.translationService,
+                          siteId: details.video.siteId,
+                          onTap: _openMetadata,
+                        ),
+                      ],
+                      if (_metadataOf(
+                        details,
+                        DiscoveryKind.model,
+                      ).isNotEmpty) ...[
+                        const SizedBox(height: 16),
+                        _PlaylistMetadataSection(
+                          title: '艺术家',
+                          items: _metadataOf(details, DiscoveryKind.model),
+                          translationService: widget.translationService,
+                          siteId: details.video.siteId,
+                          onTap: _openMetadata,
+                        ),
+                      ],
+                      if (details.uploader case final uploader?) ...[
+                        const SizedBox(height: 16),
+                        AppText(
+                          '上传者',
                           style: Theme.of(context).textTheme.titleMedium,
                         ),
-                      ),
-                      const SizedBox(width: 12),
-                      Text('${_index + 1}/${_videos.length}'),
+                        const SizedBox(height: 8),
+                        Card(
+                          margin: EdgeInsets.zero,
+                          child: ListTile(
+                            leading: SiteAvatar(
+                              imageUrl: uploader.avatarUrl,
+                              fallbackIcon: Icons.person_outline,
+                            ),
+                            title: Row(
+                              children: [
+                                Flexible(child: Text(uploader.name)),
+                                if (uploader.verified) ...[
+                                  const SizedBox(width: 4),
+                                  Icon(
+                                    Icons.verified,
+                                    size: 18,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.primary,
+                                  ),
+                                ],
+                              ],
+                            ),
+                            onTap: () {
+                              context.pushNamed(
+                                AppRouteNames.collection,
+                                pathParameters: {
+                                  'kind': DiscoveryKind.channel.name,
+                                  'id': uploader.id,
+                                },
+                                extra: ContentCollectionItem(
+                                  id: uploader.id,
+                                  title: uploader.name,
+                                  path: uploader.videosPath,
+                                  kind: DiscoveryKind.channel,
+                                  thumbnailUrl: uploader.avatarUrl,
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: SegmentedButton<PlaylistPlaybackMode>(
-                    segments: PlaylistPlaybackMode.values
-                        .map(
-                          (mode) => ButtonSegment(
-                            value: mode,
-                            label: AppText(mode.label),
-                          ),
-                        )
-                        .toList(growable: false),
-                    selected: {_mode},
-                    onSelectionChanged: (selection) {
-                      setState(() => _mode = selection.single);
-                      unawaited(_preloadNext());
-                    },
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    IconButton.filledTonal(
-                      tooltip: context.uiText('上一个'),
-                      onPressed: _index > 0 ? _previous : null,
-                      icon: const Icon(Icons.skip_previous),
-                    ),
-                    const SizedBox(width: 24),
-                    IconButton.filledTonal(
-                      tooltip: context.uiText('下一个'),
-                      onPressed: _next,
-                      icon: const Icon(Icons.skip_next),
-                    ),
-                  ],
-                ),
               ],
             ),
+    );
+  }
+
+  List<VideoMetadataItem> _metadataOf(
+    VideoDetails details,
+    DiscoveryKind kind,
+  ) {
+    return details.metadataItems
+        .where((item) => item.kind == kind)
+        .toList(growable: false);
+  }
+
+  void _openMetadata(VideoMetadataItem item) {
+    final collection = item.collection;
+    context.pushNamed(
+      AppRouteNames.collection,
+      pathParameters: {'kind': collection.kind.name, 'id': collection.id},
+      extra: collection,
+    );
+  }
+}
+
+class _PlaylistStatChip extends StatelessWidget {
+  const _PlaylistStatChip({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.6),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: theme.colorScheme.onSurfaceVariant),
+          const SizedBox(width: 6),
+          Text(label, style: theme.textTheme.bodySmall),
+        ],
+      ),
+    );
+  }
+}
+
+class _PlaylistMetadataSection extends StatelessWidget {
+  const _PlaylistMetadataSection({
+    required this.title,
+    required this.items,
+    required this.translationService,
+    required this.siteId,
+    required this.onTap,
+  });
+
+  final String title;
+  final List<VideoMetadataItem> items;
+  final TranslationService translationService;
+  final String siteId;
+  final ValueChanged<VideoMetadataItem> onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        AppText(title, style: theme.textTheme.titleMedium),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: items
+              .map((item) {
+                final translated = translationService.resolveMetadata(
+                  item.kind,
+                  item.title,
+                  siteId: siteId,
+                );
+                return ActionChip(
+                  avatar: item.kind == DiscoveryKind.tag
+                      ? const Text(
+                          '#',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        )
+                      : null,
+                  label: LocalizedTranslationText(
+                    value: translated,
+                    style: theme.textTheme.bodyMedium,
+                  ),
+                  onPressed: () => onTap(item),
+                );
+              })
+              .toList(growable: false),
+        ),
+      ],
     );
   }
 }
