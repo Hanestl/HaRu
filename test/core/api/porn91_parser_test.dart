@@ -197,4 +197,60 @@ void main() {
       expect(details.video.title, '列表里的标题');
     });
   });
+
+  group('VideoItem 路由到 91porn', () {
+    const porn91 = VideoItem(
+      id: '1248022',
+      title: '示例',
+      slug: '1248022',
+      siteId: 'porn91',
+    );
+    const rule34 = VideoItem(id: '1248022', title: 'R34', slug: 'r34');
+
+    test('视频键按站点前缀隔离，不会与 rule34video 撞车', () {
+      expect(porn91.contentKey, 'porn91:1248022');
+      expect(rule34.contentKey, 'rule34video:1248022');
+      expect(porn91.legacyCompatibleStorageId, 'porn91:1248022');
+    });
+
+    test('详情路径与规范链接使用 viewkey 查询参数', () {
+      expect(porn91.detailPath, '/view_video.php?viewkey=1248022');
+      expect(
+        porn91.canonicalUri.toString(),
+        'https://91porn.com/view_video.php?viewkey=1248022',
+      );
+    });
+
+    test('detailPath 对 viewkey 做转义，特殊字符不会被拼成第二个参数', () {
+      const tricky = VideoItem(
+        id: 'a&b=c',
+        title: 'x',
+        slug: 'x',
+        siteId: 'porn91',
+      );
+
+      expect(tricky.detailPath, '/view_video.php?viewkey=a%26b%3Dc');
+      expect(tricky.canonicalUri.queryParameters['viewkey'], 'a&b=c');
+    });
+
+    test('无账号能力，且缩略图不套用 rule34video 的高清升级规则', () {
+      expect(porn91.site.capabilities.accountFavorites, isFalse);
+      expect(porn91.site.capabilities.accountPlaylists, isFalse);
+      expect(porn91.site.capabilities.subscriptions, isFalse);
+      expect(porn91.site.capabilities.videoPreviews, isFalse);
+
+      const thumb = VideoItem(
+        id: '1',
+        title: 'x',
+        slug: 'x',
+        siteId: 'porn91',
+        thumbnailUrl: 'https://cdn.example/thumb/720x540/11.jpg',
+      );
+
+      expect(
+        thumb.highResolutionThumbnailUrl,
+        'https://cdn.example/thumb/720x540/11.jpg',
+      );
+    });
+  });
 }
