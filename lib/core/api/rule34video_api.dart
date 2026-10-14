@@ -8,6 +8,7 @@ import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import '../models/account_models.dart';
 import '../models/hanime_search_models.dart';
 import '../logging/app_log_service.dart';
+import '../models/porn91_models.dart';
 import '../models/rule34_comment_models.dart';
 import '../models/video_models.dart';
 import '../security/error_redaction.dart';
@@ -16,6 +17,7 @@ import '../services/subscription_activity_index.dart';
 import 'site_parser.dart';
 import 'hanime1_api.dart';
 import 'hanime1_parser.dart';
+import 'porn91_api.dart';
 import '../models/content_source.dart';
 
 class ApiException implements Exception {
@@ -58,6 +60,7 @@ class Rule34VideoApi {
     Future<String?> Function(Uri targetUri, bool allowForegroundVerification)?
     hanimeBrowserPageHandler,
     Hanime1Api? hanimeApi,
+    Porn91Api? porn91Api,
   }) {
     hanime1Api =
         hanimeApi ??
@@ -65,6 +68,7 @@ class Rule34VideoApi {
           sessionStore: sessionStore,
           browserPageHandler: hanimeBrowserPageHandler,
         );
+    this.porn91Api = porn91Api ?? Porn91Api(sessionStore: sessionStore);
     _dio = Dio(_baseOptions());
     _publicDio = Dio(_baseOptions());
     if (httpClientAdapter != null) {
@@ -85,6 +89,7 @@ class Rule34VideoApi {
 
   final SessionStore sessionStore;
   late final Hanime1Api hanime1Api;
+  late final Porn91Api porn91Api;
   late final SubscriptionActivityIndex subscriptionActivity;
   late final Dio _dio;
   late final Dio _publicDio;
@@ -146,18 +151,21 @@ class Rule34VideoApi {
   }
 
   Future<String?> sessionCookieHeaderFor(ContentSite site) {
-    return site == ContentSite.hanime1
-        ? hanime1Api.sessionCookieHeader()
-        : sessionCookieHeader();
+    return switch (site) {
+      ContentSite.hanime1 => hanime1Api.sessionCookieHeader(),
+      ContentSite.porn91 => porn91Api.sessionCookieHeader(),
+      ContentSite.rule34video => sessionCookieHeader(),
+    };
   }
 
   Future<Map<String, String>> mediaHeadersFor(VideoItem video) async {
-    if (video.site == ContentSite.hanime1) {
-      return hanime1Api.mediaHeaders();
-    }
-    return ContentSite.rule34video.mediaHeaders(
-      cookie: await sessionCookieHeader(),
-    );
+    return switch (video.site) {
+      ContentSite.hanime1 => hanime1Api.mediaHeaders(),
+      ContentSite.porn91 => porn91Api.mediaHeaders(),
+      ContentSite.rule34video => ContentSite.rule34video.mediaHeaders(
+        cookie: await sessionCookieHeader(),
+      ),
+    };
   }
 
   static const _feedCacheTtl = Duration(minutes: 30);
@@ -238,6 +246,22 @@ class Rule34VideoApi {
       return hanime1Api.loadFeed(kind, page);
     }
     return loadFeed(kind, page, filters: filters, force: force);
+  }
+
+  /// 91porn 的分类浏览。与其它站点不同，本站没有“最新/热门/高评分”这类
+  /// 统一 feed，而是各自独立的分类导航，因此返回原始分类列表。
+  List<Porn91Category> get porn91Categories => Porn91Category.values;
+
+  Future<List<VideoItem>> loadPorn91Category(
+    Porn91Category category,
+    int page, {
+    CancelToken? cancelToken,
+  }) {
+    return porn91Api.loadCategoryVideos(
+      category,
+      page,
+      cancelToken: cancelToken,
+    );
   }
 
   Future<List<HanimeHomeSection>> loadHanimeHomeSections({bool force = false}) {
@@ -454,6 +478,9 @@ class Rule34VideoApi {
     if (site == ContentSite.hanime1) {
       return hanime1Api.searchVideos(query, page, filters: hanimeFilters);
     }
+    if (site == ContentSite.porn91) {
+      return porn91Api.searchVideos(query, page);
+    }
     return searchVideos(query, page, filters: filters);
   }
 
@@ -593,6 +620,9 @@ class Rule34VideoApi {
   }) async {
     if (video.site == ContentSite.hanime1) {
       return hanime1Api.loadVideoDetails(video, cancelToken: cancelToken);
+    }
+    if (video.site == ContentSite.porn91) {
+      return porn91Api.loadVideoDetails(video, cancelToken: cancelToken);
     }
     String body;
     var usedPublicRequest = false;

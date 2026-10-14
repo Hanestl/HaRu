@@ -223,7 +223,9 @@ class _SearchPageState extends State<SearchPage> {
         _suggestionError = null;
       });
     }
-    if (_site == ContentSite.hanime1) {
+    // hanime1 与 porn91 都没有跨类型自动补全接口；porn91 只有视频搜索，
+    // 拿 rule34video 的补全结果填进来会给出该站根本不存在的标签/分类。
+    if (_site == ContentSite.hanime1 || _site == ContentSite.porn91) {
       if (mounted && generation == _suggestionGeneration) {
         setState(() {
           _suggestions = const {};
@@ -785,6 +787,10 @@ class _SearchPageState extends State<SearchPage> {
   Widget _buildScopeSelector() {
     final scopes = _site == ContentSite.hanime1
         ? const [SearchResultScope.overview, SearchResultScope.videos]
+        // porn91 只有视频搜索，没有标签/艺术家/分类实体检索，
+        // 保留这些页签只会永远返回空结果。
+        : _site == ContentSite.porn91
+        ? const [SearchResultScope.videos]
         : SearchResultScope.values;
     return SizedBox(
       height: 48,
@@ -809,7 +815,18 @@ class _SearchPageState extends State<SearchPage> {
     if (_site == ContentSite.hanime1) {
       return _buildHanimeLanding();
     }
+    // R34V 落地页会拉本站的热门标签，对 porn91 无意义。
+    if (_site == ContentSite.porn91) {
+      return _buildSearchHistoryOnlyLanding();
+    }
     return _buildRule34Landing();
+  }
+
+  Widget _buildSearchHistoryOnlyLanding() {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+      children: [_buildHistory()],
+    );
   }
 
   Widget _buildRule34Landing() {
