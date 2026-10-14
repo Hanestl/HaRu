@@ -5,12 +5,15 @@ import 'package:flutter/foundation.dart';
 /// 取值来自站点 `v.php?category=<code>` 导航（实测 2026-10）。
 /// 站点会按 `Accept-Language` 返回英文导航文案，因此标签由 App 侧给出，
 /// 不直接采用页面文本。
+///
+/// 导航里的 `category=hd` **不在**此列：它实测恒为空列表（两个品牌域、
+/// 多次重试均为 0 条，页面提示 VIP），与 `view_video_hd.php` 是同一道
+/// 会员墙，保留只会给出一个永远为空的分类。
 enum Porn91Category {
   hot('热门', 'hot'),
   topThisWeek('本周排行', 'top'),
   topLastWeek('上周排行', 'top', extraQuery: {'m': '-1'}),
   featured('精华', 'rf'),
-  hd('高清', 'hd'),
   tenMinutes('10 分钟以上', 'long'),
   twentyMinutes('20 分钟以上', 'longer'),
   favorite('收藏最多', 'tf'),
