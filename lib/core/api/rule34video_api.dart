@@ -1126,12 +1126,47 @@ class Rule34VideoApi {
     _clearVideoPageCache('history');
   }
 
+  /// 向 Rule34Video 上报观看历史打点。
+  ///
+  /// 该站服务端仅在收到播放器的 stats.php 打点（VideoPlay 事件）后，
+  /// 才会将该视频写入当前账号的观看历史（`/my/history/`）。
+  Future<void> reportWatchHistory(VideoItem video) async {
+    if (video.site != ContentSite.rule34video || !sessionStore.isLoggedIn) {
+      return;
+    }
+    try {
+      final rnd = DateTime.now().millisecondsSinceEpoch;
+      await _dio.get<void>(
+        '/player/stats.php',
+        queryParameters: <String, String>{
+          'embed': '0',
+          'video_id': video.id,
+          'event': 'VideoPlay,',
+          'rnd': rnd.toString(),
+        },
+        options: Options(
+          headers: <String, String>{'Referer': video.detailPath},
+          responseType: ResponseType.bytes,
+        ),
+      );
+      invalidateHistoryCache();
+    } catch (_) {
+      // 统计打点静默失败，避免干扰正常播放
+    }
+  }
+
   Future<List<VideoItem>> _loadHistoryPage(
     int page, {
     bool force = false,
     CancelToken? cancelToken,
   }) async {
     _requireLogin();
+    unawaited(
+      AppLogService.instance.info(
+        '历史记录请求开始；page=$page；force=$force',
+        component: 'r34v_history',
+      ),
+    );
     final path = page > 1 ? '/my/history/$page/' : '/my/history/';
     return _cachedVideoPage(
       key: _videoPageCacheKey('history', page),
@@ -1302,19 +1337,35 @@ class Rule34VideoApi {
     int page,
   ) async {
     _requireLogin();
-    return _paginatedVideoList(
+    final blockId = playlist.path.contains('/my/')
+        ? 'list_videos_my_favourite_videos'
+        : 'playlist_view_playlist_view';
+    unawaited(
+      AppLogService.instance.info(
+        '播放列表视频请求开始；playlistId=${playlist.id}；path=${playlist.path}；page=$page；blockId=$blockId',
+        component: 'r34v_playlists',
+      ),
+    );
+    final items = await _paginatedVideoList(
       playlist.path,
       page: page,
       query: page > 1
           ? <String, String>{
               'mode': 'async',
               'function': 'get_block',
-              'block_id': 'playlist_view_playlist_view',
+              'block_id': blockId,
               'sort_by': 'added2fav_date',
               'from': '$page',
             }
           : null,
     );
+    unawaited(
+      AppLogService.instance.info(
+        '播放列表视频请求完成；playlistId=${playlist.id}；page=$page；count=${items.length}',
+        component: 'r34v_playlists',
+      ),
+    );
+    return items;
   }
 
   Future<PlaylistFormData> loadPlaylistForm(String playlistId) async {
@@ -1489,8 +1540,6 @@ class Rule34VideoApi {
     if (cached != null) {
       return cached;
     }
-    // 网站的订阅列表并不是普通的 /2/ 路径分页；第二页起必须请求
-    // KVS 异步区块，否则会拿到空页面并错误地认为已经到底。
     final path = '/my/subscriptions/';
     final query = page > 1
         ? <String, String>{
@@ -1499,11 +1548,24 @@ class Rule34VideoApi {
             'block_id': 'list_members_subscriptions_my_subscriptions',
             'sort_by': 'added_date',
             'from_my_subscriptions': '$page',
+            'view': 'members',
           }
-        : null;
+        : const <String, String>{'view': 'members'};
+    unawaited(
+      AppLogService.instance.info(
+        '订阅列表请求开始；page=$page；ajax=${page > 1}',
+        component: 'r34v_subscriptions',
+      ),
+    );
     try {
       final result = SiteParser.subscriptions(
         await _get(path, query: query, cancelToken: cancelToken),
+      );
+      unawaited(
+        AppLogService.instance.info(
+          '订阅列表请求完成；page=$page；count=${result.length}',
+          component: 'r34v_subscriptions',
+        ),
       );
       if (effectiveGeneration == _subscriptionGeneration &&
           sessionStore.currentUserId == userId) {
@@ -1660,16 +1722,14 @@ class Rule34VideoApi {
       throw const ApiException('Hanime 暂不支持在应用内管理收藏。');
     }
     _requireLogin();
-    await _post(
+    await _postPlaylistMutation(
       video.detailPath,
-      query: const <String, String>{'mode': 'async'},
       data: <String, String>{
         'action': add ? 'add_to_favourites' : 'delete_from_favourites',
         'video_id': video.id,
         'fav_type': '0',
         'playlist_id': '0',
       },
-      ajax: true,
     );
     _syncFavoriteCache();
     _favoriteStatusByVideoId[video.id] = add;
@@ -2461,6 +2521,7 @@ class Rule34VideoApi {
   }
 
   Future<void> _clearExpiredSession() async {
+    _playlistCsrfToken = null;
     _resetSubscriptionCache();
     _clearPlaylistCache();
     _resetFollowingCache();

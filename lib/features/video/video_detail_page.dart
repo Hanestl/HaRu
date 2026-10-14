@@ -127,6 +127,7 @@ class _VideoDetailPageState extends ConsumerState<VideoDetailPage>
                 : widget.api.loadVideoDetails(widget.video),
             resumeDelay: const Duration(seconds: 3),
           );
+      unawaited(widget.api.reportWatchHistory(details.video));
       return details;
     } catch (error, stackTrace) {
       Error.throwWithStackTrace(error, stackTrace);

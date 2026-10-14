@@ -912,6 +912,7 @@ void main() {
       'block_id': 'list_members_subscriptions_my_subscriptions',
       'sort_by': 'added_date',
       'from_my_subscriptions': '2',
+      'view': 'members',
     });
     expect(requests[3].uri.queryParameters, {
       'mode': 'async',
@@ -2151,6 +2152,112 @@ void main() {
       'mode': 'async',
       'format': 'json',
     });
+  });
+
+  test('视频收藏切换带安全令牌且遇到 403 自动重试', () async {
+    final harness = TestSessionHarness.create();
+    addTearDown(harness.dispose);
+    await harness.sessionStore.load();
+    await harness.sessionStore.authenticate('2421071');
+
+    final requests = <RequestOptions>[];
+    var securityRequests = 0;
+    var rejectFirstMutation = true;
+    final api = Rule34VideoApi(
+      sessionStore: harness.sessionStore,
+      httpClientAdapter: _TestAdapter((options) {
+        requests.add(options);
+        if (options.uri.path == '/playlist_security.php') {
+          securityRequests += 1;
+          return ResponseBody.fromString(
+            '{"status":"success","csrf_token":"${'c' * 64}"}',
+            200,
+            headers: {
+              Headers.contentTypeHeader: ['application/json; charset=utf-8'],
+            },
+          );
+        }
+        if (options.method == 'POST' && rejectFirstMutation) {
+          rejectFirstMutation = false;
+          return ResponseBody.fromString(
+            '{"status":"failure","errors":[{"code":"invalid_playlist_csrf",'
+            '"message":"无效令牌"}]}',
+            403,
+            headers: {
+              Headers.contentTypeHeader: ['application/json; charset=utf-8'],
+            },
+          );
+        }
+        return ResponseBody.fromString(
+          '{"status":"success","data":{"favourites_total":1}}',
+          200,
+          headers: {
+            Headers.contentTypeHeader: ['application/json; charset=utf-8'],
+          },
+        );
+      }),
+    );
+    addTearDown(api.close);
+
+    await api.toggleFavorite(
+      video: const VideoItem(
+        id: '3051501',
+        title: 'tifa',
+        slug: 'tifa-video',
+        siteId: 'rule34video',
+      ),
+      add: true,
+    );
+
+    final mutations = requests.where((item) => item.method == 'POST').toList();
+    expect(mutations, hasLength(2));
+    expect(mutations.first.headers['X-Playlist-CSRF'], 'c' * 64);
+    expect(mutations.last.headers['X-Playlist-CSRF'], 'c' * 64);
+    expect(securityRequests, 2);
+    expect(_requestFields(mutations.first.data), {
+      'action': 'add_to_favourites',
+      'video_id': '3051501',
+      'fav_type': '0',
+      'playlist_id': '0',
+      'mode': 'async',
+      'format': 'json',
+    });
+  });
+
+  test('播放上报向 stats.php 发送 VideoPlay 统计请求', () async {
+    final harness = TestSessionHarness.create();
+    addTearDown(harness.dispose);
+    await harness.sessionStore.load();
+    await harness.sessionStore.authenticate('2421071');
+
+    final requests = <RequestOptions>[];
+    final api = Rule34VideoApi(
+      sessionStore: harness.sessionStore,
+      httpClientAdapter: _TestAdapter((options) {
+        requests.add(options);
+        return ResponseBody.fromString('', 200);
+      }),
+    );
+    addTearDown(api.close);
+
+    await api.reportWatchHistory(
+      const VideoItem(
+        id: '3051501',
+        title: 'tifa',
+        slug: 'tifa-video',
+        siteId: 'rule34video',
+      ),
+    );
+
+    final statsRequests = requests
+        .where((item) => item.uri.path == '/player/stats.php')
+        .toList();
+    expect(statsRequests, hasLength(1));
+    final req = statsRequests.first;
+    expect(req.uri.queryParameters['embed'], '0');
+    expect(req.uri.queryParameters['video_id'], '3051501');
+    expect(req.uri.queryParameters['event'], 'VideoPlay,');
+    expect(req.headers['Referer'], '/video/3051501/tifa-video/');
   });
 }
 

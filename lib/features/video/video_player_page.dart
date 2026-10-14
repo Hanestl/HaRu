@@ -1023,6 +1023,7 @@ class _VideoPlayerPageState extends ConsumerState<VideoPlayerPage>
     if (value.isPlaying && !_historyCacheInvalidated) {
       _historyCacheInvalidated = true;
       widget.api.invalidateHistoryCache();
+      unawaited(widget.api.reportWatchHistory(widget.video));
     }
     final keepAwake =
         ref.read(appSettingsRepositoryProvider).settings.keepScreenAwake &&

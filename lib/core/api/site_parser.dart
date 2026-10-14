@@ -16,12 +16,13 @@ class SiteParser {
     final result = <String, VideoItem>{};
 
     for (final card in document.querySelectorAll(
-      'div.item.thumb, div.item.ma-v',
+      'div.item.thumb, div.item.ma-v, div.item.ma-prow, div.item.ma-row',
     )) {
       final link =
           card.querySelector('a.th.js-open-popup') ??
           card.querySelector('a.th[href*="/video/"]') ??
           card.querySelector('a.ma-thumb') ??
+          card.querySelector('a.ma-row__t') ??
           card.querySelector('a[href*="/video/"]');
       final href = link?.attributes['href'] ?? card.attributes['data-url'];
       final match = RegExp(r'/video/(\d+)/([^/]+)/?').firstMatch(href ?? '');
@@ -35,6 +36,7 @@ class SiteParser {
           _clean(card.attributes['data-title']) ??
           _clean(card.querySelector('.thumb_title')?.text) ??
           _clean(card.querySelector('.ma-v__t')?.text) ??
+          _clean(card.querySelector('.ma-row__t')?.text) ??
           _clean(link?.attributes['title']) ??
           _clean(image?.attributes['alt']) ??
           '未命名视频';
@@ -44,7 +46,7 @@ class SiteParser {
             link?.attributes['data-preview'],
       );
 
-      final metaSpans = card.querySelectorAll('.ma-v__m span');
+      final metaSpans = card.querySelectorAll('.ma-v__m span, .ma-row__m span');
       String? publishedLabel = _clean(
         card.querySelector('.thumb_info .added')?.text,
       );
@@ -412,9 +414,11 @@ class SiteParser {
         final image =
             link.querySelector('img') ?? container.querySelector('img');
         final title =
+            _clean(container.attributes['data-title']) ??
             _clean(link.attributes['title']) ??
             _clean(image?.attributes['alt']) ??
             _clean(container.querySelector('.title')?.text) ??
+            _clean(container.querySelector('.ma-row__t')?.text) ??
             _clean(link.text);
         if (title == null) {
           continue;
@@ -629,6 +633,21 @@ class SiteParser {
   }
 
   static String? asyncActionError(String source) {
+    final trimmed = source.trim();
+    if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+      try {
+        final decoded = jsonDecode(trimmed);
+        if (decoded is Map && decoded['status'] == 'failure') {
+          final errors = decoded['errors'];
+          if (errors is List && errors.isNotEmpty) {
+            final first = errors.first;
+            if (first is Map && first['message'] != null) {
+              return first['message'].toString();
+            }
+          }
+        }
+      } catch (_) {}
+    }
     final document = html_parser.parse(source);
     return _clean(document.querySelector('error')?.text) ??
         _clean(document.querySelector('.generic-error')?.text) ??

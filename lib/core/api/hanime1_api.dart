@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io' show Cookie, Platform;
 
 import 'package:dio/dio.dart';
+import 'package:dio/io.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:native_dio_adapter/native_dio_adapter.dart';
 
@@ -59,6 +60,15 @@ final class Hanime1Api {
           enableHttp2: true,
           enableQuic: false,
         ),
+        createFallbackAdapter: (error, stackTrace) {
+          unawaited(
+            AppLogService.instance.warning(
+              'Cronet 不可用，已自动降级至 IOHttpClientAdapter: $error',
+              component: 'hanime1_api',
+            ),
+          );
+          return IOHttpClientAdapter();
+        },
       );
       _transportLabel = 'cronet';
     } else {

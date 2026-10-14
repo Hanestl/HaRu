@@ -743,4 +743,54 @@ void main() {
     expect(playlists.single.title, 'test1');
     expect(playlists.single.videoCount, 15);
   });
+
+  test('解析全新 Member Area 播放列表内部视频 (item ma-prow)', () {
+    const source = '''
+      <div class="ma-grid ma-grid--rows" id="list_videos_my_favourite_videos_items">
+        <div class="item ma-prow favorite_videos_video_1" data-video-card-id="4605223" data-id="4605223" data-title="AUS_OS | HMV005" data-dur="180" data-views="33578" data-rating="3.8119" data-url="https://rule34video.com/video/4605223/aus-os-hmv005/">
+          <a class="ma-thumb js-open-popup" href="https://rule34video.com/video/4605223/aus-os-hmv005/" title="AUS_OS | HMV005" data-preview="https://rule34video.com/preview.mp4">
+            <img class="thumb" src="https://rule34video.com/thumb.jpg" data-rd-jpg="https://rule34video.com/thumb_rd.jpg" alt="AUS_OS | HMV005">
+            <span class="ma-dur">3:00</span>
+          </a>
+          <div class="ma-row__b">
+            <a class="ma-row__t js-open-popup" href="https://rule34video.com/video/4605223/aus-os-hmv005/" title="AUS_OS | HMV005">AUS_OS | HMV005</a>
+            <div class="ma-row__m"><span>34K views</span><span>76%</span></div>
+          </div>
+        </div>
+      </div>
+    ''';
+
+    final videos = SiteParser.videoList(source);
+
+    expect(videos, hasLength(1));
+    expect(videos.single.id, '4605223');
+    expect(videos.single.title, 'AUS_OS | HMV005');
+    expect(videos.single.duration, '3:00');
+    expect(videos.single.views, 33578);
+    expect(videos.single.rating, 76);
+  });
+
+  test('解析全新 Member Area 创作者订阅项 (item ma-row ma-subrow)', () {
+    const source = '''
+      <div class="ma-list ma-subs" id="list_members_subscriptions_my_subscriptions_items">
+        <div class="item ma-row ma-subrow" data-id="24819735" data-rdp-sub-item="" data-title="Erovirus">
+          <span class="ma-av">ER</span>
+          <div class="ma-row__b">
+            <a class="ma-row__t" href="https://rule34video.com/models/erovirus/" title="Erovirus">Erovirus</a>
+            <div class="ma-row__m"><span class="ma-badge ma-badge--plain">Artist</span></div>
+          </div>
+          <span class="ma-kvs" hidden>
+            <input class="checkbox" name="delete[]" type="checkbox" value="24819735">
+          </span>
+        </div>
+      </div>
+    ''';
+
+    final subscriptions = SiteParser.subscriptions(source);
+
+    expect(subscriptions, hasLength(1));
+    expect(subscriptions.single.title, 'Erovirus');
+    expect(subscriptions.single.path, '/models/erovirus/');
+    expect(subscriptions.single.kind, SubscriptionKind.model);
+  });
 }
