@@ -9,6 +9,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flule34/app/providers.dart';
 import 'package:flule34/app/router/app_router.dart';
 import 'package:flule34/core/api/hanime1_api.dart';
+import 'package:flule34/core/api/porn91_api.dart';
 import 'package:flule34/core/api/rule34video_api.dart';
 import 'package:flule34/core/models/video_models.dart';
 import 'package:flule34/core/session/session_store.dart';
@@ -112,6 +113,11 @@ class _FakeRule34VideoApi extends Rule34VideoApi {
         // hanime 首页频道现在会真实发起 search 请求（空 query + 筛选），
         // 测试环境没有网络，注入空 adapter 让其立即返回空列表。
         hanimeApi: Hanime1Api(
+          sessionStore: sessionStore,
+          httpClientAdapter: _EmptyAdapter(),
+        ),
+        // porn91 首页同理：分类浏览会真实请求站点，注入空 adapter 固定为空列表。
+        porn91Api: Porn91Api(
           sessionStore: sessionStore,
           httpClientAdapter: _EmptyAdapter(),
         ),

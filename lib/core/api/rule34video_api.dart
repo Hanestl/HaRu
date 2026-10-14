@@ -249,9 +249,7 @@ class Rule34VideoApi {
   }
 
   /// 91porn 的分类浏览。与其它站点不同，本站没有“最新/热门/高评分”这类
-  /// 统一 feed，而是各自独立的分类导航，因此返回原始分类列表。
-  List<Porn91Category> get porn91Categories => Porn91Category.values;
-
+  /// 统一 feed，而是各自独立的分类导航，因此按分类分页取列表。
   Future<List<VideoItem>> loadPorn91Category(
     Porn91Category category,
     int page, {
