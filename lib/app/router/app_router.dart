@@ -32,6 +32,7 @@ import '../../features/settings/presentation/translation_catalog_page.dart';
 import '../../features/shell/app_shell.dart';
 import '../../features/video/video_detail_page.dart';
 import '../../features/home/hanime_home_page.dart';
+import '../../features/home/porn91_home_page.dart';
 import '../../shared/scroll_to_top_overlay.dart';
 import '../providers.dart';
 import 'route_names.dart';
@@ -39,6 +40,7 @@ import 'route_names.dart';
 final _rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
 final _homeNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'home');
 final _hanimeNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'hanime');
+final _porn91NavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'porn91');
 final _libraryNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'library');
 final _profileNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'profile');
 final appRouteObserver = RouteObserver<PageRoute<dynamic>>();
@@ -55,6 +57,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   final initialSite = switch (initialDestination) {
     AppDestination.rule34video => ContentSite.rule34video,
     AppDestination.hanime => ContentSite.hanime1,
+    AppDestination.porn91 => ContentSite.porn91,
     _ => null,
   };
   if (initialSite != null &&
@@ -101,6 +104,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 name: AppRouteNames.hanimeHome,
                 builder: (context, state) =>
                     scrollablePage(state, HanimeHomePage(api: api)),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            navigatorKey: _porn91NavigatorKey,
+            routes: [
+              GoRoute(
+                path: '/porn91',
+                name: AppRouteNames.porn91Home,
+                builder: (context, state) =>
+                    scrollablePage(state, Porn91HomePage(api: api)),
               ),
             ],
           ),
@@ -494,6 +508,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 String _initialLocation(AppDestination destination) => switch (destination) {
   AppDestination.rule34video => '/',
   AppDestination.hanime => '/hanime',
+  AppDestination.porn91 => '/porn91',
   AppDestination.library => '/library',
   AppDestination.profile => '/profile',
 };

@@ -12,6 +12,8 @@ class SiteBadge extends StatelessWidget {
   static const _letter = <ContentSite, String>{
     ContentSite.rule34video: 'R',
     ContentSite.hanime1: 'H',
+    // 默认回退到 label 首字符会得到 '9'，与 91porn 这个站点名对不上。
+    ContentSite.porn91: '91',
   };
 
   @override

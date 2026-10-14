@@ -188,6 +188,7 @@ class _OrderEditor<T> extends StatelessWidget {
 String _destinationLabel(AppDestination value) => switch (value) {
   AppDestination.rule34video => 'R34V',
   AppDestination.hanime => 'Hanime',
+  AppDestination.porn91 => '91porn',
   AppDestination.library => '媒体库',
   AppDestination.profile => '我的',
 };
@@ -195,6 +196,7 @@ String _destinationLabel(AppDestination value) => switch (value) {
 IconData _destinationIcon(AppDestination value) => switch (value) {
   AppDestination.rule34video => Icons.play_circle_outline,
   AppDestination.hanime => Icons.movie_outlined,
+  AppDestination.porn91 => Icons.video_settings_outlined,
   AppDestination.library => Icons.video_library_outlined,
   AppDestination.profile => Icons.person_outline,
 };

@@ -17,7 +17,7 @@ import 'package:flule34/features/settings/data/app_settings_store.dart';
 import 'helpers/test_session_harness.dart';
 
 void main() {
-  testWidgets('底部导航使用四栏结构且搜索不占一级入口', (tester) async {
+  testWidgets('底部导航使用五栏结构且搜索不占一级入口', (tester) async {
     final harness = TestSessionHarness.create();
     addTearDown(harness.dispose);
     final api = _FakeRule34VideoApi(harness.sessionStore);
@@ -40,9 +40,10 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.byType(NavigationDestination), findsNWidgets(4));
+    expect(find.byType(NavigationDestination), findsNWidgets(5));
     expect(find.text('R34V'), findsOneWidget);
     expect(find.text('Hanime'), findsOneWidget);
+    expect(find.text('91porn'), findsOneWidget);
     expect(find.text('媒体库'), findsOneWidget);
     expect(find.text('我的'), findsOneWidget);
     expect(find.widgetWithText(NavigationDestination, '搜索'), findsNothing);
@@ -66,6 +67,13 @@ void main() {
       tester.getSize(latestRelease).width,
       greaterThan(tester.getSize(ecchi).width),
     );
+
+    // 91porn 底部 tab 显示分类导航，且不出现账号类入口。
+    await tester.tap(find.text('91porn'));
+    await tester.pumpAndSettle();
+    expect(find.text('热门'), findsOneWidget);
+    expect(find.text('精华'), findsOneWidget);
+    expect(find.text('登录'), findsNothing);
 
     // 切回 R34V 首页。
     await tester.tap(find.text('R34V'));

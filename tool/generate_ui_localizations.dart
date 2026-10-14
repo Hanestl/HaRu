@@ -104,6 +104,7 @@ bool _isUiSource(String path) {
     'lib/core/models/video_models.dart',
     'lib/core/models/translation_models.dart',
     'lib/core/models/translation_provider_models.dart',
+    'lib/core/models/porn91_models.dart',
     'lib/features/downloads/domain/download_models.dart',
     'lib/features/settings/domain/app_settings.dart',
     'lib/features/settings/domain/quality_selection.dart',

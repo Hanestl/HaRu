@@ -85,8 +85,10 @@ enum UpdateChannel {
   final String label;
 }
 
-enum AppDestination { rule34video, hanime, library, profile }
+enum AppDestination { rule34video, hanime, porn91, library, profile }
 
+// 91porn 没有账号，媒体库的站点范围全部由账号数据支撑（收藏/稍后看/历史），
+// 因此不为它新增范围页签：它的下载与播放进度已经通过设备级的「本机」范围出现。
 enum LibraryScopePreference { local, rule34video, hanime }
 
 final class AppSettings {
@@ -155,6 +157,7 @@ final class AppSettings {
     navigationOrder: <AppDestination>[
       AppDestination.rule34video,
       AppDestination.hanime,
+      AppDestination.porn91,
       AppDestination.library,
       AppDestination.profile,
     ],

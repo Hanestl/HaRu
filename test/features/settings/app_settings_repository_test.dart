@@ -177,6 +177,7 @@ void main() {
     expect(repository.settings.navigationOrder, [
       AppDestination.hanime,
       AppDestination.rule34video,
+      AppDestination.porn91,
       AppDestination.library,
       AppDestination.profile,
     ]);

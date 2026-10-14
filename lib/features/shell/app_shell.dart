@@ -49,14 +49,14 @@ class AppShell extends ConsumerWidget {
                 ref
                     .read(predictivePrefetchServiceProvider)
                     .prioritizeForeground();
-                if (destination == AppDestination.rule34video) {
-                  unawaited(
-                    settingsRepository.setActiveSite(ContentSite.rule34video),
-                  );
-                } else if (destination == AppDestination.hanime) {
-                  unawaited(
-                    settingsRepository.setActiveSite(ContentSite.hanime1),
-                  );
+                final destinationSite = switch (destination) {
+                  AppDestination.rule34video => ContentSite.rule34video,
+                  AppDestination.hanime => ContentSite.hanime1,
+                  AppDestination.porn91 => ContentSite.porn91,
+                  AppDestination.library || AppDestination.profile => null,
+                };
+                if (destinationSite != null) {
+                  unawaited(settingsRepository.setActiveSite(destinationSite));
                 }
                 navigationShell.goBranch(
                   branchIndex,
@@ -77,8 +77,9 @@ class AppShell extends ConsumerWidget {
 int _branchIndex(AppDestination destination) => switch (destination) {
   AppDestination.rule34video => 0,
   AppDestination.hanime => 1,
-  AppDestination.library => 2,
-  AppDestination.profile => 3,
+  AppDestination.porn91 => 2,
+  AppDestination.library => 3,
+  AppDestination.profile => 4,
 };
 
 NavigationDestination _destination(
@@ -94,6 +95,11 @@ NavigationDestination _destination(
     icon: SiteBadge(site: ContentSite.hanime1, size: 22),
     selectedIcon: SiteBadge(site: ContentSite.hanime1, size: 22),
     label: 'Hanime',
+  ),
+  AppDestination.porn91 => const NavigationDestination(
+    icon: SiteBadge(site: ContentSite.porn91, size: 22),
+    selectedIcon: SiteBadge(site: ContentSite.porn91, size: 22),
+    label: '91porn',
   ),
   AppDestination.library => NavigationDestination(
     icon: const Icon(Icons.video_library_outlined),

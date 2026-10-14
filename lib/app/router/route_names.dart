@@ -1,6 +1,7 @@
 abstract final class AppRouteNames {
   static const home = 'home';
   static const hanimeHome = 'hanime-home';
+  static const porn91Home = 'porn91-home';
   static const discoveryDirectory = 'discovery-directory';
   static const collection = 'collection';
   static const rankings = 'rankings';
