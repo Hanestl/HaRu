@@ -6,6 +6,7 @@ import 'package:dio/dio.dart';
 import '../../features/settings/data/app_settings_repository.dart';
 import '../api/rule34video_api.dart';
 import '../logging/app_log_service.dart';
+import '../models/content_source.dart';
 import '../models/hanime_search_models.dart';
 import '../models/video_models.dart';
 import '../session/session_store.dart';
@@ -92,7 +93,17 @@ final class PredictivePrefetchService {
   }
 
   void offerLikelyVideos(Iterable<VideoItem> videos) {
-    final candidates = videos.take(3).toList(growable: false);
+    // Rule34Video 服务端只要收到视频详情页 GET 就会写入当前账号的观看
+    // 历史，因此这里绝不能对 rule34video 做预测性详情预取，否则首页 /
+    // 榜单里用户没有点开的视频会被写进历史（实机日志与历史页均已复现）。
+    // Hanime 的历史由播放接口单独上报，详情页预取不会污染历史。
+    final candidates = videos
+        .where((video) => video.site != ContentSite.rule34video)
+        .take(3)
+        .toList(growable: false);
+    if (candidates.isEmpty) {
+      return;
+    }
     for (final video in candidates.reversed) {
       _enqueue(
         _PrefetchJob(

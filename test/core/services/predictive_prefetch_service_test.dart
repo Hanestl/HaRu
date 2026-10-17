@@ -57,7 +57,7 @@ void main() {
     expect(api.favoritesTokens, hasLength(1));
   });
 
-  test('首页候选视频会按照可见顺序逐个预测加载详情', () async {
+  test('Rule34Video 候选视频不会预测加载详情，避免污染观看历史', () async {
     final harness = TestSessionHarness.create();
     addTearDown(harness.dispose);
     await harness.sessionStore.load();
@@ -75,6 +75,31 @@ void main() {
       VideoItem(id: '2', title: '第二条', slug: 'second'),
       VideoItem(id: '3', title: '第三条', slug: 'third'),
       VideoItem(id: '4', title: '第四条', slug: 'fourth'),
+    ]);
+    await Future<void>.delayed(const Duration(milliseconds: 40));
+
+    // R34V 服务端在详情页 GET 时就会写入历史，因此这里必须一个都不预取。
+    expect(api.calls, isEmpty);
+  });
+
+  test('Hanime 候选视频会按照可见顺序逐个预测加载详情', () async {
+    final harness = TestSessionHarness.create();
+    addTearDown(harness.dispose);
+    await harness.sessionStore.load();
+    final api = _PrefetchApi(harness.sessionStore);
+    final service = PredictivePrefetchService(
+      api: api,
+      sessionStore: harness.sessionStore,
+      idleDelay: const Duration(milliseconds: 1),
+      interJobDelay: const Duration(milliseconds: 1),
+    );
+    addTearDown(service.dispose);
+
+    service.offerLikelyVideos(const [
+      VideoItem(id: '1', title: '第一条', slug: 'first', siteId: 'hanime1'),
+      VideoItem(id: '2', title: '第二条', slug: 'second', siteId: 'hanime1'),
+      VideoItem(id: '3', title: '第三条', slug: 'third', siteId: 'hanime1'),
+      VideoItem(id: '4', title: '第四条', slug: 'fourth', siteId: 'hanime1'),
     ]);
     await Future<void>.delayed(const Duration(milliseconds: 40));
 
