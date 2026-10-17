@@ -1,12 +1,11 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
-import 'package:flutter_test/flutter_test.dart';
-
 import 'package:flule34/core/api/rule34video_api.dart';
 import 'package:flule34/core/models/account_models.dart';
 import 'package:flule34/core/session/session_store.dart';
 import 'package:flule34/features/profile/account_page.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 import '../../helpers/test_session_harness.dart';
 

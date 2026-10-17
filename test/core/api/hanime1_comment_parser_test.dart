@@ -1,9 +1,8 @@
 import 'dart:convert';
 
-import 'package:flutter_test/flutter_test.dart';
-
 import 'package:flule34/core/api/hanime1_parser.dart';
 import 'package:flule34/core/models/video_models.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test('评论接口返回（JSON 包裹 HTML 片段）能解析出评论字段', () {

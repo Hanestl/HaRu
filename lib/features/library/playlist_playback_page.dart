@@ -1,13 +1,15 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
 import 'package:flule34/l10n/ui_localization.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/router/route_names.dart';
 import '../../core/api/rule34video_api.dart';
+import '../../core/logging/app_log_service.dart';
 import '../../core/models/video_models.dart';
 import '../../core/services/translation_service.dart';
+import '../../shared/error_view.dart';
 import '../../shared/localized_translation_text.dart';
 import '../../shared/site_avatar.dart';
 import '../video/video_player_page.dart';
@@ -110,6 +112,12 @@ class _PlaylistPlaybackPageState extends State<PlaylistPlaybackPage> {
       });
       unawaited(_preloadNext());
     } catch (error) {
+      unawaited(
+        AppLogService.instance.warning(
+          '加载播放列表当前视频详情失败：$error；videoId=${_video.id}',
+          component: 'playlist_playback',
+        ),
+      );
       if (mounted) {
         setState(() {
           _detailsError = error;
@@ -212,10 +220,16 @@ class _PlaylistPlaybackPageState extends State<PlaylistPlaybackPage> {
     try {
       nextLoaded = await _ensureNextLoaded();
     } catch (error) {
+      unawaited(
+        AppLogService.instance.warning(
+          '预加载下一视频失败；错误=$error',
+          component: 'playlist_playback',
+        ),
+      );
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: AppText('加载下一视频失败：$error')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: AppText('加载下一视频失败：${friendlyErrorMessage(error)}')),
+        );
       }
       return;
     }
@@ -269,10 +283,16 @@ class _PlaylistPlaybackPageState extends State<PlaylistPlaybackPage> {
       });
     } catch (error) {
       if (mounted && operation == _switchOperation) {
+        unawaited(
+          AppLogService.instance.warning(
+            '切换播放列表视频失败；index=$value；错误=$error',
+            component: 'playlist_playback',
+          ),
+        );
         setState(() => _switchingVideo = false);
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: AppText('加载下一视频失败：$error')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: AppText('加载下一视频失败：${friendlyErrorMessage(error)}')),
+        );
       }
     }
   }

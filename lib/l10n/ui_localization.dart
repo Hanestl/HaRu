@@ -25,10 +25,9 @@ String localizeUiText(Locale locale, String source) {
     if (match == null) continue;
     var translated = template.translations[language] ?? source;
     for (var index = 1; index <= match.groupCount; index++) {
-      translated = translated.replaceAll(
-        '{p${index - 1}}',
-        match.group(index)!,
-      );
+      final param = match.group(index)!;
+      final localizedParam = localizeUiText(locale, param);
+      translated = translated.replaceAll('{p${index - 1}}', localizedParam);
     }
     return translated;
   }
@@ -44,15 +43,29 @@ String localizeUiText(Locale locale, String source) {
   return translated;
 }
 
-final List<_TemplateTranslation> _templateTranslations = uiTranslations.entries
-    .where((entry) => entry.key.contains('{p0}'))
-    .map(
-      (entry) => _TemplateTranslation(
-        pattern: _templatePattern(entry.key),
-        translations: entry.value,
-      ),
-    )
-    .toList(growable: false);
+final List<_TemplateTranslation> _templateTranslations = () {
+  final list = uiTranslations.entries
+      .where((entry) => entry.key.contains('{p0}'))
+      .map(
+        (entry) => _TemplateTranslation(
+          source: entry.key,
+          pattern: _templatePattern(entry.key),
+          translations: entry.value,
+        ),
+      )
+      .toList();
+  list.sort((left, right) {
+    final literalLeft = left.source.replaceAll(RegExp(r'\{p\d+\}'), '').length;
+    final literalRight = right.source
+        .replaceAll(RegExp(r'\{p\d+\}'), '')
+        .length;
+    if (literalLeft != literalRight) {
+      return literalRight.compareTo(literalLeft);
+    }
+    return right.source.length.compareTo(left.source.length);
+  });
+  return List<_TemplateTranslation>.unmodifiable(list);
+}();
 
 final List<_FragmentTranslation> _fragmentTranslations =
     uiTranslations.entries
@@ -87,10 +100,12 @@ RegExp _templatePattern(String template) {
 
 final class _TemplateTranslation {
   const _TemplateTranslation({
+    required this.source,
     required this.pattern,
     required this.translations,
   });
 
+  final String source;
   final RegExp pattern;
   final Map<String, String> translations;
 }

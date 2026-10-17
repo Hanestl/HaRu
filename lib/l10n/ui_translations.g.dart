@@ -2,11 +2,6 @@
 // dart format off
 
 const uiTranslations = <String, Map<String, String>>{
-  "(\\d+)\\s*(秒|分钟|分鐘|小时|小時|天|周|週|个月|個月|月|年)\\s*前": <String, String>{
-    'en': "(\\d+)\\s*(seconds|minutes|minutes|hour|hour|day|week|week|month|month|month|year)\\s* ago",
-    'ja': "(\\d+)\\s*(秒|分|分|時|時|日|週|週|月|月|月|年)\\s* 前",
-    'ko': "(\\d+)\\s*(초|분|분|시간|시간|일|주|주|월|월|월|년)\\s* 전",
-  },
   "2.5D動畫": <String, String>{
     'en': "2.5D animation",
     'ja': "2.5Dアニメーション",
@@ -42,6 +37,11 @@ const uiTranslations = <String, Map<String, String>>{
     'ja': "60分以上",
     'ko': "60분 이상",
   },
+  "<html片段>": <String, String>{
+    'en': "<html fragment>",
+    'ja': "<htmlフラグメント>",
+    'ko': "<html 조각>",
+  },
   "===== 最近 7 天日志 =====": <String, String>{
     'en': "===== Logs from the Last 7 Days =====",
     'ja': "===== 過去7日間のログ =====",
@@ -62,15 +62,20 @@ const uiTranslations = <String, Map<String, String>>{
     'ja': "アプリ設定",
     'ko': "앱 설정",
   },
-  "Cookie 名称={p0}": <String, String>{
-    'en': "Cookie names={p0}",
-    'ja': "Cookie名={p0}",
-    'ko': "쿠키 이름={p0}",
+  "Chat 返回格式无效": <String, String>{
+    'en': "Invalid Chat response format",
+    'ja': "Chat の応答形式が無効です",
+    'ko': "Chat 응답 형식이 올바르지 않습니다",
   },
   "DeepL 套餐与端点": <String, String>{
     'en': "DeepL Plans and Endpoints",
     'ja': "DeepLのプランとエンドポイント",
     'ko': "DeepL 요금제 및 엔드포인트",
+  },
+  "DeepL 返回格式无效": <String, String>{
+    'en': "Invalid DeepL response format",
+    'ja': "DeepL の応答形式が無効です",
+    'ko': "DeepL 응답 형식이 올바르지 않습니다",
   },
   "Git 提交": <String, String>{
     'en': "Git commit",
@@ -97,85 +102,110 @@ const uiTranslations = <String, Map<String, String>>{
     'ja': "HaRu 翻訳ライブラリ",
     'ko': "HaRu 번역 라이브러리",
   },
-  "Hanime landing 选择分类；genre={p0}": <String, String>{
-    'en': "Hanime landing select category; genre={p0}",
-    'ja': "Hanime 上陸選択カテゴリ;ジャンル={p0}",
-    'ko': "하니메 착륙 선택 카테고리; 장르={p0}",
+  "Hanime 历史删除": <String, String>{
+    'en': "Hanime history deletion",
+    'ja': "Hanime 履歴の削除",
+    'ko': "Hanime 시청 기록 삭제",
+  },
+  "Hanime 媒体库操作": <String, String>{
+    'en': "Hanime library action",
+    'ja': "Hanime ライブラリの操作",
+    'ko': "Hanime 보관함 작업",
+  },
+  "Hanime 官网登录": <String, String>{
+    'en': "Hanime Official Website Login",
+    'ja': "Hanime 公式サイトログイン",
+    'ko': "Hanime 공식 웹사이트 로그인",
   },
   "Hanime 播放列表": <String, String>{
     'en': "Hanime playlist",
     'ja': "ハニメプレイリスト",
     'ko': "하니메 재생목록",
   },
+  "Hanime 暂不支持在应用内管理收藏。": <String, String>{
+    'en': "Managing favorites within the app is currently not supported for Hanime.",
+    'ja': "Hanime のお気に入り管理はアプリ内ではまだサポートされていません。",
+    'ko': "Hanime 즐겨찾기 관리는 현재 앱 내에서 지원되지 않습니다.",
+  },
   "Hanime 点赞": <String, String>{
     'en': "Liked by Hanime",
     'ja': "「いいね!」したユーザー: ハニメ",
     'ko': "Hanime이 좋아한 것",
   },
-  "Hanime 筛选 sheet 应用；摘要={p0}": <String, String>{
-    'en': "Hanime filter sheet application; summary={p0}",
-    'ja': "Hanimeフィルターシートの適用;概要={p0}",
-    'ko': "하니메 필터시트 적용; 요약={p0}",
+  "Hanime 点赞操作": <String, String>{
+    'en': "Hanime like action",
+    'ja': "Hanime 高評価操作",
+    'ko': "Hanime 좋아요 작업",
+  },
+  "Hanime 登录请求失败：{p0}": <String, String>{
+    'en': "Hanime login request failed: {p0}",
+    'ja': "Hanime のログインリクエストに失敗しました：{p0}",
+    'ko': "Hanime 로그인 요청에 실패했습니다: {p0}",
   },
   "Hanime 筛选与排序": <String, String>{
     'en': "Hanime filtering and sorting",
     'ja': "Hanimeのフィルタリングとソート",
     'ko': "Hanime 필터링 및 정렬",
   },
-  "Hanime 筛选已应用；摘要={p0}": <String, String>{
-    'en': "Hanime filter applied; summary={p0}",
-    'ja': "Hanime フィルターが適用されました。概要={p0}",
-    'ko': "하니메 필터가 적용되었습니다. 요약={p0}",
+  "Hanime 网络请求失败：{p0}": <String, String>{
+    'en': "Hanime network request failed: {p0}",
+    'ja': "Hanime のネットワークリクエストに失敗しました：{p0}",
+    'ko': "Hanime 네트워크 요청에 실패했습니다: {p0}",
   },
-  "Hanime 订阅作者作品筛选；artist={p0}；page={p1}；": <String, String>{
-    'en': "Hanime subscribes to author works filtering; artist={p0}; page={p1};",
-    'ja': "Hanime は作家作品のフィルタリングを購読しています。アーティスト={p0};ページ={p1};",
-    'ko': "Hanime은 작가 작품 필터링을 구독합니다. 아티스트={p0}; 페이지={p1};",
+  "Hanime 评论操作": <String, String>{
+    'en': "Hanime comment action",
+    'ja': "Hanime コメント操作",
+    'ko': "Hanime 댓글 작업",
   },
-  "Hanime 评论提交成功；video={p0}；reply={p1}": <String, String>{
-    'en': "Hanime comment submitted successfully; video={p0}; reply={p1}",
-    'ja': "Hanime コメントが正常に送信されました。ビデオ={p0};返信={p1}",
-    'ko': "Hanime 댓글이 성공적으로 제출되었습니다. 비디오={p0}; 답장={p1}",
-  },
-  "Hanime 详情页元数据点击；kind={p0}；": <String, String>{
-    'en': "Hanime details page metadata click; kind={p0};",
-    'ja': "Hanime 詳細ページのメタデータをクリック;種類={p0};",
-    'ko': "Hanime 세부정보 페이지 메타데이터 클릭; 종류={p0};",
+  "Hanime 详情页没有返回可播放的视频源。": <String, String>{
+    'en': "No playable video source was returned on the Hanime detail page.",
+    'ja': "Hanime 詳細ページに再生可能な動画ソースがありませんでした。",
+    'ko': "Hanime 상세 페이지에서 재생 가능한 비디오 소스를 반환하지 않았습니다.",
   },
   "Hanime 账号": <String, String>{
     'en': "Hanime account",
     'ja': "ハニメアカウント",
     'ko': "하니메 계정",
   },
-  "Hanime 首页切换频道；频道={p0}；索引={p1}；种子={p2}": <String, String>{
-    'en': "Hanime home channel changed; channel={p0}; index={p1}; seed={p2}",
-    'ja': "Hanimeホームのチャンネルを切り替えました；チャンネル={p0}；インデックス={p1}；シード={p2}",
-    'ko': "Hanime 홈 채널 전환; 채널={p0}; 인덱스={p1}; 시드={p2}",
+  "Hanime 账号头像上传": <String, String>{
+    'en': "Hanime account avatar upload",
+    'ja': "Hanime アカウントアバターのアップロード",
+    'ko': "Hanime 계정 프로필 이미지 업로드",
+  },
+  "Hanime 页面受到 Cloudflare 限制，浏览器辅助访问未完成。": <String, String>{
+    'en': "The Hanime page is restricted by Cloudflare; browser-assisted access did not complete.",
+    'ja': "Hanime ページは Cloudflare により制限されており、ブラウザ補助アクセスは完了しませんでした。",
+    'ko': "Hanime 페이지가 Cloudflare 제한을 받고 있어 브라우저 보조 접근이 완료되지 않았습니다.",
   },
   "Hanime 验证": <String, String>{
     'en': "Hanime verification",
     'ja': "ハニメ認証",
     'ko': "하니메 검증",
   },
-  "Hanime={p0}；当前范围={p1}": <String, String>{
-    'en': "Hanime={p0}; current scope={p1}",
-    'ja': "ハニメ={p0};現在のスコープ={p1}",
-    'ko': "하니메={p0}; 현재 범위={p1}",
-  },
-  "Hanime登录={p0}": <String, String>{
-    'en': "Hanime login={p0}",
-    'ja': "Hanime ログイン={p0}",
-    'ko': "하니메 로그인={p0}",
+  "Messages 返回格式无效": <String, String>{
+    'en': "Invalid Messages response format",
+    'ja': "Messages の応答形式が無効です",
+    'ko': "Messages 응답 형식이 올바르지 않습니다",
   },
   "MyMemory 可用邮箱标识提高免费额度。": <String, String>{
     'en': "Adding an email address can increase MyMemory's free quota.",
     'ja': "メールアドレスを指定すると、MyMemoryの無料利用枠を増やせます。",
     'ko': "이메일 주소를 입력하면 MyMemory의 무료 할당량을 늘릴 수 있습니다.",
   },
-  "R34V登录={p0}；": <String, String>{
-    'en': "R34V login={p0};",
-    'ja': "R34V ログイン={p0};",
-    'ko': "R34V 로그인={p0};",
+  "MyMemory 返回格式无效": <String, String>{
+    'en': "Invalid MyMemory response format",
+    'ja': "MyMemory の応答形式が無効です",
+    'ko': "MyMemory 응답 형식이 올바르지 않습니다",
+  },
+  "MyMemory 返回状态 {p0}": <String, String>{
+    'en': "MyMemory returned status {p0}",
+    'ja': "MyMemory がステータス {p0} を返しました",
+    'ko': "MyMemory 상태 {p0} 반환됨",
+  },
+  "Responses 返回格式无效": <String, String>{
+    'en': "Invalid Responses response format",
+    'ja': "Responses の応答形式が無効です",
+    'ko': "Responses 응답 형식이 올바르지 않습니다",
   },
   "Rule34Video 账号": <String, String>{
     'en': "Rule34Video Account",
@@ -192,10 +222,10 @@ const uiTranslations = <String, Map<String, String>>{
     'ja': "Wi-Fiでは最大720p、モバイルデータ通信では最大360p",
     'ko': "Wi-Fi에서는 최대 720p, 모바일 데이터에서는 최대 360p",
   },
-  "attempt={p0}；耗时={p1}ms": <String, String>{
-    'en': "attempt={p0}; time consumption={p1}ms",
-    'ja': "試行={p0};消費時間={p1}ms",
-    'ko': "시도={p0}; 시간 소비={p1}ms",
+  "{p0} - {p1} 秒": <String, String>{
+    'en': "{p0} - {p1}s",
+    'ja': "{p0} - {p1} 秒",
+    'ko': "{p0} - {p1}초",
   },
   "{p0} · 已下载": <String, String>{
     'en': "{p0} · Downloaded",
@@ -246,6 +276,11 @@ const uiTranslations = <String, Map<String, String>>{
     'en': "{p0} months",
     'ja': "{p0}か月",
     'ko': "{p0}개월",
+  },
+  "{p0} 未配置模型名": <String, String>{
+    'en': "Model name is not configured for {p0}",
+    'ja': "{p0} にモデル名が設定されていません",
+    'ko': "{p0}의 모델명이 설정되지 않았습니다",
   },
   "{p0} 次观看": <String, String>{
     'en': "{p0} views",
@@ -312,6 +347,16 @@ const uiTranslations = <String, Map<String, String>>{
     'ja': "1列",
     'ko': "1열",
   },
+  "一键更新": <String, String>{
+    'en': "One-click update",
+    'ja': "ワンクリック更新",
+    'ko': "원클릭 업데이트",
+  },
+  "万": <String, String>{
+    'en': "0k",
+    'ja': "万",
+    'ko': "만",
+  },
   "上一个": <String, String>{
     'en': "Previous",
     'ja': "前へ",
@@ -377,6 +422,21 @@ const uiTranslations = <String, Map<String, String>>{
     'ja': "ダウンロードファイルが無効になっているか、このMP4を再生できるアプリがありません。",
     'ko': "다운로드 파일을 더 이상 사용할 수 없거나 이 MP4를 재생할 앱이 없습니다.",
   },
+  "下载更新包失败（HTTP {p0}），请稍后重试。": <String, String>{
+    'en': "Failed to download update package (HTTP {p0}), please try again later.",
+    'ja': "更新パッケージ (HTTP {p0}) のダウンロードに失敗しました。後でもう一度試してください。",
+    'ko': "업데이트 패키지(HTTP {p0})를 다운로드하지 못했습니다. 나중에 다시 시도해 주세요.",
+  },
+  "下载更新包失败，请稍后重试。": <String, String>{
+    'en': "Failed to download update package, please try again later.",
+    'ja': "更新パッケージのダウンロードに失敗しました。後でもう一度お試しください。",
+    'ko': "업데이트 패키지를 다운로드하지 못했습니다. 나중에 다시 시도해 주세요.",
+  },
+  "下载更新包超时，请检查网络后重试。": <String, String>{
+    'en': "Downloading the update package timed out, please check the network and try again.",
+    'ja': "更新パッケージのダウンロードがタイムアウトしました。ネットワークを確認して再試行してください。",
+    'ko': "업데이트 패키지 다운로드 시간이 초과되었습니다. 네트워크를 확인한 후 다시 시도해 주세요.",
+  },
   "下载服务暂不可用。": <String, String>{
     'en': "Download service is temporarily unavailable.",
     'ja': "ダウンロードサービスは一時的にご利用いただけません。",
@@ -406,6 +466,21 @@ const uiTranslations = <String, Map<String, String>>{
     'en': "Does not exist",
     'ja': "存在しません",
     'ko': "존재하지 않음",
+  },
+  "不支持的翻译库版本：{p0}": <String, String>{
+    'en': "Unsupported translation library version: {p0}",
+    'ja': "サポートされていない翻訳ライブラリのバージョンです：{p0}",
+    'ko': "지원되지 않는 번역 라이브러리 버전입니다: {p0}",
+  },
+  "不是 AI 翻译协议": <String, String>{
+    'en': "Not an AI translation protocol",
+    'ja': "AI 翻訳プロトコルではありません",
+    'ko': "AI 번역 프로토콜이 아닙니다",
+  },
+  "不是 HaRu 翻译库文件": <String, String>{
+    'en': "Not a valid HaRu translation library file",
+    'ja': "HaRu 翻訳ライブラリファイルではありません",
+    'ko': "HaRu 번역 라이브러리 파일이 아닙니다",
   },
   "不限": <String, String>{
     'en': "No limit",
@@ -467,6 +542,11 @@ const uiTranslations = <String, Map<String, String>>{
     'ja': "コメントを報告",
     'ko': "댓글 신고",
   },
+  "亿": <String, String>{
+    'en': "00M",
+    'ja': "億",
+    'ko': "억",
+  },
   "仅 Wi-Fi 下载": <String, String>{
     'en': "Download over Wi-Fi only",
     'ja': "Wi-Fi接続時のみダウンロード",
@@ -511,16 +591,6 @@ const uiTranslations = <String, Map<String, String>>{
     'en': "Play continuously from the start",
     'ja': "先頭から連続再生",
     'ko': "처음부터 연속 재생",
-  },
-  "从媒体库请求登录；范围=hanime1；section={p0}": <String, String>{
-    'en': "Request login from media library; scope=hanime1; section={p0}",
-    'ja': "メディア ライブラリからログインを要求します。スコープ=アニメ1;セクション={p0}",
-    'ko': "미디어 라이브러리에서 로그인을 요청합니다. 범위=hanime1; 섹션={p0}",
-  },
-  "从媒体库请求登录；范围={p0}；section={p1}": <String, String>{
-    'en': "Request login from media library; scope={p0}; section={p1}",
-    'ja': "メディア ライブラリからログインを要求します。スコープ={p0};セクション={p1}",
-    'ko': "미디어 라이브러리에서 로그인을 요청합니다. 범위={p0}; 섹션={p1}",
   },
   "从播放列表移除": <String, String>{
     'en': "Remove from playlist",
@@ -622,6 +692,11 @@ const uiTranslations = <String, Map<String, String>>{
     'ja': "月",
     'ko': "개월",
   },
+  "億": <String, String>{
+    'en': "00M",
+    'ja': "億",
+    'ko': "억",
+  },
   "全屏": <String, String>{
     'en': "Full screen",
     'ja': "全画面",
@@ -652,10 +727,20 @@ const uiTranslations = <String, Map<String, String>>{
     'ja': "合計 {p0} 件 · 内蔵 {p1} · API {p2} · ユーザー {p3}",
     'ko': "총 {p0}개 · 내장 {p1} · API {p2} · 사용자 {p3}",
   },
+  "共{p0}集": <String, String>{
+    'en': "{p0} episodes in total",
+    'ja': "全{p0}話",
+    'ko': "총 {p0}화",
+  },
   "关于 HaRu": <String, String>{
     'en': "About HaRu",
     'ja': "HaRuについて",
     'ko': "HaRu 소개",
+  },
+  "关闭": <String, String>{
+    'en': "close",
+    'ja': "閉じる",
+    'ko': "닫기",
   },
   "关闭后将清除全部本地播放进度。": <String, String>{
     'en': "Turning this off will clear all playback progress stored on this device.",
@@ -697,10 +782,15 @@ const uiTranslations = <String, Map<String, String>>{
     'ja': "組み込み",
     'ko': "내장",
   },
-  "准备下载；站点={p0}；视频={p1}；": <String, String>{
-    'en': "Preparing download; site={p0}; video={p1};",
-    'ja': "ダウンロードを準備；サイト={p0}；動画={p1}；",
-    'ko': "다운로드 준비; 사이트={p0}; 동영상={p1};",
+  "写入更新包失败，请检查设备存储空间后重试。": <String, String>{
+    'en': "Failed to write the update package, please check the device storage space and try again.",
+    'ja': "更新パッケージの書き込みに失敗しました。デバイスのストレージ容量を確認して、もう一度お試しください。",
+    'ko': "업데이트 패키지를 작성하지 못했습니다. 기기 저장 공간을 확인한 후 다시 시도해 주세요.",
+  },
+  "出错了，请稍后重试": <String, String>{
+    'en': "Something went wrong. Please try again later.",
+    'ja': "エラーが発生しました。しばらくしてから再試行してください。",
+    'ko': "오류가 발생했습니다. 잠시 후 다시 시도하세요.",
   },
   "分享": <String, String>{
     'en': "Share",
@@ -857,6 +947,11 @@ const uiTranslations = <String, Map<String, String>>{
     'ja': "動画URLを更新できませんでした：{p0}",
     'ko': "동영상 URL을 새로고침하지 못했습니다: {p0}",
   },
+  "前台内容开始加载": <String, String>{
+    'en': "Foreground content started loading",
+    'ja': "フォアグラウンドコンテンツの読み込みを開始しました",
+    'ko': "포그라운드 콘텐츠 로딩 시작됨",
+  },
   "加载下一视频失败：{p0}": <String, String>{
     'en': "Failed to load next video: {p0}",
     'ja': "次の動画を読み込めませんでした：{p0}",
@@ -882,6 +977,11 @@ const uiTranslations = <String, Map<String, String>>{
     'ja': "一致する翻訳：{p0}",
     'ko': "일치하는 번역: {p0}",
   },
+  "匿名用户": <String, String>{
+    'en': "Anonymous User",
+    'ja': "匿名ユーザー",
+    'ko': "익명 사용자",
+  },
   "单集循环": <String, String>{
     'en': "Repeat one video",
     'ja': "1本をリピート",
@@ -902,6 +1002,11 @@ const uiTranslations = <String, Map<String, String>>{
     'ja': "原文",
     'ko': "원문",
   },
+  "去设置": <String, String>{
+    'en': "Go to settings",
+    'ja': "設定に移動",
+    'ko': "설정으로 이동",
+  },
   "双语": <String, String>{
     'en': "Original + translation",
     'ja': "原文＋訳文",
@@ -921,6 +1026,11 @@ const uiTranslations = <String, Map<String, String>>{
     'en': "Published",
     'ja': "公開日時",
     'ko': "게시 시간",
+  },
+  "发现新版本": <String, String>{
+    'en': "new version found",
+    'ja': "新しいバージョンが見つかりました",
+    'ko': "새 버전이 발견되었습니다",
   },
   "发现新版本 {p0}。": <String, String>{
     'en': "New version {p0} found.",
@@ -992,6 +1102,11 @@ const uiTranslations = <String, Map<String, String>>{
     'ja': "このデバイス上の現在のアカウントの検索履歴のみが消去されます。",
     'ko': "이 기기에 있는 현재 계정의 검색 기록만 삭제됩니다.",
   },
+  "只允许打开 HTTPS 链接。": <String, String>{
+    'en': "Only HTTPS links are allowed to be opened.",
+    'ja': "HTTPS リンクのみを開くことができます。",
+    'ko': "HTTPS 링크만 열 수 있습니다.",
+  },
   "只删除 App 中的全部下载记录，已经保存到 Download/Flule34 的视频会保留。进行中的任务会先取消。": <String, String>{
     'en': "Delete all download records from the app while keeping videos saved in Download/Flule34. Active tasks are canceled first.",
     'ja': "アプリ内のダウンロード記録をすべて削除します。Download/Flule34に保存済みの動画は残り、進行中のタスクは先にキャンセルされます。",
@@ -1062,6 +1177,16 @@ const uiTranslations = <String, Map<String, String>>{
     'ja': "バックグラウンド再生",
     'ko': "백그라운드 재생",
   },
+  "后台订阅整理已让位于当前操作。": <String, String>{
+    'en': "Background subscription indexing has yielded to the current action.",
+    'ja': "バックグラウンドの購読整理は現在の操作に優先権を譲りました。",
+    'ko': "백그라운드 구독 정리가 현재 작업에 양보되었습니다.",
+  },
+  "后台预加载已让位于当前操作。": <String, String>{
+    'en': "Background preloading has yielded to the current action.",
+    'ja': "バックグラウンドのプリロードは現在の操作に優先権を譲りました。",
+    'ko': "백그라운드 사전 로드가 현재 작업에 양보되었습니다.",
+  },
   "否": <String, String>{
     'en': "No",
     'ja': "いいえ",
@@ -1101,6 +1226,11 @@ const uiTranslations = <String, Map<String, String>>{
     'en': "Reply...",
     'ja': "返信...",
     'ko': "답장하다...",
+  },
+  "回复内容不能为空。": <String, String>{
+    'en': "Reply content cannot be empty.",
+    'ja': "返信内容は空にできません。",
+    'ko': "답글 내용은 비워둘 수 없습니다.",
   },
   "回复加载失败：{p0}": <String, String>{
     'en': "Reply loading failed: {p0}",
@@ -1217,46 +1347,6 @@ const uiTranslations = <String, Map<String, String>>{
     'ja': "ライブラリ",
     'ko': "라이브러리",
   },
-  "媒体库二级页切换；范围=hanime1；section={p0}": <String, String>{
-    'en': "Media library secondary page switching; range=hanime1; section={p0}",
-    'ja': "メディア ライブラリのセカンダリ ページ切り替え。範囲=アニメ1;セクション={p0}",
-    'ko': "미디어 라이브러리 보조 페이지 전환; 범위=hanime1; 섹션={p0}",
-  },
-  "媒体库二级页切换；范围=local；section={p0}": <String, String>{
-    'en': "Media library secondary page switching; scope=local; section={p0}",
-    'ja': "メディア ライブラリのセカンダリ ページ切り替え。スコープ=ローカル;セクション={p0}",
-    'ko': "미디어 라이브러리 보조 페이지 전환; 범위=로컬; 섹션={p0}",
-  },
-  "媒体库二级页切换；范围=rule34video；section={p0}": <String, String>{
-    'en': "Media library secondary page switching; range=rule34video; section={p0}",
-    'ja': "メディア ライブラリのセカンダリ ページ切り替え。範囲=ルール34ビデオ;セクション={p0}",
-    'ko': "미디어 라이브러리 보조 페이지 전환; 범위=rule34video; 섹션={p0}",
-  },
-  "媒体库列表请求完成；范围=rule34video；section={p0}；": <String, String>{
-    'en': "Media library list request completed; scope=rule34video; section={p0};",
-    'ja': "メディア ライブラリ リストのリクエストが完了しました。スコープ=ルール34ビデオ;セクション={p0};",
-    'ko': "미디어 라이브러리 목록 요청이 완료되었습니다. 범위=rule34video; 섹션={p0};",
-  },
-  "媒体库列表请求开始；范围=rule34video；section={p0}；": <String, String>{
-    'en': "Media library list request starts; scope=rule34video; section={p0};",
-    'ja': "メディア ライブラリ リストのリクエストが開始されます。スコープ=ルール34ビデオ;セクション={p0};",
-    'ko': "미디어 라이브러리 목록 요청이 시작됩니다. 범위=rule34video; 섹션={p0};",
-  },
-  "媒体库打开；范围={p0}；": <String, String>{
-    'en': "Media library open;scope={p0};",
-    'ja': "メディア ライブラリが開いています;スコープ={p0};",
-    'ko': "미디어 라이브러리 열기;범위={p0};",
-  },
-  "媒体库登录状态变化；R34V={p0}；": <String, String>{
-    'en': "Media library login status change; R34V={p0};",
-    'ja': "メディア ライブラリのログイン ステータスの変更。 R34V={p0};",
-    'ko': "미디어 라이브러리 로그인 상태 변경; R34V={p0};",
-  },
-  "媒体库范围切换；from={p0}；to={p1}": <String, String>{
-    'en': "Media library range switching; from={p0}; to={p1}",
-    'ja': "メディアライブラリ範囲の切り替え。から={p0};へ={p1}",
-    'ko': "미디어 라이브러리 범위 전환; ={p0}에서; ={p1}에",
-  },
   "媒体库范围顺序": <String, String>{
     'en': "Media library range order",
     'ja': "メディア ライブラリの範囲順序",
@@ -1271,6 +1361,26 @@ const uiTranslations = <String, Map<String, String>>{
     'en': "Merge safely",
     'ja': "安全にマージ",
     'ko': "안전하게 병합",
+  },
+  "安全证书验证失败": <String, String>{
+    'en': "Security certificate verification failed.",
+    'ja': "セキュリティ証明書の検証に失敗しました。",
+    'ko': "보안 인증서 확인에 실패했습니다.",
+  },
+  "安装包签名与已安装版本不一致，无法覆盖安装，请前往 GitHub 手动下载安装。": <String, String>{
+    'en': "The installation package signature is inconsistent with the installed version, and the installation cannot be overwritten. Please go to GitHub to download and install manually.",
+    'ja': "インストール パッケージの署名がインストールされているバージョンと一致しないため、インストールを上書きできません。 GitHub にアクセスして手動でダウンロードしてインストールしてください。",
+    'ko': "설치 패키지 서명이 설치된 버전과 일치하지 않으므로 설치를 덮어쓸 수 없습니다. 수동으로 다운로드하고 설치하려면 GitHub로 이동하세요.",
+  },
+  "安装更新包失败，请稍后重试。": <String, String>{
+    'en': "Failed to install update package, please try again later.",
+    'ja': "更新パッケージのインストールに失敗しました。後でもう一度試してください。",
+    'ko': "업데이트 패키지를 설치하지 못했습니다. 나중에 다시 시도해 주세요.",
+  },
+  "安装超时，请稍后重试。": <String, String>{
+    'en': "Installation timed out, please try again later.",
+    'ja': "インストールがタイムアウトしました。後でもう一度試してください。",
+    'ko': "설치 시간이 초과되었습니다. 나중에 다시 시도해 주세요.",
   },
   "宽泛搜索": <String, String>{
     'en': "Broad search",
@@ -1372,6 +1482,11 @@ const uiTranslations = <String, Map<String, String>>{
     'ja': "時間",
     'ko': "시간",
   },
+  "尚未开启安装权限，请稍后重试。": <String, String>{
+    'en': "The installation permission has not been enabled, please try again later.",
+    'ja': "インストール権限が有効になっていません。後でもう一度試してください。",
+    'ko': "설치 권한이 활성화되지 않았습니다. 나중에 다시 시도해 주세요.",
+  },
   "尚未登录": <String, String>{
     'en': "Not signed in",
     'ja': "未ログイン",
@@ -1392,10 +1507,25 @@ const uiTranslations = <String, Map<String, String>>{
     'ja': "拡大する",
     'ko': "펼치기",
   },
+  "展开({p0})": <String, String>{
+    'en': "Expand ({p0})",
+    'ja': "展開 ({p0})",
+    'ko': "더보기 ({p0})",
+  },
   "已下载": <String, String>{
     'en': "Downloaded",
     'ja': "ダウンロード済み",
     'ko': "다운로드됨",
+  },
+  "已下载 {p0}": <String, String>{
+    'en': "Downloaded {p0}",
+    'ja': "{p0}をダウンロードしました",
+    'ko': "{p0} 다운로드됨",
+  },
+  "已下载 {p0} / {p1}": <String, String>{
+    'en': "Downloaded {p0} / {p1}",
+    'ja': "{p0} / {p1} をダウンロードしました",
+    'ko': "{p0} / {p1} 다운로드됨",
   },
   "已从“{p0}”移出。": <String, String>{
     'en': "Removed from “{p0}”.",
@@ -1456,6 +1586,16 @@ const uiTranslations = <String, Map<String, String>>{
     'en': "Canceled",
     'ja': "キャンセルされました",
     'ko': "취소됨",
+  },
+  "已取消下载更新包。": <String, String>{
+    'en': "Download of update package canceled.",
+    'ja': "更新パッケージのダウンロードがキャンセルされました。",
+    'ko': "업데이트 패키지 다운로드가 취소되었습니다.",
+  },
+  "已取消安装。": <String, String>{
+    'en': "Installation canceled.",
+    'ja': "インストールがキャンセルされました。",
+    'ko': "설치가 취소되었습니다.",
   },
   "已取消收藏。": <String, String>{
     'en': "Removed from favorites.",
@@ -1622,11 +1762,6 @@ const uiTranslations = <String, Map<String, String>>{
     'ja': "条件を{p0}件適用",
     'ko': "조건 {p0}개 적용",
   },
-  "应用初始化完成。": <String, String>{
-    'en': "App initialization complete.",
-    'ja': "アプリの初期化が完了しました。",
-    'ko': "앱 초기화가 완료되었습니다.",
-  },
   "应用日志": <String, String>{
     'en': "App logs",
     'ja': "アプリログ",
@@ -1641,6 +1776,11 @@ const uiTranslations = <String, Map<String, String>>{
     'en': "Apply (no limit)",
     'ja': "適用（制限なし）",
     'ko': "적용(제한 없음)",
+  },
+  "底座网络适配器已释放，无法发起请求。": <String, String>{
+    'en': "Underlying network adapter has been disposed; cannot initiate requests.",
+    'ja': "基盤のネットワークアダプタが破棄されたため、リクエストを開始できません。",
+    'ko': "기반 네트워크 어댑터가 해제되어 요청을 시작할 수 없습니다.",
   },
   "底部导航顺序": <String, String>{
     'en': "Bottom navigation order",
@@ -1657,10 +1797,10 @@ const uiTranslations = <String, Map<String, String>>{
     'ja': "オンにすると、アプリを切り替えたり画面を消したりしても音声の再生が続きます。",
     'ko': "켜면 앱을 전환하거나 화면을 꺼도 오디오가 계속 재생됩니다.",
   },
-  "开始视频预览；site={p0}；video={p1}；": <String, String>{
-    'en': "Start video preview; site={p0}; video={p1};",
-    'ja': "ビデオのプレビューを開始します。サイト={p0};ビデオ={p1};",
-    'ko': "비디오 미리보기를 시작합니다. 사이트={p0}; 비디오={p1};",
+  "开始日期": <String, String>{
+    'en': "Start Date",
+    'ja': "開始日",
+    'ko': "시작일",
   },
   "开源许可": <String, String>{
     'en': "Open source license",
@@ -1717,6 +1857,16 @@ const uiTranslations = <String, Map<String, String>>{
     'ja': "現在のバージョン：{p0}",
     'ko': "현재 버전: {p0}",
   },
+  "当前环境没有可写入的翻译数据库": <String, String>{
+    'en': "No writable translation database in the current environment",
+    'ja': "現在の環境には書き込み可能な翻訳データベースがありません",
+    'ko': "현재 환경에 쓸 수 있는 번역 데이터베이스가 없습니다",
+  },
+  "当前设备不支持自动安装，请前往 GitHub 手动下载安装包。": <String, String>{
+    'en': "The current device does not support automatic installation. Please go to GitHub to download the installation package manually.",
+    'ja': "現在のデバイスは自動インストールをサポートしていません。 GitHub にアクセスして、インストール パッケージを手動でダウンロードしてください。",
+    'ko': "현재 장치는 자동 설치를 지원하지 않습니다. 설치 패키지를 수동으로 다운로드하려면 GitHub로 이동하세요.",
+  },
   "当前账号 ID": <String, String>{
     'en': "Current account ID",
     'ja': "現在のアカウントID",
@@ -1751,11 +1901,6 @@ const uiTranslations = <String, Map<String, String>>{
     'en': "Restore learned translations",
     'ja': "学習した翻訳を復元する",
     'ko': "학습된 번역 복원",
-  },
-  "恢复播放，开始自动展开播放器；video={p0}；": <String, String>{
-    'en': "Playback resumed; expanding player automatically; video={p0};",
-    'ja': "再生を再開し、プレーヤーの自動展開を開始；video={p0}；",
-    'ko': "재생 재개, 플레이어 자동 펼치기 시작; video={p0};",
   },
   "我的": <String, String>{
     'en': "Profile",
@@ -1837,11 +1982,6 @@ const uiTranslations = <String, Map<String, String>>{
     'ja': "モデル一覧を取得",
     'ko': "모델 목록 불러오기",
   },
-  "拖动调整；冷启动时默认进入第一项。": <String, String>{
-    'en': "Drag to adjust; default to the first item during cold start.",
-    'ja': "ドラッグして調整します。コールド スタート時のデフォルトは最初の項目です。",
-    'ko': "드래그하여 조정하세요. 콜드 스타트 ​​중에는 첫 번째 항목이 기본값입니다.",
-  },
   "指定月份…": <String, String>{
     'en': "Specify month…",
     'ja': "月を指定してください…",
@@ -1866,11 +2006,6 @@ const uiTranslations = <String, Map<String, String>>{
     'en': "Sort by source",
     'ja': "提供元順",
     'ko': "출처순",
-  },
-  "按标签和内容主题探索": <String, String>{
-    'en': "Explore by tags and topics",
-    'ja': "タグやテーマから探す",
-    'ko': "태그와 주제로 탐색",
   },
   "按观看量浏览热门内容": <String, String>{
     'en': "Browse popular content by view count",
@@ -1911,11 +2046,6 @@ const uiTranslations = <String, Map<String, String>>{
     'en': "Exclude:",
     'ja': "除外：",
     'ko': "제외:",
-  },
-  "探索内容": <String, String>{
-    'en': "Explore content",
-    'ja': "コンテンツを探索する",
-    'ko': "콘텐츠 탐색",
   },
   "接口类型": <String, String>{
     'en': "API format",
@@ -2082,6 +2212,11 @@ const uiTranslations = <String, Map<String, String>>{
     'ja': "プレイリストはサイトのアカウントから削除されます。",
     'ko': "재생목록이 웹사이트 계정에서 삭제됩니다.",
   },
+  "播放列表分页未取得进展，请刷新重试。": <String, String>{
+    'en': "Playlist pagination made no progress, please refresh and retry.",
+    'ja': "プレイリストのページネーションが進みませんでした。更新して再試行してください。",
+    'ko': "재생목록 페이지 이동에 진전이 없습니다. 새로고침 후 다시 시도해 주세요.",
+  },
   "播放列表加载失败：{p0}": <String, String>{
     'en': "Playlist loading failed: {p0}",
     'ja': "プレイリストの読み込みに失敗しました: {p0}",
@@ -2122,65 +2257,20 @@ const uiTranslations = <String, Map<String, String>>{
     'ja': "プレイリストの操作",
     'ko': "재생목록 작업",
   },
+  "播放列表操作失败。": <String, String>{
+    'en': "Playlist action failed.",
+    'ja': "プレイリストの操作に失敗しました。",
+    'ko': "재생목록 작업에 실패했습니다.",
+  },
+  "播放列表编辑页面缺少标题字段。": <String, String>{
+    'en': "Playlist edit page is missing the title field.",
+    'ja': "プレイリスト編集ページにタイトルフィールドがありません。",
+    'ko': "재생목록 편집 페이지에 제목 필드가 없습니다.",
+  },
   "播放器初始化后未提供视频时长。": <String, String>{
     'en': "The player did not report the video duration after initialization.",
     'ja': "プレーヤーの初期化後も動画の長さを取得できませんでした。",
     'ko': "플레이어 초기화 후 동영상 길이 정보가 제공되지 않았습니다.",
-  },
-  "播放器开始自动恢复；attempt={p0}；": <String, String>{
-    'en': "The player starts to resume automatically; attempt={p0};",
-    'ja': "プレーヤーは自動的に再開を開始します。試行={p0};",
-    'ko': "플레이어가 자동으로 재개되기 시작합니다. 시도={p0};",
-  },
-  "播放器折叠权限更新；video={p0}；": <String, String>{
-    'en': "Player collapse permission updated; video={p0};",
-    'ja': "プレーヤーの折りたたみ権限を更新；video={p0}；",
-    'ko': "플레이어 접기 권한 업데이트; video={p0};",
-  },
-  "播放器报告异常：{p0}；": <String, String>{
-    'en': "Player reported an error: {p0};",
-    'ja': "プレーヤーがエラーを報告：{p0}；",
-    'ko': "플레이어 오류 보고: {p0};",
-  },
-  "播放器自动展开完成；video={p0}；": <String, String>{
-    'en': "Player finished expanding automatically; video={p0};",
-    'ja': "プレーヤーの自動展開が完了；video={p0}；",
-    'ko': "플레이어 자동 펼치기 완료; video={p0};",
-  },
-  "播放器自动恢复失败；reason=no-alternate-source；": <String, String>{
-    'en': "Player automatic recovery failed; reason=no-alternate-source;",
-    'ja': "プレーヤーの自動回復に失敗しました。理由=代替ソースがない;",
-    'ko': "플레이어 자동 복구에 실패했습니다. 이유=대체 소스 없음;",
-  },
-  "播放器自动恢复异常；{p0}；": <String, String>{
-    'en': "Player automatic recovery exception; {p0};",
-    'ja': "プレーヤーの自動回復例外。 {p0};",
-    'ko': "플레이어 자동 복구 예외; {p0};",
-  },
-  "播放器自动恢复成功；{p0}；耗时={p1}ms": <String, String>{
-    'en': "The player automatically resumed successfully; {p0}; time consumption = {p1}ms",
-    'ja': "プレーヤーは自動的に正常に再開されました。 {p0};消費時間 = {p1}ms",
-    'ko': "플레이어가 자동으로 성공적으로 재개되었습니다. {p0}; 시간 소비 = {p1}ms",
-  },
-  "播放器自动恢复装载失败；{p0}；": <String, String>{
-    'en': "Player automatic recovery failed to load; {p0};",
-    'ja': "プレーヤーの自動回復のロードに失敗しました。 {p0};",
-    'ko': "플레이어 자동 복구를 로드하지 못했습니다. {p0};",
-  },
-  "播放器自动恢复选择备用源；from={p0}；": <String, String>{
-    'en': "The player automatically resumes selecting the alternate source; from={p0};",
-    'ja': "プレーヤーは自動的に代替ソースの選択を再開します。から={p0};",
-    'ko': "플레이어는 자동으로 대체 소스 선택을 재개합니다. ={p0}에서;",
-  },
-  "播放器装载失败：{p0}；": <String, String>{
-    'en': "Player failed to load: {p0};",
-    'ja': "プレーヤーの読み込みに失敗：{p0}；",
-    'ko': "플레이어 로드 실패: {p0};",
-  },
-  "播放态详情滚动触发边界反馈，已禁用视觉拉伸；video={p0}；": <String, String>{
-    'en': "Detail scrolling reached the boundary during playback; visual overscroll disabled; video={p0};",
-    'ja': "再生中の詳細スクロールが境界に到達したため、視覚的な伸縮を無効化；video={p0}；",
-    'ko': "재생 중 상세 스크롤이 경계에 도달하여 시각적 오버스크롤 비활성화; video={p0};",
   },
   "播放文件": <String, String>{
     'en': "Play file",
@@ -2227,6 +2317,16 @@ const uiTranslations = <String, Map<String, String>>{
     'ja': "操作を完了できませんでした。しばらくしてから再試行してください。",
     'ko': "작업을 완료하지 못했습니다. 잠시 후 다시 시도하세요.",
   },
+  "操作超时，请稍后重试": <String, String>{
+    'en': "Operation timed out. Try again later.",
+    'ja': "操作がタイムアウトしました。しばらくしてから再試行してください。",
+    'ko': "작업 시간이 초과되었습니다. 잠시 후 다시 시도하세요.",
+  },
+  "支持 Google 一键登入或官网邮箱密码登录，登录完成后会自动返回。": <String, String>{
+    'en': "Supports Google one-tap sign-in or official email/password login. Automatically returns after login.",
+    'ja': "Google ワンタップログインまたは公式サイトのメール／パスワードログインに対応。完了後に自動で戻ります。",
+    'ko': "Google 원터치 로그인 또는 공식 웹사이트 이메일/비밀번호 로그인을 지원하며, 완료 후 자동으로 돌아옵니다.",
+  },
   "收藏": <String, String>{
     'en': "Favorites",
     'ja': "お気に入り",
@@ -2261,6 +2361,11 @@ const uiTranslations = <String, Map<String, String>>{
     'en': "Database structure",
     'ja': "データベース構造",
     'ko': "데이터베이스 구조",
+  },
+  "数据解析失败，站点结构可能已更新": <String, String>{
+    'en': "Data parsing failed. The site structure may have changed.",
+    'ja': "データの解析に失敗しました。サイト構造が更新された可能性があります。",
+    'ko': "데이터 분석에 실패했습니다. 사이트 구조가 업데이트되었을 수 있습니다.",
   },
   "文件不存在": <String, String>{
     'en': "File does not exist",
@@ -2307,6 +2412,26 @@ const uiTranslations = <String, Map<String, String>>{
     'ja': "翻訳サービスを作成",
     'ko': "번역 서비스 만들기",
   },
+  "新版本 {p0} 已发布，是否立即下载并安装？": <String, String>{
+    'en': "The new version {p0} has been released. Do you want to download and install it now?",
+    'ja': "新しいバージョン {p0} がリリースされました。今すぐダウンロードしてインストールしますか?",
+    'ko': "새 버전 {p0}이 출시되었습니다. 지금 다운로드하여 설치하시겠습니까?",
+  },
+  "无": <String, String>{
+    'en': "None",
+    'ja': "なし",
+    'ko': "없음",
+  },
+  "无法启动系统安装器，请稍后重试。": <String, String>{
+    'en': "Unable to start system installer, please try again later.",
+    'ja': "システム インストーラーを起動できません。後でもう一度お試しください。",
+    'ko': "시스템 설치 프로그램을 시작할 수 없습니다. 나중에 다시 시도해 주세요.",
+  },
+  "无法启动系统安装器：{p0}": <String, String>{
+    'en': "Unable to start system installer: {p0}",
+    'ja': "システム インストーラーを起動できません: {p0}",
+    'ko': "시스템 설치 프로그램을 시작할 수 없습니다: {p0}",
+  },
   "无法将视频保存到 Download/Flule34。": <String, String>{
     'en': "Unable to save the video to Download/Flule34.",
     'ja': "動画をDownload/Flule34に保存できません。",
@@ -2316,6 +2441,11 @@ const uiTranslations = <String, Map<String, String>>{
     'en': "Unable to open share panel: {p0}",
     'ja': "共有パネルを開けません：{p0}",
     'ko': "공유 패널을 열 수 없습니다: {p0}",
+  },
+  "无法打开链接：{p0}": <String, String>{
+    'en': "Cannot open link: {p0}",
+    'ja': "リンクを開けません：{p0}",
+    'ko': "링크를 열 수 없습니다: {p0}",
   },
   "无法播放此视频源：{p0}": <String, String>{
     'en': "Unable to play this video source: {p0}",
@@ -2327,6 +2457,51 @@ const uiTranslations = <String, Map<String, String>>{
     'ja': "診断情報を生成できません：{p0}",
     'ko': "진단 정보를 생성할 수 없습니다: {p0}",
   },
+  "无法确定思考参数兼容方式": <String, String>{
+    'en': "Unable to determine thinking parameter compatibility mode",
+    'ja': "思考パラメータの互換モードを特定できません",
+    'ko': "사고 파라미터 호환 방식을 확인할 수 없습니다",
+  },
+  "无法获取操作令牌。": <String, String>{
+    'en': "Failed to obtain operation token.",
+    'ja': "操作トークンを取得できませんでした。",
+    'ko': "작업 토큰을 가져올 수 없습니다.",
+  },
+  "无法获取登录表单的校验令牌。": <String, String>{
+    'en': "Failed to obtain verification token for the login form.",
+    'ja': "ログインフォームの検証トークンを取得できませんでした。",
+    'ko': "로그인 양식의 검증 토큰을 가져올 수 없습니다.",
+  },
+  "无法解析上传者资料，请稍后重试。": <String, String>{
+    'en': "Failed to parse uploader profile, please retry later.",
+    'ja': "アップロード者のプロフィールを解析できませんでした。後で再試行してください。",
+    'ko': "업로더 프로필을 분석하지 못했습니다. 잠시 후 다시 시도해 주세요.",
+  },
+  "无法解析当前账号资料，请稍后重试。": <String, String>{
+    'en': "Failed to parse current account profile, please retry later.",
+    'ja': "現在のアカウント情報を解析できませんでした。後で再試行してください。",
+    'ko': "현재 계정 프로필을 분석하지 못했습니다. 잠시 후 다시 시도해 주세요.",
+  },
+  "无法解析账号编辑资料。": <String, String>{
+    'en': "Failed to parse account edit profile.",
+    'ja': "アカウント編集用データを解析できませんでした。",
+    'ko': "계정 편집 정보를 분석할 수 없습니다.",
+  },
+  "无法识别视频作者。": <String, String>{
+    'en': "Unable to identify video author.",
+    'ja': "動画の作者を特定できません。",
+    'ko': "비디오 작성자를 식별할 수 없습니다.",
+  },
+  "无法识别这个上传者的订阅信息。": <String, String>{
+    'en': "Unable to identify subscription details for this uploader.",
+    'ja': "このアップロード者の購読情報を特定できません。",
+    'ko': "이 업로더의 구독 정보를 식별할 수 없습니다.",
+  },
+  "无法识别这个订阅，请从相关视频详情页{p0}。": <String, String>{
+    'en': "Unable to identify this subscription. Please {p0} again from the related video's details page.",
+    'ja': "この購読を特定できませんでした。関連動画の詳細ページから{p0}してください。",
+    'ko': "이 구독을 식별할 수 없습니다. 관련 동영상 상세 페이지에서 {p0}하세요.",
+  },
   "无法读取网页内容，可以点重试。": <String, String>{
     'en': "Unable to read the web page content, please click to try again.",
     'ja': "Web ページのコンテンツを読み取ることができません。クリックしてもう一度お試しください。",
@@ -2336,6 +2511,21 @@ const uiTranslations = <String, Map<String, String>>{
     'en': "Unable to connect to GitHub. Check your network and try again.",
     'ja': "GitHubに接続できません。ネットワークを確認して再試行してください。",
     'ko': "GitHub에 연결할 수 없습니다. 네트워크를 확인한 후 다시 시도하세요.",
+  },
+  "无法连接到网站": <String, String>{
+    'en': "Unable to connect to website",
+    'ja': "ウェブサイトに接続できません",
+    'ko': "웹사이트에 연결할 수 없습니다",
+  },
+  "无法连接到网站，请检查网络。": <String, String>{
+    'en': "Unable to connect to the website, please check your network.",
+    'ja': "ウェブサイトに接続できません。ネットワークを確認してください。",
+    'ko': "웹사이트에 연결할 수 없습니다. 네트워크를 확인해 주세요.",
+  },
+  "日期：{p0}": <String, String>{
+    'en': "Date: {p0}",
+    'ja': "日付：{p0}",
+    'ko': "날짜: {p0}",
   },
   "日本 IP 可能无法通过验证": <String, String>{
     'en': "Japanese IPs may fail verification",
@@ -2397,6 +2587,11 @@ const uiTranslations = <String, Map<String, String>>{
     'ja': "一時停止",
     'ko': "일시 중지",
   },
+  "暂无诊断信息。": <String, String>{
+    'en': "No diagnostic information available.",
+    'ja': "診断情報はありません。",
+    'ko': "진단 정보가 없습니다.",
+  },
   "暂时无法检查更新，请稍后重试。": <String, String>{
     'en': "Unable to check for updates right now. Try again later.",
     'ja': "現在、更新を確認できません。しばらくしてから再試行してください。",
@@ -2437,6 +2632,41 @@ const uiTranslations = <String, Map<String, String>>{
     'ja': "アバターの変更",
     'ko': "아바타 변경",
   },
+  "更新包下载失败，请稍后重试。": <String, String>{
+    'en': "The update package download failed, please try again later.",
+    'ja': "更新パッケージのダウンロードに失敗しました。後でもう一度試してください。",
+    'ko': "업데이트 패키지 다운로드에 실패했습니다. 나중에 다시 시도해 주세요.",
+  },
+  "更新包与当前系统不兼容。": <String, String>{
+    'en': "The update package is incompatible with the current system.",
+    'ja': "更新パッケージは現在のシステムと互換性がありません。",
+    'ko': "업데이트 패키지가 현재 시스템과 호환되지 않습니다.",
+  },
+  "更新包保存不完整，请重试。": <String, String>{
+    'en': "The update package is not saved completely, please try again.",
+    'ja': "更新パッケージが完全に保存されていません。もう一度試してください。",
+    'ko': "업데이트 패키지가 완전히 저장되지 않았습니다. 다시 시도해 주세요.",
+  },
+  "更新包大小校验失败，请重试。": <String, String>{
+    'en': "Update package size verification failed, please try again.",
+    'ja': "更新パッケージのサイズの検証に失敗しました。もう一度お試しください。",
+    'ko': "업데이트 패키지 크기 확인에 실패했습니다. 다시 시도해 주세요.",
+  },
+  "更新包已安装完成。": <String, String>{
+    'en': "The update package has been installed.",
+    'ja': "アップデートパッケージがインストールされました。",
+    'ko': "업데이트 패키지가 설치되었습니다.",
+  },
+  "更新包无效或已损坏，请重新下载。": <String, String>{
+    'en': "The update package is invalid or damaged, please download again.",
+    'ja': "更新パッケージが無効であるか破損しています。再度ダウンロードしてください。",
+    'ko': "업데이트 패키지가 잘못되었거나 손상되었습니다. 다시 다운로드하세요.",
+  },
+  "更新包校验失败，请重试。": <String, String>{
+    'en': "Update package verification failed, please try again.",
+    'ja': "更新パッケージの検証に失敗しました。もう一度お試しください。",
+    'ko': "업데이트 패키지 확인에 실패했습니다. 다시 시도해 주세요.",
+  },
   "更新失败：{p0}": <String, String>{
     'en': "Update failed: {p0}",
     'ja': "更新に失敗しました: {p0}",
@@ -2462,10 +2692,20 @@ const uiTranslations = <String, Map<String, String>>{
     'ja': "更新元：{p0}",
     'ko': "업데이트 소스: {p0}",
   },
+  "更新说明": <String, String>{
+    'en': "Update instructions",
+    'ja': "アップデート手順",
+    'ko': "업데이트 지침",
+  },
   "更新通道": <String, String>{
     'en': "Update channel",
     'ja': "更新チャンネル",
     'ko': "업데이트 채널",
+  },
+  "更早的关注内容仍在整理，请重试加载。": <String, String>{
+    'en': "Older subscription updates are still being organized, please retry loading.",
+    'ja': "過去の購読コンテンツはまだ整理中です。再読み込みしてください。",
+    'ko': "이전 구독 항목이 아직 정리 중입니다. 다시 불러와 주세요.",
   },
   "最低投票数": <String, String>{
     'en': "Minimum number of votes",
@@ -2527,6 +2767,11 @@ const uiTranslations = <String, Map<String, String>>{
     'ja': "最もホットな",
     'ko': "가장 뜨거운",
   },
+  "最短时长（秒）": <String, String>{
+    'en': "Min duration (seconds)",
+    'ja': "最短時間（秒）",
+    'ko': "최소 길이 (초)",
+  },
   "最近修改": <String, String>{
     'en': "Recently modified",
     'ja': "更新日時が新しい順",
@@ -2552,6 +2797,16 @@ const uiTranslations = <String, Map<String, String>>{
     'ja': "長い順",
     'ko': "긴 순",
   },
+  "最长时长不能小于最短时长": <String, String>{
+    'en': "Max duration cannot be less than min duration",
+    'ja': "最長時間を最短時間より短くすることはできません",
+    'ko': "최대 길이는 최소 길이보다 작을 수 없습니다",
+  },
+  "最长时长（秒）": <String, String>{
+    'en': "Max duration (seconds)",
+    'ja': "最長時間（秒）",
+    'ko': "최대 길이 (초)",
+  },
   "最高可用": <String, String>{
     'en': "Best available",
     'ja': "利用可能な最高画質",
@@ -2572,35 +2827,100 @@ const uiTranslations = <String, Map<String, String>>{
     'ja': "月",
     'ko': "달",
   },
+  "有 {p0} 个订阅暂时无法继续读取。": <String, String>{
+    'en': "{p0} subscriptions cannot be loaded further for now.",
+    'ja': "{p0} 件の購読は現在これ以上読み込めません。",
+    'ko': "{p0}개의 구독을 현재 더 이상 불러올 수 없습니다.",
+  },
+  "有 {p0} 个订阅暂时无法读取。": <String, String>{
+    'en': "{p0} subscriptions cannot be read for now.",
+    'ja': "{p0} 件の購読は現在読み込めません。",
+    'ko': "{p0}개의 구독을 현재 읽어올 수 없습니다.",
+  },
   "服务名称": <String, String>{
     'en': "Service name",
     'ja': "サービス名",
     'ko': "서비스 이름",
+  },
+  "服务器响应异常 ({p0})": <String, String>{
+    'en': "Abnormal server response ({p0})",
+    'ja': "サーバーの応答が異常です ({p0})",
+    'ko': "서버 응답 이상 ({p0})",
+  },
+  "服务器返回了 HTTP {p0}。": <String, String>{
+    'en': "Server returned HTTP {p0}.",
+    'ja': "サーバーが HTTP {p0} を返しました。",
+    'ko': "서버에서 HTTP {p0}을(를) 반환했습니다.",
+  },
+  "服务器返回了缺少目标地址的重定向。": <String, String>{
+    'en': "Server returned a redirect without a target URL.",
+    'ja': "サーバーがリダイレクト先URLのないリダイレクトを返しました。",
+    'ko': "서버가 대상 주소가 없는 리디렉션을 반환했습니다.",
+  },
+  "服务器重定向次数过多。": <String, String>{
+    'en': "Too many server redirects.",
+    'ja': "サーバーのリダイレクトが多すぎます。",
+    'ko': "서버 리디렉션 횟수가 너무 많습니다.",
+  },
+  "未命名播放列表": <String, String>{
+    'en': "Untitled Playlist",
+    'ja': "無題のプレイリスト",
+    'ko': "이름 없는 재생목록",
+  },
+  "未命名系列": <String, String>{
+    'en': "Untitled Series",
+    'ja': "無題のシリーズ",
+    'ko': "이름 없는 시리즈",
+  },
+  "未命名视频": <String, String>{
+    'en': "Untitled Video",
+    'ja': "無題の動画",
+    'ko': "제목 없는 비디오",
   },
   "未挂载": <String, String>{
     'en': "Not mounted",
     'ja': "未マウント",
     'ko': "마운트되지 않음",
   },
-  "未捕获异步异常：{p0}\n{p1}": <String, String>{
-    'en': "Unhandled asynchronous error: {p0}\n{p1}",
-    'ja': "未処理の非同期例外：{p0}\n{p1}",
-    'ko': "처리되지 않은 비동기 예외: {p0}\n{p1}",
-  },
   "未排除任何{p0}": <String, String>{
     'en': "No {p0} excluded",
     'ja': "{p0}は除外されていません",
     'ko': "제외된 {p0} 없음",
+  },
+  "未注入": <String, String>{
+    'en': "Not set",
+    'ja': "未設定",
+    'ko': "미설정",
   },
   "未登录 Hanime": <String, String>{
     'en': "Not logged in Hanime",
     'ja': "ハニメにログインしていません",
     'ko': "로그인되지 않았습니다.",
   },
+  "未知翻译类型": <String, String>{
+    'en': "Unknown translation type",
+    'ja': "不明な翻訳タイプ",
+    'ko': "알 수 없는 번역 유형",
+  },
+  "未知错误": <String, String>{
+    'en': "Unknown error",
+    'ja': "不明なエラー",
+    'ko': "알 수 없는 오류",
+  },
+  "未获取到更新信息。": <String, String>{
+    'en': "No update information obtained.",
+    'ja': "更新情報は取得できませんでした。",
+    'ko': "업데이트 정보를 가져오지 못했습니다.",
+  },
   "未配置": <String, String>{
     'en': "Not configured",
     'ja': "未設定",
     'ko': "구성되지 않음",
+  },
+  "未配置 API Key": <String, String>{
+    'en': "API Key is not configured",
+    'ja': "API キーが設定されていません",
+    'ko': "API 키가 구성되지 않았습니다",
   },
   "本地分类库": <String, String>{
     'en': "Local libraries",
@@ -2612,10 +2932,20 @@ const uiTranslations = <String, Map<String, String>>{
     'ja': "ローカルライブラリ",
     'ko': "로컬 라이브러리",
   },
+  "本地数据库读写异常，请重试": <String, String>{
+    'en': "Local database read/write error. Please try again.",
+    'ja': "ローカルデータベースの読み書きエラーが発生しました。再試行してください。",
+    'ko': "로컬 데이터베이스 읽기/쓰기 오류입니다. 다시 시도하세요.",
+  },
   "本地诊断日志": <String, String>{
     'en': "Local diagnostic log",
     'ja': "ローカル診断ログ",
     'ko': "로컬 진단 로그",
+  },
+  "本地语言识别": <String, String>{
+    'en': "Local language identification",
+    'ja': "ローカル言語識別",
+    'ko': "로컬 언어 식별",
   },
   "本机": <String, String>{
     'en': "local machine",
@@ -2647,11 +2977,6 @@ const uiTranslations = <String, Map<String, String>>{
     'ja': "ビルドモード",
     'ko': "빌드 모드",
   },
-  "查找艺术家页面": <String, String>{
-    'en': "Find artist page",
-    'ja': "アーティストページを検索",
-    'ko': "아티스트 페이지 찾기",
-  },
   "查看 HaRu 与第三方 Flutter 依赖许可": <String, String>{
     'en': "View licenses for HaRu and third-party Flutter dependencies",
     'ja': "HaRuとサードパーティ製Flutter依存関係のライセンスを表示",
@@ -2676,6 +3001,11 @@ const uiTranslations = <String, Map<String, String>>{
     'en': "View and copy a runtime summary with credentials excluded",
     'ja': "認証情報を除いた実行環境の概要を表示・コピー",
     'ko': "자격 증명을 제외한 실행 환경 요약 보기 및 복사",
+  },
+  "查看更多": <String, String>{
+    'en': "View more",
+    'ja': "もっと見る",
+    'ko': "더 보기",
   },
   "查看诊断信息": <String, String>{
     'en': "View diagnostic information",
@@ -2722,6 +3052,11 @@ const uiTranslations = <String, Map<String, String>>{
     'ja': "モデルリストの取得に失敗しました：{p0}",
     'ko': "모델 목록 가져오기 실패: {p0}",
   },
+  "模型列表返回格式无效": <String, String>{
+    'en': "Invalid model list response format",
+    'ja': "モデル一覧の応答形式が無効です",
+    'ko': "모델 목록 응답 형식이 올바르지 않습니다",
+  },
   "模型名": <String, String>{
     'en': "Model name",
     'ja': "モデル名",
@@ -2731,6 +3066,11 @@ const uiTranslations = <String, Map<String, String>>{
     'en': "Blur video thumbnails",
     'ja': "動画のサムネイルをぼかす",
     'ko': "동영상 썸네일 흐리게",
+  },
+  "欢迎回来，{p0}！已成功登录 Hanime。": <String, String>{
+    'en': "Welcome back, {p0}! Logged into Hanime successfully.",
+    'ja': "おかえりなさい、{p0}！Hanime に正常にログインしました。",
+    'ko': "돌아오신 것을 환영합니다, {p0}님! Hanime에 성공적으로 로그인했습니다.",
   },
   "正在下载": <String, String>{
     'en': "Downloading",
@@ -2742,6 +3082,11 @@ const uiTranslations = <String, Map<String, String>>{
     'ja': "ダウンロード中 · {p0}",
     'ko': "다운로드 중 · {p0}",
   },
+  "正在下载更新包": <String, String>{
+    'en': "Downloading update package",
+    'ja': "アップデートパッケージをダウンロードしています",
+    'ko': "업데이트 패키지 다운로드 중",
+  },
   "正在刷新视频地址…": <String, String>{
     'en': "Refreshing video URL…",
     'ja': "動画URLを更新しています…",
@@ -2752,15 +3097,15 @@ const uiTranslations = <String, Map<String, String>>{
     'ja': "処理中",
     'ko': "처리 중",
   },
+  "正在播放": <String, String>{
+    'en': "Now Playing",
+    'ja': "再生中",
+    'ko': "재생 중",
+  },
   "正在播放媒体": <String, String>{
     'en': "Playing media",
     'ja': "メディアを再生中",
     'ko': "미디어 재생 중",
-  },
-  "正在整理订阅内容 {p0}/{p1}": <String, String>{
-    'en': "Organizing subscription content {p0}/{p1}",
-    'ja': "サブスクリプション コンテンツの整理 {p0}/{p1}",
-    'ko': "구독 콘텐츠 정리 {p0}/{p1}",
   },
   "正在等待验证结果…如果长时间无反应，请点重试。": <String, String>{
     'en': "Waiting for verification results... If there is no response for a long time, please click Retry.",
@@ -2827,6 +3172,16 @@ const uiTranslations = <String, Map<String, String>>{
     'ja': "このビルドには、GitHub Releases 更新元が構成されていません。",
     'ko': "이 빌드에는 GitHub 릴리스 업데이트 소스가 구성되어 있지 않습니다.",
   },
+  "此类型不支持订阅。": <String, String>{
+    'en': "Subscriptions are not supported for this type.",
+    'ja': "このタイプは購読をサポートしていません。",
+    'ko': "이 유형은 구독을 지원하지 않습니다.",
+  },
+  "此类型暂不支持在 App 内取消订阅。": <String, String>{
+    'en': "Unsubscribing within the app is currently not supported for this type.",
+    'ja': "このタイプのアカウント解除はアプリ内ではまだサポートされていません。",
+    'ko': "이 유형은 현재 앱 내에서 구독 취소를 지원하지 않습니다.",
+  },
   "此视频未提供可直接播放的 MP4 源。": <String, String>{
     'en': "This video has no directly playable MP4 source.",
     'ja': "この動画には直接再生できるMP4ソースがありません。",
@@ -2841,11 +3196,6 @@ const uiTranslations = <String, Map<String, String>>{
     'en': "This video source is still unavailable. Try refreshing the video URL again.",
     'ja': "この動画ソースはまだ利用できません。動画URLをもう一度更新してください。",
     'ko': "이 동영상 소스를 아직 사용할 수 없습니다. 동영상 URL을 다시 새로고침하세요.",
-  },
-  "每次加载一批随机视频": <String, String>{
-    'en': "Load a new batch of random videos each time",
-    'ja': "毎回新しいランダム動画を読み込む",
-    'ko': "매번 새로운 무작위 동영상 묶음 불러오기",
   },
   "每次询问": <String, String>{
     'en': "Ask every time",
@@ -2881,6 +3231,11 @@ const uiTranslations = <String, Map<String, String>>{
     'en': "No backup definitions available, please try again later.",
     'ja': "使用可能なバックアップ定義がありません。後でもう一度試してください。",
     'ko': "사용 가능한 백업 정의가 없습니다. 나중에 다시 시도해 주세요.",
+  },
+  "没有启用翻译服务。": <String, String>{
+    'en': "Translation service is not enabled.",
+    'ja': "翻訳サービスが有効になっていません。",
+    'ko': "번역 서비스가 활성화되지 않았습니다.",
   },
   "没有找到与“{p0}”匹配的{p1}。": <String, String>{
     'en': "No matching {p1} found for \"{p0}\".",
@@ -2947,6 +3302,11 @@ const uiTranslations = <String, Map<String, String>>{
     'ja': "一致する翻訳はありません。",
     'ko': "일치하는 번역이 없습니다.",
   },
+  "没有返回可用模型": <String, String>{
+    'en': "No available models returned",
+    'ja': "利用可能なモデルが返されませんでした",
+    'ko': "사용 가능한 모델이 반환되지 않았습니다",
+  },
   "泡面番": <String, String>{
     'en': "instant noodles",
     'ja': "インスタントラーメン",
@@ -2977,41 +3337,6 @@ const uiTranslations = <String, Map<String, String>>{
     'ja': "接続テスト",
     'ko': "연결 테스트",
   },
-  "浏览器主页面加载失败；错误码={p0}；": <String, String>{
-    'en': "The browser's main page failed to load; error code = {p0};",
-    'ja': "ブラウザのメイン ページの読み込みに失敗しました。エラーコード = {p0};",
-    'ko': "브라우저의 기본 페이지를 로드하지 못했습니다. 오류 코드 = {p0};",
-  },
-  "浏览器挑战界面已消失，正在等待 cf_clearance；": <String, String>{
-    'en': "Browser challenge screen cleared; waiting for cf_clearance;",
-    'ja': "ブラウザーのチャレンジ画面が消失；cf_clearanceを待機中；",
-    'ko': "브라우저 챌린지 화면 종료; cf_clearance 대기 중;",
-  },
-  "浏览器检测到 Cloudflare 挑战；路径={p0}；": <String, String>{
-    'en': "Browser detected a Cloudflare challenge; path={p0};",
-    'ja': "ブラウザーがCloudflareチャレンジを検出；パス={p0}；",
-    'ko': "브라우저에서 Cloudflare 챌린지 감지; 경로={p0};",
-  },
-  "浏览器辅助验证完成；触发={p0}；路径={p1}；": <String, String>{
-    'en': "Browser-assisted verification completed; trigger={p0}; path={p1};",
-    'ja': "ブラウザによる検証が完了しました。トリガー={p0};パス={p1};",
-    'ko': "브라우저 지원 확인이 완료되었습니다. 트리거={p0}; 경로={p1};",
-  },
-  "浏览器辅助验证弹窗已显示；路径={p0}": <String, String>{
-    'en': "The browser-assisted verification pop-up window has been displayed; path={p0}",
-    'ja': "ブラウザ支援検証ポップアップ ウィンドウが表示されます。パス={p0}",
-    'ko': "브라우저 지원 확인 팝업 창이 표시되었습니다. 경로={p0}",
-  },
-  "浏览器页面开始加载；路径={p0}": <String, String>{
-    'en': "Browser page started loading; path={p0}",
-    'ja': "ブラウザーページの読み込みを開始；パス={p0}",
-    'ko': "브라우저 페이지 로드 시작; 경로={p0}",
-  },
-  "浏览站点内容分类": <String, String>{
-    'en': "Browse site content categories",
-    'ja': "サイトのコンテンツカテゴリを参照する",
-    'ko': "사이트 콘텐츠 카테고리 찾아보기",
-  },
   "浏览站点评分最高的视频": <String, String>{
     'en': "Browse the site's highest-rated videos",
     'ja': "サイトで評価の高い動画を見る",
@@ -3031,11 +3356,6 @@ const uiTranslations = <String, Map<String, String>>{
     'en': "Quality",
     'ja': "画質",
     'ko': "화질",
-  },
-  "清晰度={p0}": <String, String>{
-    'en': "Quality={p0}",
-    'ja': "画質={p0}",
-    'ko': "화질={p0}",
   },
   "清空": <String, String>{
     'en': "Clear",
@@ -3137,6 +3457,11 @@ const uiTranslations = <String, Map<String, String>>{
     'ja': "少数の投票で数値が不自然に高くなるのを避けるため、いいね率は投票数とあわせて判断してください。",
     'ko': "적은 투표로 비율이 지나치게 높아지는 것을 피하려면 좋아요 비율과 투표 수를 함께 확인하세요.",
   },
+  "点踩": <String, String>{
+    'en': "Dislike",
+    'ja': "低評価",
+    'ko': "싫어요",
+  },
   "热门": <String, String>{
     'en': "Popular",
     'ja': "人気",
@@ -3156,11 +3481,6 @@ const uiTranslations = <String, Map<String, String>>{
     'en': "Popular videos",
     'ja': "人気の動画",
     'ko': "인기 동영상",
-  },
-  "热门视频、高评分视频和艺术家排行": <String, String>{
-    'en': "Popular videos, top-rated videos, and artist rankings",
-    'ja': "人気動画、高評価動画、アーティストランキング",
-    'ko': "인기 동영상, 최고 평점 동영상 및 아티스트 순위",
   },
   "煽动仇恨或恶意内容": <String, String>{
     'en': "Incite hatred or malicious content",
@@ -3192,15 +3512,20 @@ const uiTranslations = <String, Map<String, String>>{
     'ja': "ユーザー",
     'ko': "사용자",
   },
+  "用户 ID 格式无效": <String, String>{
+    'en': "Invalid user ID format",
+    'ja': "ユーザー ID の形式が無効です",
+    'ko': "사용자 ID 형식이 잘못되었습니다",
+  },
   "用户 ID：{p0}": <String, String>{
     'en': "User ID: {p0}",
     'ja': "ユーザーID：{p0}",
     'ko': "사용자 ID: {p0}",
   },
-  "用户手动重试刷新验证页面；路径={p0}；": <String, String>{
-    'en': "The user manually retries to refresh the verification page; path={p0};",
-    'ja': "ユーザーは手動で検証ページの更新を再試行します。パス={p0};",
-    'ko': "사용자가 확인 페이지 새로고침을 수동으로 다시 시도합니다. 경로={p0};",
+  "用户开始了更高优先级的操作": <String, String>{
+    'en': "User initiated a higher priority action",
+    'ja': "ユーザーがより優先度の高い操作を開始しました",
+    'ko': "사용자가 더 높은 우선순위의 작업을 시작했습니다",
   },
   "用户译文 {p0} 条。\n\n": <String, String>{
     'en': "User translations: {p0}.\n\n",
@@ -3286,6 +3611,21 @@ const uiTranslations = <String, Map<String, String>>{
     'en': "After signing in, search history is stored securely for each account.",
     'ja': "ログイン後、検索履歴はアカウントごとに安全に保存されます。",
     'ko': "로그인하면 검색 기록이 계정별로 안전하게 저장됩니다.",
+  },
+  "登录失败，请检查账号、密码或验证码要求。": <String, String>{
+    'en': "Login failed, please check account, password, or captcha requirements.",
+    'ja': "ログインに失敗しました。アカウント、パスワード、または認証要件を確認してください。",
+    'ko': "로그인에 실패했습니다. 계정, 비밀번호 또는 인증 요구사항을 확인해 주세요.",
+  },
+  "登录失败，请检查账号和密码。": <String, String>{
+    'en': "Login failed, please check your username and password.",
+    'ja': "ログインに失敗しました。アカウントとパスワードを確認してください。",
+    'ko': "로그인에 실패했습니다. 계정과 비밀번호를 확인해 주세요.",
+  },
+  "登录状态已过期，请重新登录。": <String, String>{
+    'en': "Session expired, please log in again.",
+    'ja': "ログイン状態の期限が切れました。再ログインしてください。",
+    'ko': "로그인 상태가 만료되었습니다. 다시 로그인해 주세요.",
   },
   "目标语言": <String, String>{
     'en': "Target language",
@@ -3392,6 +3732,11 @@ const uiTranslations = <String, Map<String, String>>{
     'ja': "サイト内メッセージ",
     'ko': "사이트 메시지",
   },
+  "站点服务暂时不可用，请稍后重试": <String, String>{
+    'en': "Site service is temporarily unavailable. Try again later.",
+    'ja': "サイトのサービスは一時的に利用できません。しばらくしてから再試行してください。",
+    'ko': "사이트 서비스를 일시적으로 사용할 수 없습니다. 잠시 후 다시 시도하세요.",
+  },
   "等不到 cookie → 重刷 → 再挑战": <String, String>{
     'en': "Can't wait for cookies → Refresh → Challenge again",
     'ja': "クッキーが待ちきれない → 更新 → 再チャレンジ",
@@ -3406,11 +3751,6 @@ const uiTranslations = <String, Map<String, String>>{
     'en': "Waiting for retry",
     'ja': "再試行を待っています",
     'ko': "재시도를 기다리는 중",
-  },
-  "等待验证结果已超 10 秒，提示用户可手动重试；": <String, String>{
-    'en': "After waiting for the verification result for more than 10 seconds, the user is prompted to try again manually;",
-    'ja': "検証結果を 10 秒以上待った後、ユーザーは手動で再試行するよう求められます。",
-    'ko': "10초 이상 확인 결과를 기다린 후 사용자에게 수동으로 다시 시도하라는 메시지가 표시됩니다.",
   },
   "筛选": <String, String>{
     'en': "Filter",
@@ -3467,11 +3807,6 @@ const uiTranslations = <String, Map<String, String>>{
     'ja': "種類",
     'ko': "유형",
   },
-  "类型={p0}；耗时={p1}ms": <String, String>{
-    'en': "Type={p0}; time consumption={p1}ms",
-    'ja': "タイプ={p0};消費時間={p1}ms",
-    'ko': "유형={p0}; 시간 소비={p1}ms",
-  },
   "精选库 {p0} 包含重复视频。": <String, String>{
     'en': "Curated library {p0} contains duplicate videos.",
     'ja': "おすすめライブラリ{p0}に重複する動画があります。",
@@ -3512,10 +3847,10 @@ const uiTranslations = <String, Map<String, String>>{
     'ja': "おすすめ動画項目に必須フィールドがありません。",
     'ko': "추천 동영상 항목에 필수 필드가 없습니다.",
   },
-  "系统中断|网络连接中断|connection reset|socketexception|timed?\\s*out|broken pipe": <String, String>{
-    'en': "系统中断|网络连接中断|connection reset|socketexception|timed?\\s*out|broken pipe",
-    'ja': "系统中断|网络连接中断|connection reset|socketexception|timed？\\s*out|broken pipe",
-    'ko': "系统中断|网络连接中断|connection reset|socketexception|timed?\\s*out|broken pipe",
+  "系列视频": <String, String>{
+    'en': "Series Videos",
+    'ja': "シリーズ動画",
+    'ko': "시리즈 동영상",
   },
   "系统未授予公共下载目录写入权限。": <String, String>{
     'en': "The system has not granted write access to the public download folder.",
@@ -3531,6 +3866,21 @@ const uiTranslations = <String, Map<String, String>>{
     'en': "The system could not add the download back to the queue.",
     'ja': "ダウンロードタスクをキューに再追加できませんでした。",
     'ko': "시스템에서 다운로드 작업을 대기열에 다시 추가하지 못했습니다.",
+  },
+  "系统阻止了本次安装，请检查「安装未知应用」权限。": <String, String>{
+    'en': "The system has blocked this installation. Please check the \"Install Unknown Applications\" permission.",
+    'ja': "システムがこのインストールをブロックしました。 「不明なアプリケーションのインストール」権限を確認してください。",
+    'ko': "시스템이 이 설치를 차단했습니다. \"알 수 없는 애플리케이션 설치\" 권한을 확인해주세요.",
+  },
+  "结束日期": <String, String>{
+    'en': "End Date",
+    'ja': "終了日",
+    'ko': "종료일",
+  },
+  "结束日期不能早于开始日期": <String, String>{
+    'en': "End date cannot be earlier than start date",
+    'ja': "終了日を開始日より前に設定することはできません",
+    'ko': "종료일은 시작일보다 빠를 수 없습니다",
   },
   "继续": <String, String>{
     'en': "Continue",
@@ -3627,10 +3977,55 @@ const uiTranslations = <String, Map<String, String>>{
     'ja': "ネットワーク再生ポリシー",
     'ko': "네트워크 재생 정책",
   },
+  "网络请求超时": <String, String>{
+    'en': "Network request timed out",
+    'ja': "ネットワークリクエストがタイムアウトしました",
+    'ko': "네트워크 요청 시간이 초과되었습니다",
+  },
+  "网络请求超时，请稍后重试。": <String, String>{
+    'en': "Network request timed out, please retry later.",
+    'ja': "ネットワークリクエストがタイムアウトしました。後で再試行してください。",
+    'ko': "네트워크 요청 시간이 초과되었습니다. 잠시 후 다시 시도해 주세요.",
+  },
+  "网络请求遇到问题，请重试": <String, String>{
+    'en': "Network request encountered a problem. Please try again.",
+    'ja': "ネットワークリクエストで問題が発生しました。再試行してください。",
+    'ko': "네트워크 요청에 문제가 발생했습니다. 다시 시도하세요.",
+  },
   "网络连接中断，请检查网络后重试。": <String, String>{
     'en': "The network connection was interrupted. Check your network and try again.",
     'ja': "ネットワーク接続が中断されました。接続を確認して再試行してください。",
     'ko': "네트워크 연결이 중단되었습니다. 네트워크를 확인한 후 다시 시도하세요.",
+  },
+  "网络连接失败，请检查网络是否畅通": <String, String>{
+    'en': "Network connection failed. Check your network connection.",
+    'ja': "ネットワーク接続に失敗しました。接続状態を確認してください。",
+    'ko': "네트워크 연결에 실패했습니다. 네트워크 상태를 확인하세요.",
+  },
+  "网络连接异常，请检查网络": <String, String>{
+    'en': "Network connection error. Please check your network.",
+    'ja': "ネットワーク接続エラー。ネットワークを確認してください。",
+    'ko': "네트워크 연결 오류입니다. 네트워크를 확인하세요.",
+  },
+  "网络连接异常，请检查网络后重试": <String, String>{
+    'en': "Network connection error. Check your network and try again.",
+    'ja': "ネットワーク接続エラー。ネットワークを確認して再試行してください。",
+    'ko': "네트워크 연결 오류입니다. 네트워크를 확인한 후 다시 시도하세요.",
+  },
+  "网络错误": <String, String>{
+    'en': "Network error",
+    'ja': "ネットワークエラー",
+    'ko': "네트워크 오류",
+  },
+  "网页 / Google 账号登入": <String, String>{
+    'en': "Web / Google Account Sign-in",
+    'ja': "ウェブ／Google アカウントログイン",
+    'ko': "웹 / Google 계정 로그인",
+  },
+  "翻译不能为空": <String, String>{
+    'en': "Translation cannot be empty",
+    'ja': "翻訳は空にできません",
+    'ko': "번역은 비워둘 수 없습니다",
   },
   "翻译失败：{p0}": <String, String>{
     'en': "Translation failed: {p0}",
@@ -3642,10 +4037,45 @@ const uiTranslations = <String, Map<String, String>>{
     'ja': "翻訳ライブラリ",
     'ko': "번역 라이브러리",
   },
+  "翻译库包含不支持的目标语言：{p0}": <String, String>{
+    'en': "The translation library contains an unsupported target language: {p0}",
+    'ja': "翻訳ライブラリにサポートされていない対象言語が含まれています：{p0}",
+    'ko': "번역 라이브러리에 지원되지 않는 대상 언어가 포함되어 있습니다: {p0}",
+  },
+  "翻译库包含长度异常的字段": <String, String>{
+    'en': "Translation library contains fields with invalid length",
+    'ja': "翻訳ライブラリに異常な長さのフィールドが含まれています",
+    'ko': "번역 라이브러리에 비정상적인 길이의 필드가 포함되어 있습니다",
+  },
+  "翻译库文件不能超过 10 MB": <String, String>{
+    'en': "Translation library file cannot exceed 10 MB",
+    'ja': "翻訳ライブラリファイルは 10 MB を超えることはできません",
+    'ko': "번역 라이브러리 파일은 10 MB를 초과할 수 없습니다",
+  },
+  "翻译库缺少 entries": <String, String>{
+    'en': "Translation library is missing entries",
+    'ja': "翻訳ライブラリに entries が不足しています",
+    'ko': "번역 라이브러리에 entries가 없습니다",
+  },
+  "翻译库词条数量超过 100000 条": <String, String>{
+    'en': "Translation library entry count exceeds 100,000",
+    'ja': "翻訳ライブラリの項目数が 100,000 件を超えています",
+    'ko': "번역 라이브러리 항목 수가 100,000개를 초과합니다",
+  },
+  "翻译库键字段包含非法字符": <String, String>{
+    'en': "Translation library key field contains invalid characters",
+    'ja': "翻訳ライブラリのキーフィールドに不正な文字が含まれています",
+    'ko': "번역 라이브러리 키 필드에 잘못된 문자가 포함되어 있습니다",
+  },
   "翻译服务": <String, String>{
     'en': "Translation services",
     'ja': "翻訳サービス",
     'ko': "번역 서비스",
+  },
+  "翻译服务尚未配置": <String, String>{
+    'en': "Translation service is not configured yet",
+    'ja': "翻訳サービスがまだ設定されていません",
+    'ko': "번역 서비스가 아직 구성되지 않았습니다",
   },
   "翻译目标语言": <String, String>{
     'en': "Translation target language",
@@ -3657,20 +4087,20 @@ const uiTranslations = <String, Map<String, String>>{
     'ja': "翻訳設定",
     'ko': "번역 설정",
   },
-  "耗时={p0}ms": <String, String>{
-    'en': "Elapsed={p0}ms",
-    'ja': "所要時間={p0}ms",
-    'ko': "소요 시간={p0}ms",
-  },
-  "耗时={p0}ms；": <String, String>{
-    'en': "Time consumption={p0}ms;",
-    'ja': "消費時間={p0}ms;",
-    'ko': "시간 소모={p0}ms;",
+  "翻译资产不是 JSON 对象：{p0}": <String, String>{
+    'en': "Translation asset is not a JSON object: {p0}",
+    'ja': "翻訳アセットが JSON オブジェクトではありません：{p0}",
+    'ko': "번역 에셋이 JSON 객체가 아닙니다: {p0}",
   },
   "自动": <String, String>{
     'en': "Automatic",
     'ja': "自動",
     'ko': "자동",
+  },
+  "自动安装更新包需要「安装未知应用」权限。请在系统设置中允许 HaRu 安装应用后返回。": <String, String>{
+    'en': "Automatically installing update packages requires the \"Install Unknown Applications\" permission. Please allow HaRu to install applications in the system settings and return.",
+    'ja': "更新パッケージを自動的にインストールするには、「不明なアプリケーションのインストール」権限が必要です。システム設定で HaRu にアプリケーションのインストールを許可してから戻ってください。",
+    'ko': "업데이트 패키지를 자동으로 설치하려면 \"알 수 없는 응용 프로그램 설치\" 권한이 필요합니다. 하루가 시스템 설정에서 애플리케이션을 설치하도록 허용하고 돌아오세요.",
   },
   "自动或手动翻译时，每次只发送当前标题、标签或分类。服务按当前顺序依次尝试，失败后自动使用下一项。建议优先使用 AI 翻译，结果通常更自然、准确。": <String, String>{
     'en': "Each automatic or manual request sends only the current title, tag, or category. Services are tried in order, with the next one used automatically after a failure. AI translation is recommended because it is usually more natural and accurate.",
@@ -3682,6 +4112,26 @@ const uiTranslations = <String, Map<String, String>>{
     'ja': "自動翻訳",
     'ko': "자동 번역",
   },
+  "自定义…": <String, String>{
+    'en': "Custom...",
+    'ja': "カスタム…",
+    'ko': "사용자 지정...",
+  },
+  "自定义日期": <String, String>{
+    'en': "Custom Date",
+    'ja': "カスタム日付",
+    'ko': "사용자 지정 날짜",
+  },
+  "自定义时长": <String, String>{
+    'en': "Custom Duration",
+    'ja': "カスタム時間",
+    'ko': "사용자 지정 길이",
+  },
+  "自定义筛选范围无效。": <String, String>{
+    'en': "Custom filter range is invalid.",
+    'ja': "カスタムフィルター範囲が無効です。",
+    'ko': "사용자 지정 필터 범위가 잘못되었습니다.",
+  },
   "艺术家": <String, String>{
     'en': "Artist",
     'ja': "アーティスト",
@@ -3692,20 +4142,50 @@ const uiTranslations = <String, Map<String, String>>{
     'ja': "アーティストランキング",
     'ko': "아티스트 순위",
   },
+  "艺术家订阅": <String, String>{
+    'en': "Artist subscriptions",
+    'ja': "絵師の購読",
+    'ko': "아티스트 구독",
+  },
   "节省流量": <String, String>{
     'en': "Save data",
     'ja': "データ通信量を節約",
     'ko': "데이터 절약",
+  },
+  "获取播放列表安全令牌失败，请刷新后重试。": <String, String>{
+    'en': "Failed to obtain playlist security token, please refresh and retry.",
+    'ja': "プレイリストのセキュリティトークンを取得できませんでした。更新して再試行してください。",
+    'ko': "재생목록 보안 토큰을 가져오지 못했습니다. 새로고침 후 다시 시도해 주세요.",
+  },
+  "萬": <String, String>{
+    'en': "0k",
+    'ja': "万",
+    'ko': "만",
   },
   "裏番": <String, String>{
     'en': "Rifan",
     'ja': "リファン",
     'ko': "리판",
   },
+  "觀看次數": <String, String>{
+    'en': "Views",
+    'ja': "再生回数",
+    'ko': "조회수",
+  },
+  "观看次数": <String, String>{
+    'en': "Views",
+    'ja': "再生回数",
+    'ko': "조회수",
+  },
   "视频": <String, String>{
     'en': "Video",
     'ja': "動画",
     'ko': "동영상",
+  },
+  "视频 {p0}": <String, String>{
+    'en': "Video {p0}",
+    'ja': "動画 {p0}",
+    'ko': "동영상 {p0}",
   },
   "视频保存路径：Download/Flule34": <String, String>{
     'en': "Video save location: Download/Flule34",
@@ -3742,20 +4222,15 @@ const uiTranslations = <String, Map<String, String>>{
     'ja': "動画は選択した共有フォルダーに直接保存されます。デフォルトはDownloads/Flule34です。「マイページ → ダウンロード」を開き、右上のボタンから変更できます。",
     'ko': "동영상은 선택한 공용 폴더에 직접 저장됩니다. 기본 위치는 Downloads/Flule34입니다. 내 정보 → 다운로드에서 오른쪽 위 버튼을 눌러 변경할 수 있습니다.",
   },
-  "视频详情": <String, String>{
-    'en': "Video details",
-    'ja': "動画の詳細",
-    'ko': "동영상 세부정보",
+  "视频详情响应异常，请稍后重试。": <String, String>{
+    'en': "Abnormal response for video details, please retry later.",
+    'ja': "動画詳細の応答が異常です。後で再試行してください。",
+    'ko': "비디오 상세 응답이 비정상입니다. 잠시 후 다시 시도해 주세요.",
   },
   "视频预览": <String, String>{
     'en': "Video preview",
     'ja': "動画プレビュー",
     'ko': "동영상 미리보기",
-  },
-  "视频预览失败；site={p0}；video={p1}": <String, String>{
-    'en': "Video preview failed; site={p0}; video={p1}",
-    'ja': "ビデオのプレビューに失敗しました。サイト={p0};ビデオ={p1}",
-    'ko': "비디오 미리보기에 실패했습니다. 사이트={p0}; 비디오={p1}",
   },
   "解锁控件": <String, String>{
     'en': "Unlock controls",
@@ -3802,6 +4277,16 @@ const uiTranslations = <String, Map<String, String>>{
     'ja': "端末",
     'ko': "기기",
   },
+  "设备存储空间不足，无法安装更新包。": <String, String>{
+    'en': "The device has insufficient storage space to install the update package.",
+    'ja': "デバイスに更新パッケージをインストールするための十分なストレージ容量がありません。",
+    'ko': "장치에 업데이트 패키지를 설치할 저장 공간이 부족합니다.",
+  },
+  "访问受限，可能需要安全验证": <String, String>{
+    'en': "Access restricted. Security verification may be required.",
+    'ja': "アクセスが制限されています。セキュリティ認証が必要な場合があります。",
+    'ko': "접근이 제한되었습니다. 보안 인증이 필요할 수 있습니다.",
+  },
   "评分最高": <String, String>{
     'en': "Top rated",
     'ja': "最高評価",
@@ -3811,6 +4296,11 @@ const uiTranslations = <String, Map<String, String>>{
     'en': "Comment",
     'ja': "コメント",
     'ko': "코멘트",
+  },
+  "评论内容不能为空。": <String, String>{
+    'en': "Comment content cannot be empty.",
+    'ja': "コメント内容は空にできません。",
+    'ko': "댓글 내용은 비워둘 수 없습니다.",
   },
   "评论加载失败，点击重试": <String, String>{
     'en': "Comment loading failed, click to try again",
@@ -3847,6 +4337,26 @@ const uiTranslations = <String, Map<String, String>>{
     'ja': "訳文を空にすることはできません",
     'ko': "번역문은 비워 둘 수 없습니다",
   },
+  "该客户端已被关闭，无法发起请求。": <String, String>{
+    'en': "The client has been closed; cannot initiate requests.",
+    'ja': "クライアントはすでに閉じられているため、リクエストを開始できません。",
+    'ko': "클라이언트가 종료되어 요청을 시작할 수 없습니다.",
+  },
+  "该版本没有可下载的安装包。": <String, String>{
+    'en': "There is no downloadable installation package for this version.",
+    'ja': "このバージョンにはダウンロード可能なインストール パッケージはありません。",
+    'ko': "이 버전에는 다운로드 가능한 설치 패키지가 없습니다.",
+  },
+  "该版本没有可下载的安装包，已打开 GitHub 发布页。": <String, String>{
+    'en': "There is no downloadable installation package for this version, and the GitHub release page has been opened.",
+    'ja': "このバージョンにはダウンロード可能なインストール パッケージはなく、GitHub リリース ページが公開されています。",
+    'ko': "이 버전에는 다운로드 가능한 설치 패키지가 없으며 GitHub 릴리스 페이지가 열렸습니다.",
+  },
+  "该类型不允许翻译": <String, String>{
+    'en': "This type is not allowed to be translated",
+    'ja': "このタイプは翻訳が許可されていません",
+    'ko': "이 유형은 번역이 허용되지 않습니다",
+  },
   "语言显示模式": <String, String>{
     'en': "Language display mode",
     'ja': "言語表示モード",
@@ -3856,6 +4366,11 @@ const uiTranslations = <String, Map<String, String>>{
     'en': "Description",
     'ja': "説明",
     'ko': "설명",
+  },
+  "请先填写 API Key": <String, String>{
+    'en': "Please fill in the API Key first",
+    'ja': "先に API キーを入力してください",
+    'ko': "먼저 API 키를 입력해 주세요",
   },
   "请先填写有效基址。": <String, String>{
     'en': "Enter a valid base URL first.",
@@ -3867,6 +4382,16 @@ const uiTranslations = <String, Map<String, String>>{
     'ja': "まずはHanimeにログインしてください",
     'ko': "먼저 Hanime에 로그인하세요.",
   },
+  "请先登录 Hanime 账号。": <String, String>{
+    'en': "Please log in to your Hanime account first.",
+    'ja': "先に Hanime アカウントにログインしてください。",
+    'ko': "먼저 Hanime 계정에 로그인해 주세요.",
+  },
+  "请先登录后再使用此功能。": <String, String>{
+    'en': "Please log in before using this feature.",
+    'ja': "この機能を使用する前にログインしてください。",
+    'ko': "이 기능을 사용하려면 먼저 로그인해 주세요.",
+  },
   "请在网页中完成验证，成功后会自动返回。": <String, String>{
     'en': "Complete the verification in the page. The app will return automatically when it succeeds.",
     'ja': "ページ内で認証を完了してください。成功すると自動的にアプリへ戻ります。",
@@ -3877,10 +4402,45 @@ const uiTranslations = <String, Map<String, String>>{
     'ja': "名前、ベースURL、モデル、APIキーをすべて入力してください。",
     'ko': "이름, 기본 URL, 모델 및 API 키를 모두 입력하세요.",
   },
+  "请求失败": <String, String>{
+    'en': "Request failed",
+    'ja': "リクエストに失敗しました",
+    'ko': "요청 실패",
+  },
+  "请求失败，请稍后重试。": <String, String>{
+    'en': "Request failed, please retry later.",
+    'ja': "リクエストに失敗しました。後で再試行してください。",
+    'ko': "요청이 실패했습니다. 잠시 후 다시 시도해 주세요.",
+  },
+  "请求失败：{p0}": <String, String>{
+    'en': "Request failed: {p0}",
+    'ja': "リクエストに失敗しました：{p0}",
+    'ko': "요청 실패: {p0}",
+  },
+  "请求已取消": <String, String>{
+    'en': "Request cancelled.",
+    'ja': "リクエストがキャンセルされました。",
+    'ko': "요청이 취소되었습니다.",
+  },
+  "请求的内容不存在或已被删除": <String, String>{
+    'en': "The requested content does not exist or has been deleted.",
+    'ja': "要求されたコンテンツは存在しないか、削除されています。",
+    'ko': "요청한 콘텐츠가 존재하지 않거나 삭제되었습니다.",
+  },
+  "请求超时，请重试": <String, String>{
+    'en': "Request timed out. Please try again.",
+    'ja': "リクエストがタイムアウトしました。再試行してください。",
+    'ko': "요청 시간이 초과되었습니다. 다시 시도하세요.",
+  },
   "请至少输入 2 个字符。": <String, String>{
     'en': "Please enter at least 2 characters.",
     'ja': "少なくとも 2 文字を入力してください。",
     'ko': "2자 이상 입력해주세요.",
+  },
+  "请输入 0 至 36000 的整数": <String, String>{
+    'en': "Please enter an integer between 0 and 36000",
+    'ja': "0 から 36000 までの整数を入力してください",
+    'ko': "0부터 36000 사이의 정수를 입력하세요",
   },
   "请输入密码。": <String, String>{
     'en': "Please enter your password.",
@@ -3902,11 +4462,6 @@ const uiTranslations = <String, Map<String, String>>{
     'ja': "「マイページ」に戻ってログインすると、アカウント情報を確認できます。",
     'ko': "내 정보로 돌아가 로그인한 뒤 계정 정보를 확인하세요.",
   },
-  "调整本机、R34V 与 Hanime 的显示顺序。": <String, String>{
-    'en': "Adjust the display order of this unit, R34V and Hanime.",
-    'ja': "本機、R34V、Hanimeの表示順序を調整します。",
-    'ko': "본 기기, R34V 및 Hanime의 표시 순서를 조정합니다.",
-  },
   "账号与媒体库": <String, String>{
     'en': "Account and library",
     'ja': "アカウントとライブラリ",
@@ -3916,6 +4471,16 @@ const uiTranslations = <String, Map<String, String>>{
     'en': "There are no playlists in the account yet.",
     'ja': "アカウントにはまだプレイリストがありません。",
     'ko': "계정에 아직 재생목록이 없습니다.",
+  },
+  "账号和密码不能为空。": <String, String>{
+    'en': "Account and password cannot be empty.",
+    'ja': "アカウントとパスワードは空にできません。",
+    'ko': "계정과 비밀번호는 비워둘 수 없습니다.",
+  },
+  "账号状态发生变化": <String, String>{
+    'en': "Account status has changed",
+    'ja': "アカウント状態が変更されました",
+    'ko': "계정 상태가 변경되었습니다",
   },
   "账号资料已更新。": <String, String>{
     'en': "Account information has been updated.",
@@ -3941,11 +4506,6 @@ const uiTranslations = <String, Map<String, String>>{
     'en': "Use system setting",
     'ja': "システムに合わせる",
     'ko': "시스템 설정 따르기",
-  },
-  "路径={p0}；进度={p1}；": <String, String>{
-    'en': "Path={p0}; progress={p1};",
-    'ja': "パス={p0}；進捗={p1}；",
-    'ko': "경로={p0}; 진행률={p1};",
   },
   "跳过 {p0}，": <String, String>{
     'en': "Skipped {p0},",
@@ -4001,6 +4561,11 @@ const uiTranslations = <String, Map<String, String>>{
     'en': "Back",
     'ja': "戻る",
     'ko': "뒤로",
+  },
+  "返回了空译文": <String, String>{
+    'en': "Returned an empty translation",
+    'ja': "空の訳文が返されました",
+    'ko': "빈 번역문이 반환되었습니다",
   },
   "还没有下载任务。": <String, String>{
     'en': "There are no download tasks yet.",
@@ -4087,6 +4652,11 @@ const uiTranslations = <String, Map<String, String>>{
     'ja': "接続に失敗しました：{p0}",
     'ko': "연결 실패: {p0}",
   },
+  "连接超时，请检查网络设置后重试": <String, String>{
+    'en': "Connection timed out. Check your network settings and try again.",
+    'ja': "接続がタイムアウトしました。ネットワーク設定を確認して再試行してください。",
+    'ko': "연결 시간이 초과되었습니다. 네트워크 설정을 확인하고 다시 시도하세요.",
+  },
   "退出": <String, String>{
     'en': "Exit",
     'ja': "終了",
@@ -4117,11 +4687,6 @@ const uiTranslations = <String, Map<String, String>>{
     'ja': "ログアウトしますか？",
     'ko': "로그아웃하시겠습니까?",
   },
-  "适用于 R34V、Hanime 首页和普通视频列表，以及搜索结果和本地分类库。": <String, String>{
-    'en': "Applies to R34V, Hanime homepage and normal video lists, as well as search results and local category libraries.",
-    'ja': "R34V、Hanime ホームページ、通常のビデオ リスト、検索結果、ローカル カテゴリ ライブラリに適用されます。",
-    'ko': "R34V, Hanime 홈페이지, 일반 동영상 목록, 검색결과, 지역 카테고리 라이브러리에 적용됩니다.",
-  },
   "选择一个分类开始浏览，也可以直接在上方输入关键词搜索。": <String, String>{
     'en': "Select a category to start browsing, or you can enter keyword search directly above.",
     'ja': "カテゴリを選択して閲覧を開始するか、直接上にキーワード検索を入力することもできます。",
@@ -4147,11 +4712,6 @@ const uiTranslations = <String, Map<String, String>>{
     'ja': "モデルを選択",
     'ko': "모델 선택",
   },
-  "选择跟随系统或固定使用一种界面语言": <String, String>{
-    'en': "Follow the system language or choose a fixed interface language",
-    'ja': "システム言語に合わせるか、表示言語を固定します",
-    'ko': "시스템 언어를 따르거나 인터페이스 언어를 고정합니다",
-  },
   "通过配置的 GitHub Releases 源检查": <String, String>{
     'en': "Check using the configured GitHub Releases source",
     'ja': "設定済みのGitHub Releases更新元から確認",
@@ -4176,6 +4736,11 @@ const uiTranslations = <String, Map<String, String>>{
     'en': "Some autocomplete suggestions are temporarily unavailable.",
     'ja': "一部の入力候補は一時的に利用できません。",
     'ko': "일부 자동 완성 제안을 일시적으로 사용할 수 없습니다.",
+  },
+  "部分订阅暂时无法读取，请稍后重试。": <String, String>{
+    'en': "Some subscriptions cannot be read for now, please retry later.",
+    'ja': "一部の購読は現在読み込めません。後で再試行してください。",
+    'ko': "일부 구독을 현재 읽어올 수 없습니다. 잠시 후 다시 시도해 주세요.",
   },
   "里番": <String, String>{
     'en': "Rifan",
@@ -4237,11 +4802,6 @@ const uiTranslations = <String, Map<String, String>>{
     'ja': "ランダム",
     'ko': "무작위",
   },
-  "随机探索": <String, String>{
-    'en': "Explore randomly",
-    'ja': "ランダムに探す",
-    'ko': "무작위 탐색",
-  },
   "隐私与数据": <String, String>{
     'en': "Privacy and data",
     'ja': "プライバシーとデータ",
@@ -4261,6 +4821,11 @@ const uiTranslations = <String, Map<String, String>>{
     'en': "Hide password",
     'ja': "パスワードを隠す",
     'ko': "비밀번호 숨기기",
+  },
+  "需要安装权限": <String, String>{
+    'en': "Requires installation permission",
+    'ja': "インストール許可が必要です",
+    'ko': "설치 권한이 필요합니다",
   },
   "需要通知权限才能可靠显示后台下载进度。": <String, String>{
     'en': "Notification permission is required to reliably show background download progress.",
@@ -4291,6 +4856,11 @@ const uiTranslations = <String, Map<String, String>>{
     'en': "Play in order",
     'ja': "順番に再生",
     'ko': "순서대로 재생",
+  },
+  "预加载服务已销毁": <String, String>{
+    'en': "Preload service has been destroyed",
+    'ja': "プリロードサービスは破棄されました",
+    'ko': "사전 로드 서비스가 해제되었습니다",
   },
   "预发布版": <String, String>{
     'en': "Pre-release",

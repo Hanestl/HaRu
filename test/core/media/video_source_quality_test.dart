@@ -1,6 +1,5 @@
-import 'package:flutter_test/flutter_test.dart';
-
 import 'package:flule34/core/media/video_source_quality.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test('视频源高度解析优先明确格式并避免把宽度当高度', () {

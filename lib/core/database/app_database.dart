@@ -103,6 +103,7 @@ class CuratedLibrarySeeds extends Table {
   Set<Column<Object>> get primaryKey => {seedKey};
 }
 
+@TableIndex(name: 'idx_local_library_videos_video_id', columns: {#videoId})
 class LocalLibraryVideos extends Table {
   IntColumn get libraryId =>
       integer().references(LocalLibraries, #id, onDelete: KeyAction.cascade)();
@@ -212,7 +213,7 @@ class TranslationCatalogPacks extends Table {
     TranslationCatalogPacks,
   ],
 )
-final class AppDatabase extends _$AppDatabase {
+class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   AppDatabase.defaults()
@@ -227,7 +228,7 @@ final class AppDatabase extends _$AppDatabase {
       );
 
   @override
-  int get schemaVersion => 13;
+  int get schemaVersion => 14;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -409,6 +410,9 @@ final class AppDatabase extends _$AppDatabase {
         await customStatement('DROP TABLE translation_overrides_v12');
         await customStatement('DROP TABLE learned_translations_v12');
         await customStatement('DROP TABLE built_in_translation_states_v12');
+      },
+      from13To14: (migrator, schema) async {
+        await migrator.createIndex(schema.idxLocalLibraryVideosVideoId);
       },
     ),
     beforeOpen: (_) async {
@@ -888,6 +892,8 @@ final class AppDatabase extends _$AppDatabase {
     String? filePath,
     String? errorMessage,
     DateTime? completedAt,
+    int? bytesDownloaded,
+    int? totalBytes,
   }) {
     return (update(
       downloadRecords,
@@ -901,6 +907,12 @@ final class AppDatabase extends _$AppDatabase {
         completedAt: completedAt == null
             ? const Value.absent()
             : Value(completedAt),
+        bytesDownloaded: bytesDownloaded == null
+            ? const Value.absent()
+            : Value(bytesDownloaded),
+        totalBytes: totalBytes == null
+            ? const Value.absent()
+            : Value(totalBytes),
         updatedAt: Value(DateTime.now().toUtc()),
       ),
     );

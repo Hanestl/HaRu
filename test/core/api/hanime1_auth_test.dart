@@ -2,10 +2,9 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
-import 'package:flutter_test/flutter_test.dart';
-
 import 'package:flule34/core/api/hanime1_api.dart';
 import 'package:flule34/core/api/rule34video_api.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 import '../../helpers/test_session_harness.dart';
 
@@ -149,7 +148,7 @@ void main() {
       '_token': 'TOKEN456',
       'comment-user-id': '366912',
       'comment-type': 'video',
-      'comment-foreign-id': '366912',
+      'comment-foreign-id': '407598',
       'comment-text': '测试评论',
       'comment-count': '1',
       'comment-is-political': '0',

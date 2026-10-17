@@ -1,8 +1,8 @@
 import 'package:drift/drift.dart';
 
 import '../../../core/database/app_database.dart';
-import '../../../core/models/video_models.dart';
 import '../../../core/models/content_source.dart';
+import '../../../core/models/video_models.dart';
 
 final class LocalLibraryException implements Exception {
   const LocalLibraryException(this.message);

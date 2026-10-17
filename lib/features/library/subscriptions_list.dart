@@ -1,14 +1,16 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
 import 'package:flule34/l10n/ui_localization.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/providers.dart';
 import '../../app/router/route_names.dart';
 import '../../core/api/rule34video_api.dart';
+import '../../core/logging/app_log_service.dart';
 import '../../core/models/video_models.dart';
+import '../../shared/error_view.dart';
 import '../../shared/site_avatar.dart';
 import '../../shared/transient_focus.dart';
 import '../settings/domain/app_settings.dart';
@@ -110,8 +112,14 @@ class _SubscriptionsListState extends ConsumerState<SubscriptionsList>
         }
       }
     } catch (error) {
+      unawaited(
+        AppLogService.instance.warning(
+          '加载订阅列表失败；错误=$error',
+          component: 'subscription_activity',
+        ),
+      );
       if (mounted) {
-        setState(() => _error = error.toString());
+        setState(() => _error = friendlyErrorMessage(error));
       }
     } finally {
       if (mounted) {
@@ -158,7 +166,13 @@ class _SubscriptionsListState extends ConsumerState<SubscriptionsList>
           ..clear()
           ..addAll(ages);
       });
-    } on Object {
+    } on Object catch (error) {
+      unawaited(
+        AppLogService.instance.warning(
+          '加载订阅更新时间失败，回退使用本地缓存；错误=$error',
+          component: 'subscription_activity',
+        ),
+      );
       if (mounted) {
         setState(() {
           _updatedAgeByPath
@@ -441,10 +455,16 @@ class _SubscriptionsListState extends ConsumerState<SubscriptionsList>
         context,
       ).showSnackBar(const SnackBar(content: AppText('已取消订阅。')));
     } catch (error) {
+      unawaited(
+        AppLogService.instance.warning(
+          '取消订阅失败：$error；path=${subscription.path}',
+          component: 'subscriptions_list',
+        ),
+      );
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: AppText(error.toString())));
+        ).showSnackBar(SnackBar(content: AppText(friendlyErrorMessage(error))));
       }
     } finally {
       if (mounted) {

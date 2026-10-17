@@ -1,9 +1,9 @@
 import 'dart:io';
 
-import 'package:flutter_test/flutter_test.dart';
-
+import 'package:flule34/core/models/video_models.dart';
 import 'package:flule34/features/library/data/curated_library_seeder.dart';
 import 'package:flule34/features/library/data/local_library_repository.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 import '../../helpers/test_session_harness.dart';
 
@@ -131,6 +131,89 @@ void main() {
       harness.database.localLibraryVideos,
     )..where((item) => item.libraryId.equals(delta.id))).get();
     expect(deltaVideos.map((item) => item.videoId), ['new-video']);
+  });
+
+  test('R3-6: 库名包含 % 和 _ 特殊字符时 LIKE 转义生效，增量包正确识别已有库', () async {
+    final harness = TestSessionHarness.create();
+    addTearDown(harness.dispose);
+
+    const specialManifestV1 = '''
+{
+  "version": 1,
+  "libraries": [
+    {
+      "key": "special_lib",
+      "name": "100%_Special_Collection",
+      "videos": [
+        {"id": "v1", "title": "Video 1", "slug": "video-1"}
+      ]
+    }
+  ]
+}''';
+
+    const specialManifestV2 = '''
+{
+  "version": 2,
+  "libraries": [
+    {
+      "key": "special_lib",
+      "name": "100%_Special_Collection",
+      "videos": [
+        {"id": "v1", "title": "Video 1", "slug": "video-1"},
+        {"id": "v2", "title": "Video 2", "slug": "video-2"}
+      ]
+    }
+  ]
+}''';
+
+    final seederV1 = CuratedLibrarySeeder(
+      harness.database,
+      const _StringManifestLoader(specialManifestV1),
+    );
+    await seederV1.seedIfNeeded();
+
+    // 插入诱饵库：其名字能被「未转义」的 LIKE 模式
+    // '100%_special_collection（内置新增%' 命中（_ 通配单字符、% 通配任意串），
+    // 但既不是同名库，也不以「内置新增」为前缀。诱饵里刻意放了 v2：
+    // 一旦 _escapeLike 被删掉，_existingVideoIds 会把 v2 误判为已存在，
+    // 从而不再创建「内置新增 v2」库 —— 这样本用例才对转义有判别力。
+    final repository = DriftLocalLibraryRepository(harness.database);
+    final decoyId = await repository.createLibrary(
+      '1000ASpecialXCollection（内置新增 999）',
+    );
+    await repository.addVideo(
+      libraryId: decoyId,
+      video: const VideoItem(
+        id: 'v2',
+        title: 'Decoy Video',
+        slug: 'decoy-video',
+      ),
+    );
+
+    final seederV2 = CuratedLibrarySeeder(
+      harness.database,
+      const _StringManifestLoader(specialManifestV2),
+    );
+    await seederV2.seedIfNeeded();
+
+    final libraries = await harness.database
+        .select(harness.database.localLibraries)
+        .get();
+    expect(libraries, hasLength(3));
+    final decoy = libraries.firstWhere((item) => item.id == decoyId);
+    expect(decoy.name, '1000ASpecialXCollection（内置新增 999）');
+    final decoyVideos = await (harness.database.select(
+      harness.database.localLibraryVideos,
+    )..where((item) => item.libraryId.equals(decoyId))).get();
+    expect(decoyVideos.map((item) => item.videoId), ['v2']);
+
+    final delta = libraries.firstWhere((item) => item.name.contains('内置新增 v2'));
+    expect(delta.name, '100%_Special_Collection（内置新增 v2）');
+
+    final deltaVideos = await (harness.database.select(
+      harness.database.localLibraryVideos,
+    )..where((item) => item.libraryId.equals(delta.id))).get();
+    expect(deltaVideos.map((item) => item.videoId), ['v2']);
   });
 }
 

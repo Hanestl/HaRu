@@ -1,16 +1,20 @@
-import 'package:flutter/material.dart';
+import 'dart:async';
+
 import 'package:flule34/l10n/ui_localization.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/providers.dart';
 import '../../app/router/route_names.dart';
 import '../../core/database/app_database.dart';
+import '../../core/logging/app_log_service.dart';
 import '../../core/models/video_models.dart';
+import '../../shared/error_view.dart';
+import '../../shared/transient_focus.dart';
 import '../../shared/video_card.dart';
 import '../../shared/video_collection_layout.dart';
 import '../../shared/video_list_filters.dart';
-import '../../shared/transient_focus.dart';
 import 'data/local_library_repository.dart';
 import 'local_library_name_dialog.dart';
 
@@ -42,6 +46,21 @@ class _LocalLibraryOverviewState extends State<LocalLibraryOverview> {
   final TextEditingController _searchController = TextEditingController();
   var _query = '';
   var _sort = LocalLibraryOverviewSort.modified;
+  late Stream<List<LocalLibrarySummary>> _summariesStream;
+
+  @override
+  void initState() {
+    super.initState();
+    _summariesStream = widget.repository.watchLibrarySummaries();
+  }
+
+  @override
+  void didUpdateWidget(covariant LocalLibraryOverview oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.repository != widget.repository) {
+      _summariesStream = widget.repository.watchLibrarySummaries();
+    }
+  }
 
   @override
   void dispose() {
@@ -52,10 +71,15 @@ class _LocalLibraryOverviewState extends State<LocalLibraryOverview> {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<List<LocalLibrarySummary>>(
-      stream: widget.repository.watchLibrarySummaries(),
+      stream: _summariesStream,
       builder: (context, snapshot) {
         if (snapshot.hasError) {
-          return Center(child: AppText(snapshot.error.toString()));
+          return AppErrorView(
+            error: snapshot.error,
+            onRetry: () => setState(() {
+              _summariesStream = widget.repository.watchLibrarySummaries();
+            }),
+          );
         }
         if (!snapshot.hasData) {
           return const Center(child: CircularProgressIndicator());
@@ -221,8 +245,14 @@ class _LocalLibraryOverviewState extends State<LocalLibraryOverview> {
     try {
       await widget.repository.createLibrary(name);
     } catch (error) {
+      unawaited(
+        AppLogService.instance.warning(
+          '创建本地库失败：$error',
+          component: 'local_library',
+        ),
+      );
       if (context.mounted) {
-        _message(context, error.toString());
+        _message(context, friendlyErrorMessage(error));
       }
     }
   }
@@ -239,8 +269,14 @@ class _LocalLibraryOverviewState extends State<LocalLibraryOverview> {
     try {
       await widget.repository.renameLibrary(library.id, name);
     } catch (error) {
+      unawaited(
+        AppLogService.instance.warning(
+          '重命名本地库失败：$error',
+          component: 'local_library',
+        ),
+      );
       if (context.mounted) {
-        _message(context, error.toString());
+        _message(context, friendlyErrorMessage(error));
       }
     }
   }
@@ -267,8 +303,14 @@ class _LocalLibraryOverviewState extends State<LocalLibraryOverview> {
       try {
         await widget.repository.deleteLibrary(library.id);
       } catch (error) {
+        unawaited(
+          AppLogService.instance.warning(
+            '删除本地库失败：$error',
+            component: 'local_library',
+          ),
+        );
         if (context.mounted) {
-          _message(context, error.toString());
+          _message(context, friendlyErrorMessage(error));
         }
       }
     }
@@ -295,6 +337,26 @@ class _LocalLibraryPageState extends ConsumerState<LocalLibraryPage> {
   final TextEditingController _searchController = TextEditingController();
   var _query = '';
   var _filters = const VideoListFilters();
+  late Stream<List<VideoItem>> _videosStream;
+
+  @override
+  void initState() {
+    super.initState();
+    _initStream();
+  }
+
+  @override
+  void didUpdateWidget(covariant LocalLibraryPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.libraryId != widget.libraryId ||
+        oldWidget.repository != widget.repository) {
+      _initStream();
+    }
+  }
+
+  void _initStream() {
+    _videosStream = widget.repository.watchVideos(widget.libraryId);
+  }
 
   @override
   void dispose() {
@@ -343,10 +405,13 @@ class _LocalLibraryPageState extends ConsumerState<LocalLibraryPage> {
           ),
           Expanded(
             child: StreamBuilder<List<VideoItem>>(
-              stream: widget.repository.watchVideos(widget.libraryId),
+              stream: _videosStream,
               builder: (context, snapshot) {
                 if (snapshot.hasError) {
-                  return Center(child: AppText(snapshot.error.toString()));
+                  return AppErrorView(
+                    error: snapshot.error,
+                    onRetry: () => setState(_initStream),
+                  );
                 }
                 if (!snapshot.hasData) {
                   return const Center(child: CircularProgressIndicator());
@@ -408,8 +473,8 @@ class _LocalLibraryPageState extends ConsumerState<LocalLibraryPage> {
   Future<void> _removeVideo(VideoItem video) async {
     try {
       final repository = widget.repository;
-      if (repository is SourceAwareLocalLibraryRepository) {
-        await (repository as SourceAwareLocalLibraryRepository).removeVideoItem(
+      if (repository case final SourceAwareLocalLibraryRepository sourceAware) {
+        await sourceAware.removeVideoItem(
           libraryId: widget.libraryId,
           video: video,
         );
@@ -423,8 +488,14 @@ class _LocalLibraryPageState extends ConsumerState<LocalLibraryPage> {
         _message(context, '已从本地库移出。');
       }
     } catch (error) {
+      unawaited(
+        AppLogService.instance.warning(
+          '从本地库移出视频失败：$error',
+          component: 'local_library',
+        ),
+      );
       if (mounted) {
-        _message(context, error.toString());
+        _message(context, friendlyErrorMessage(error));
       }
     }
   }

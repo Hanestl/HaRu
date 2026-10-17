@@ -1,7 +1,6 @@
+import 'package:flule34/shared/transient_focus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:flule34/shared/transient_focus.dart';
 
 void main() {
   testWidgets('关闭非输入弹层后不会恢复原输入框焦点', (tester) async {

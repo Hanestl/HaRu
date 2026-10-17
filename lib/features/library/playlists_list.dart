@@ -1,10 +1,11 @@
-import 'package:flutter/material.dart';
 import 'package:flule34/l10n/ui_localization.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/router/route_names.dart';
 import '../../core/api/rule34video_api.dart';
 import '../../core/models/video_models.dart';
+import '../../shared/error_view.dart';
 import '../../shared/transient_focus.dart';
 import 'playlist_form_dialog.dart';
 
@@ -142,7 +143,7 @@ class _PlaylistsListState extends State<PlaylistsList>
               }
               if (snapshot.hasError) {
                 return _PlaylistState(
-                  message: snapshot.error.toString(),
+                  message: friendlyErrorMessage(snapshot.error),
                   onRetry: _reload,
                 );
               }
@@ -295,7 +296,7 @@ class _PlaylistsListState extends State<PlaylistsList>
       }
     } catch (error) {
       if (mounted) {
-        _message(error.toString());
+        _message(friendlyErrorMessage(error));
       }
     } finally {
       if (mounted) {
@@ -334,7 +335,7 @@ class _PlaylistsListState extends State<PlaylistsList>
       }
     } catch (error) {
       if (mounted) {
-        _message(error.toString());
+        _message(friendlyErrorMessage(error));
       }
     } finally {
       if (mounted) {

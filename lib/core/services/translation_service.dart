@@ -4,15 +4,15 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
+import '../../features/settings/data/app_settings_repository.dart';
 import '../database/app_database.dart';
 import '../logging/app_log_service.dart';
 import '../models/translation_models.dart';
 import '../models/translation_provider_models.dart';
 import '../models/video_models.dart';
-import '../../features/settings/data/app_settings_repository.dart';
-import 'translation_provider_router.dart';
-import 'translation_catalog_archive.dart';
 import 'source_language_detector.dart';
+import 'translation_catalog_archive.dart';
+import 'translation_provider_router.dart';
 
 final class TranslationService extends ChangeNotifier {
   TranslationService({
@@ -38,7 +38,9 @@ final class TranslationService extends ChangeNotifier {
          categoryDictionary,
        ),
        _assetLoaded = true,
-       _initialized = database == null;
+       _initialized = database == null {
+    _buildBuiltinTagEntries();
+  }
 
   static const _tagAssetPath = 'assets/translations/rule34video_tags_zh.json';
   static const _categoryAssetPath =
@@ -58,6 +60,7 @@ final class TranslationService extends ChangeNotifier {
   final AssetBundle _assetBundle;
   Map<String, String> _builtinTagEnglishToChinese = const {};
   Map<String, String> _builtinCategoryEnglishToChinese = const {};
+  List<_BuiltinTagEntry> _builtinTagEntries = const [];
   final Map<String, String> _overrides = {};
   final Map<String, String?> _overrideSourceTexts = {};
   final Map<String, String?> _overrideVideoSlugs = {};
@@ -115,6 +118,7 @@ final class TranslationService extends ChangeNotifier {
       _builtinCategoryEnglishToChinese = await _loadAssetDictionaryOrEmpty(
         _categoryAssetPath,
       );
+      _buildBuiltinTagEntries();
       _assetLoaded = true;
     }
 
@@ -1060,8 +1064,12 @@ final class TranslationService extends ChangeNotifier {
 
     final candidates = <String, TranslatedTagSuggestion>{};
 
-    void consider(String english, String alias, TranslationAliasSource source) {
-      final normalizedAlias = _normalizeAlias(alias);
+    void considerNormalized(
+      String english,
+      String alias,
+      String normalizedAlias,
+      TranslationAliasSource source,
+    ) {
       final matchKind = _matchKind(normalizedAlias, query);
       if (matchKind == null) return;
       final candidate = TranslatedTagSuggestion(
@@ -1078,9 +1086,18 @@ final class TranslationService extends ChangeNotifier {
       }
     }
 
+    void consider(String english, String alias, TranslationAliasSource source) {
+      considerNormalized(english, alias, _normalizeAlias(alias), source);
+    }
+
     if (targetLanguage == TranslationLanguage.simplifiedChinese) {
-      for (final entry in _builtinTagEnglishToChinese.entries) {
-        consider(entry.key, entry.value, TranslationAliasSource.builtIn);
+      for (final entry in _builtinTagEntries) {
+        considerNormalized(
+          entry.english,
+          entry.chinese,
+          entry.normalizedChinese,
+          TranslationAliasSource.builtIn,
+        );
       }
     }
     for (final entry in _learned.entries) {
@@ -1406,14 +1423,28 @@ final class TranslationService extends ChangeNotifier {
     return _sourceMatches(saved, current);
   }
 
+  static final _whitespaceRegex = RegExp(r'\s+');
+
   static String _normalize(String value) => value
       .trim()
       .toLowerCase()
       .replaceAll('_', ' ')
-      .replaceAll(RegExp(r'\s+'), ' ');
+      .replaceAll(_whitespaceRegex, ' ');
 
   static String _normalizeAlias(String value) =>
-      value.trim().toLowerCase().replaceAll(RegExp(r'\s+'), ' ');
+      value.trim().toLowerCase().replaceAll(_whitespaceRegex, ' ');
+
+  void _buildBuiltinTagEntries() {
+    _builtinTagEntries = _builtinTagEnglishToChinese.entries
+        .map(
+          (entry) => _BuiltinTagEntry(
+            english: entry.key,
+            chinese: entry.value,
+            normalizedChinese: _normalizeAlias(entry.value),
+          ),
+        )
+        .toList(growable: false);
+  }
 
   static TranslationMatchKind? _matchKind(String alias, String query) {
     if (alias == query) return TranslationMatchKind.exact;
@@ -1548,4 +1579,16 @@ final class _LearnedValue {
   final String? videoSlug;
   final DateTime createdAt;
   final DateTime updatedAt;
+}
+
+final class _BuiltinTagEntry {
+  const _BuiltinTagEntry({
+    required this.english,
+    required this.chinese,
+    required this.normalizedChinese,
+  });
+
+  final String english;
+  final String chinese;
+  final String normalizedChinese;
 }

@@ -1,8 +1,8 @@
+import 'package:flule34/core/models/video_models.dart';
+import 'package:flule34/shared/video_list_filters.dart';
+import 'package:flule34/shared/video_range_filters.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flule34/core/models/video_models.dart';
-import 'package:flule34/shared/video_range_filters.dart';
-import 'package:flule34/shared/video_list_filters.dart';
 
 void main() {
   test('范围状态计数、切换预设、局部更新及本地边界筛选', () {

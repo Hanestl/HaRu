@@ -2,9 +2,9 @@ import 'dart:async';
 import 'dart:ui';
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flule34/l10n/ui_localization.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flule34/l10n/ui_localization.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -17,6 +17,7 @@ import '../features/library/local_library_picker.dart';
 import '../features/library/playlist_picker.dart';
 import '../features/settings/domain/quality_selection.dart';
 import 'editable_translation.dart';
+import 'error_view.dart';
 import 'localized_translation_text.dart';
 import 'transient_focus.dart';
 
@@ -329,7 +330,7 @@ class VideoCard extends ConsumerWidget {
       }
     } catch (error) {
       if (context.mounted) {
-        _message(context, error.toString());
+        _message(context, friendlyErrorMessage(error));
       }
     }
   }
@@ -732,24 +733,57 @@ class _Thumbnail extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return CachedNetworkImage(
-      imageUrl: url,
-      fit: BoxFit.cover,
-      placeholder: (_, _) => const ColoredBox(
-        color: Color(0xff25252d),
-        child: Center(child: CircularProgressIndicator()),
-      ),
-      errorWidget: (_, _, _) {
-        final fallback = fallbackUrl;
-        if (fallback != null && fallback != url) {
-          return CachedNetworkImage(
-            imageUrl: fallback,
-            fit: BoxFit.cover,
-            errorWidget: (_, _, _) => const _BrokenThumbnail(),
-          );
-        }
-        return const _BrokenThumbnail();
+    final dpr = MediaQuery.maybeDevicePixelRatioOf(context) ?? 1.0;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final targetWidth =
+            constraints.maxWidth.isFinite && constraints.maxWidth > 0
+            ? (constraints.maxWidth * dpr).round().clamp(240, 1920)
+            : null;
+
+        return CachedNetworkImage(
+          imageUrl: url,
+          fit: BoxFit.cover,
+          memCacheWidth: targetWidth,
+          placeholder: (_, _) => const _ThumbnailPlaceholder(),
+          errorWidget: (_, _, _) {
+            final fallback = fallbackUrl;
+            if (fallback != null && fallback != url) {
+              return CachedNetworkImage(
+                imageUrl: fallback,
+                fit: BoxFit.cover,
+                memCacheWidth: targetWidth,
+                placeholder: (_, _) => const _ThumbnailPlaceholder(),
+                errorWidget: (_, _, _) => const _BrokenThumbnail(),
+              );
+            }
+            return const _BrokenThumbnail();
+          },
+        );
       },
+    );
+  }
+}
+
+class _ThumbnailPlaceholder extends StatelessWidget {
+  const _ThumbnailPlaceholder();
+
+  @override
+  Widget build(BuildContext context) {
+    return const DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xff2b2c34), Color(0xff202126)],
+        ),
+      ),
+      child: Center(
+        child: SizedBox.square(
+          dimension: 20,
+          child: CircularProgressIndicator(strokeWidth: 2),
+        ),
+      ),
     );
   }
 }

@@ -2,8 +2,6 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:drift/native.dart';
-import 'package:flutter_test/flutter_test.dart';
-
 import 'package:flule34/core/database/app_database.dart';
 import 'package:flule34/core/models/translation_models.dart';
 import 'package:flule34/core/models/video_models.dart';
@@ -11,6 +9,7 @@ import 'package:flule34/core/services/translation_catalog_archive.dart';
 import 'package:flule34/core/services/translation_service.dart';
 import 'package:flule34/features/settings/data/app_settings_repository.dart';
 import 'package:flule34/features/settings/data/app_settings_store.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test('翻译库导出保留三层译文，导入明确忽略内置层', () async {

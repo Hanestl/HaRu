@@ -1,17 +1,17 @@
-import 'package:flutter/material.dart';
 import 'package:flule34/l10n/ui_localization.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/providers.dart';
 import '../../app/router/route_names.dart';
 import '../../core/api/rule34video_api.dart';
-import '../../core/models/video_models.dart';
 import '../../core/models/content_source.dart';
+import '../../core/models/video_models.dart';
 import '../../core/services/predictive_prefetch_service.dart';
+import '../../shared/transient_focus.dart';
 import '../../shared/video_feed.dart';
 import '../../shared/video_range_filters.dart';
-import '../../shared/transient_focus.dart';
 import '../auth/login_sheet.dart';
 import '../settings/data/app_settings_repository.dart';
 

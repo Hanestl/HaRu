@@ -1,14 +1,16 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
 import 'package:flule34/l10n/ui_localization.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/providers.dart';
 import '../../app/router/route_names.dart';
 import '../../core/api/rule34video_api.dart';
+import '../../core/logging/app_log_service.dart';
 import '../../core/models/video_models.dart';
+import '../../shared/error_view.dart';
 import '../../shared/video_card.dart';
 import '../../shared/video_collection_layout.dart';
 import '../../shared/video_list_filters.dart';
@@ -101,8 +103,14 @@ class _PlaylistPageState extends ConsumerState<PlaylistPage> {
         _hasMore = page.isNotEmpty && newItems.isNotEmpty;
       });
     } catch (error) {
+      unawaited(
+        AppLogService.instance.warning(
+          '播放列表视频加载失败；错误=$error',
+          component: 'playlist',
+        ),
+      );
       if (mounted) {
-        setState(() => _error = error.toString());
+        setState(() => _error = friendlyErrorMessage(error));
       }
     } finally {
       if (mounted) {
@@ -345,10 +353,16 @@ class _PlaylistPageState extends ConsumerState<PlaylistPage> {
         context,
       ).showSnackBar(const SnackBar(content: AppText('已从播放列表移出。')));
     } catch (error) {
+      unawaited(
+        AppLogService.instance.warning(
+          '移出播放列表失败；video=${video.id}；错误=$error',
+          component: 'playlist',
+        ),
+      );
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: AppText(error.toString())));
+        ).showSnackBar(SnackBar(content: AppText(friendlyErrorMessage(error))));
       }
     } finally {
       if (mounted) {

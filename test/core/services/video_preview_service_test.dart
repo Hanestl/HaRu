@@ -1,8 +1,8 @@
 import 'dart:async';
 
-import 'package:flutter_test/flutter_test.dart';
 import 'package:flule34/core/models/video_models.dart';
 import 'package:flule34/core/services/video_preview_service.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test('视频已有预览地址时不会发起搜索', () async {

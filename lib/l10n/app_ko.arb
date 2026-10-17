@@ -1,9 +1,5 @@
 {
   "@@locale": "ko",
-  "ui45be8e30": "(\\d+)\\s*(초|분|분|시간|시간|일|주|주|월|월|월|년)\\s* 전",
-  "@ui45be8e30": {
-    "description": "HaRu UI: (\\d+)\\s*(秒|分钟|分鐘|小时|小時|天|周|週|个月|個月|月|年)\\s*前"
-  },
   "ui7b86fa60": "2.5D 애니메이션",
   "@ui7b86fa60": {
     "description": "HaRu UI: 2.5D動畫"
@@ -32,6 +28,10 @@
   "@ui0be8a2c8": {
     "description": "HaRu UI: 60 分钟以上"
   },
+  "ui5756c92c": "<html 조각>",
+  "@ui5756c92c": {
+    "description": "HaRu UI: <html片段>"
+  },
   "ui6e93de1b": "===== 최근 7일간의 로그 =====",
   "@ui6e93de1b": {
     "description": "HaRu UI: ===== 最近 7 天日志 ====="
@@ -48,18 +48,17 @@
   "@ui186386f2": {
     "description": "HaRu UI: App 设置"
   },
-  "ui1bb6cf0e": "쿠키 이름={p0}",
-  "@ui1bb6cf0e": {
-    "description": "HaRu UI: Cookie 名称={p0}",
-    "placeholders": {
-      "p0": {
-        "type": "String"
-      }
-    }
+  "ui417bf31e": "Chat 응답 형식이 올바르지 않습니다",
+  "@ui417bf31e": {
+    "description": "HaRu UI: Chat 返回格式无效"
   },
   "ui14d5d228": "DeepL 요금제 및 엔드포인트",
   "@ui14d5d228": {
     "description": "HaRu UI: DeepL 套餐与端点"
+  },
+  "ui72f234b8": "DeepL 응답 형식이 올바르지 않습니다",
+  "@ui72f234b8": {
+    "description": "HaRu UI: DeepL 返回格式无效"
   },
   "ui57e4db6c": "Git 커밋",
   "@ui57e4db6c": {
@@ -81,26 +80,37 @@
   "@ui18362f38": {
     "description": "HaRu UI: HaRu 翻译库"
   },
-  "ui2cd06f4c": "하니메 착륙 선택 카테고리; 장르={p0}",
-  "@ui2cd06f4c": {
-    "description": "HaRu UI: Hanime landing 选择分类；genre={p0}",
-    "placeholders": {
-      "p0": {
-        "type": "String"
-      }
-    }
+  "ui2a29886f": "Hanime 시청 기록 삭제",
+  "@ui2a29886f": {
+    "description": "HaRu UI: Hanime 历史删除"
+  },
+  "ui48a1e8a9": "Hanime 보관함 작업",
+  "@ui48a1e8a9": {
+    "description": "HaRu UI: Hanime 媒体库操作"
+  },
+  "ui6a657fe9": "Hanime 공식 웹사이트 로그인",
+  "@ui6a657fe9": {
+    "description": "HaRu UI: Hanime 官网登录"
   },
   "ui3fd23b15": "하니메 재생목록",
   "@ui3fd23b15": {
     "description": "HaRu UI: Hanime 播放列表"
   },
+  "ui1e79d09d": "Hanime 즐겨찾기 관리는 현재 앱 내에서 지원되지 않습니다.",
+  "@ui1e79d09d": {
+    "description": "HaRu UI: Hanime 暂不支持在应用内管理收藏。"
+  },
   "ui33a113c4": "Hanime이 좋아한 것",
   "@ui33a113c4": {
     "description": "HaRu UI: Hanime 点赞"
   },
-  "ui12696fd4": "하니메 필터시트 적용; 요약={p0}",
-  "@ui12696fd4": {
-    "description": "HaRu UI: Hanime 筛选 sheet 应用；摘要={p0}",
+  "ui2dff86e7": "Hanime 좋아요 작업",
+  "@ui2dff86e7": {
+    "description": "HaRu UI: Hanime 点赞操作"
+  },
+  "ui15642644": "Hanime 로그인 요청에 실패했습니다: {p0}",
+  "@ui15642644": {
+    "description": "HaRu UI: Hanime 登录请求失败：{p0}",
     "placeholders": {
       "p0": {
         "type": "String"
@@ -111,104 +121,63 @@
   "@ui0136f228": {
     "description": "HaRu UI: Hanime 筛选与排序"
   },
-  "ui553f848b": "하니메 필터가 적용되었습니다. 요약={p0}",
-  "@ui553f848b": {
-    "description": "HaRu UI: Hanime 筛选已应用；摘要={p0}",
+  "ui7dc6eb1b": "Hanime 네트워크 요청에 실패했습니다: {p0}",
+  "@ui7dc6eb1b": {
+    "description": "HaRu UI: Hanime 网络请求失败：{p0}",
     "placeholders": {
       "p0": {
         "type": "String"
       }
     }
   },
-  "ui3b3b256b": "Hanime은 작가 작품 필터링을 구독합니다. 아티스트={p0}; 페이지={p1};",
-  "@ui3b3b256b": {
-    "description": "HaRu UI: Hanime 订阅作者作品筛选；artist={p0}；page={p1}；",
-    "placeholders": {
-      "p0": {
-        "type": "String"
-      },
-      "p1": {
-        "type": "String"
-      }
-    }
+  "ui341110e9": "Hanime 댓글 작업",
+  "@ui341110e9": {
+    "description": "HaRu UI: Hanime 评论操作"
   },
-  "ui3deb27cd": "Hanime 댓글이 성공적으로 제출되었습니다. 비디오={p0}; 답장={p1}",
-  "@ui3deb27cd": {
-    "description": "HaRu UI: Hanime 评论提交成功；video={p0}；reply={p1}",
-    "placeholders": {
-      "p0": {
-        "type": "String"
-      },
-      "p1": {
-        "type": "String"
-      }
-    }
-  },
-  "ui73e7844e": "Hanime 세부정보 페이지 메타데이터 클릭; 종류={p0};",
-  "@ui73e7844e": {
-    "description": "HaRu UI: Hanime 详情页元数据点击；kind={p0}；",
-    "placeholders": {
-      "p0": {
-        "type": "String"
-      }
-    }
+  "ui0fd18fa1": "Hanime 상세 페이지에서 재생 가능한 비디오 소스를 반환하지 않았습니다.",
+  "@ui0fd18fa1": {
+    "description": "HaRu UI: Hanime 详情页没有返回可播放的视频源。"
   },
   "ui27638fa8": "하니메 계정",
   "@ui27638fa8": {
     "description": "HaRu UI: Hanime 账号"
   },
-  "ui081c5de6": "Hanime 홈 채널 전환; 채널={p0}; 인덱스={p1}; 시드={p2}",
-  "@ui081c5de6": {
-    "description": "HaRu UI: Hanime 首页切换频道；频道={p0}；索引={p1}；种子={p2}",
-    "placeholders": {
-      "p0": {
-        "type": "String"
-      },
-      "p1": {
-        "type": "String"
-      },
-      "p2": {
-        "type": "String"
-      }
-    }
+  "ui4ac3cece": "Hanime 계정 프로필 이미지 업로드",
+  "@ui4ac3cece": {
+    "description": "HaRu UI: Hanime 账号头像上传"
+  },
+  "ui4b73143a": "Hanime 페이지가 Cloudflare 제한을 받고 있어 브라우저 보조 접근이 완료되지 않았습니다.",
+  "@ui4b73143a": {
+    "description": "HaRu UI: Hanime 页面受到 Cloudflare 限制，浏览器辅助访问未完成。"
   },
   "ui77cbd28c": "하니메 검증",
   "@ui77cbd28c": {
     "description": "HaRu UI: Hanime 验证"
   },
-  "ui4a1461a3": "하니메={p0}; 현재 범위={p1}",
-  "@ui4a1461a3": {
-    "description": "HaRu UI: Hanime={p0}；当前范围={p1}",
-    "placeholders": {
-      "p0": {
-        "type": "String"
-      },
-      "p1": {
-        "type": "String"
-      }
-    }
-  },
-  "ui042e6d42": "하니메 로그인={p0}",
-  "@ui042e6d42": {
-    "description": "HaRu UI: Hanime登录={p0}",
-    "placeholders": {
-      "p0": {
-        "type": "String"
-      }
-    }
+  "ui2e244a94": "Messages 응답 형식이 올바르지 않습니다",
+  "@ui2e244a94": {
+    "description": "HaRu UI: Messages 返回格式无效"
   },
   "ui103930a8": "이메일 주소를 입력하면 MyMemory의 무료 할당량을 늘릴 수 있습니다.",
   "@ui103930a8": {
     "description": "HaRu UI: MyMemory 可用邮箱标识提高免费额度。"
   },
-  "ui35377097": "R34V 로그인={p0};",
-  "@ui35377097": {
-    "description": "HaRu UI: R34V登录={p0}；",
+  "ui345ef1cb": "MyMemory 응답 형식이 올바르지 않습니다",
+  "@ui345ef1cb": {
+    "description": "HaRu UI: MyMemory 返回格式无效"
+  },
+  "ui76229bcf": "MyMemory 상태 {p0} 반환됨",
+  "@ui76229bcf": {
+    "description": "HaRu UI: MyMemory 返回状态 {p0}",
     "placeholders": {
       "p0": {
         "type": "String"
       }
     }
+  },
+  "ui74b8531a": "Responses 응답 형식이 올바르지 않습니다",
+  "@ui74b8531a": {
+    "description": "HaRu UI: Responses 返回格式无效"
   },
   "ui2c98e3c6": "Rule34Video 계정",
   "@ui2c98e3c6": {
@@ -222,9 +191,9 @@
   "@ui34eda443": {
     "description": "HaRu UI: Wi-Fi 最高 720p，移动网络最高 360p"
   },
-  "ui0fed973b": "시도={p0}; 시간 소비={p1}ms",
-  "@ui0fed973b": {
-    "description": "HaRu UI: attempt={p0}；耗时={p1}ms",
+  "ui78defc63": "{p0} - {p1}초",
+  "@ui78defc63": {
+    "description": "HaRu UI: {p0} - {p1} 秒",
     "placeholders": {
       "p0": {
         "type": "String"
@@ -318,6 +287,15 @@
   "ui196d3c87": "{p0}개월",
   "@ui196d3c87": {
     "description": "HaRu UI: {p0} 月",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
+  "ui3f6d7631": "{p0}의 모델명이 설정되지 않았습니다",
+  "@ui3f6d7631": {
+    "description": "HaRu UI: {p0} 未配置模型名",
     "placeholders": {
       "p0": {
         "type": "String"
@@ -457,6 +435,14 @@
   "@ui2046553b": {
     "description": "HaRu UI: 一列"
   },
+  "ui0a9e6b7f": "원클릭 업데이트",
+  "@ui0a9e6b7f": {
+    "description": "HaRu UI: 一键更新"
+  },
+  "ui12469822": "만",
+  "@ui12469822": {
+    "description": "HaRu UI: 万"
+  },
   "ui0b8ef7e3": "이전",
   "@ui0b8ef7e3": {
     "description": "HaRu UI: 上一个"
@@ -519,6 +505,23 @@
   "@ui7fc5cfeb": {
     "description": "HaRu UI: 下载文件已失效或没有可播放此 MP4 的应用。"
   },
+  "ui495af0fd": "업데이트 패키지(HTTP {p0})를 다운로드하지 못했습니다. 나중에 다시 시도해 주세요.",
+  "@ui495af0fd": {
+    "description": "HaRu UI: 下载更新包失败（HTTP {p0}），请稍后重试。",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
+  "ui714ebd00": "업데이트 패키지를 다운로드하지 못했습니다. 나중에 다시 시도해 주세요.",
+  "@ui714ebd00": {
+    "description": "HaRu UI: 下载更新包失败，请稍后重试。"
+  },
+  "ui225e3259": "업데이트 패키지 다운로드 시간이 초과되었습니다. 네트워크를 확인한 후 다시 시도해 주세요.",
+  "@ui225e3259": {
+    "description": "HaRu UI: 下载更新包超时，请检查网络后重试。"
+  },
   "ui5cade6e1": "다운로드 서비스를 일시적으로 이용할 수 없습니다.",
   "@ui5cade6e1": {
     "description": "HaRu UI: 下载服务暂不可用。"
@@ -542,6 +545,23 @@
   "ui10ebf8e5": "존재하지 않음",
   "@ui10ebf8e5": {
     "description": "HaRu UI: 不存在"
+  },
+  "ui2d12eadf": "지원되지 않는 번역 라이브러리 버전입니다: {p0}",
+  "@ui2d12eadf": {
+    "description": "HaRu UI: 不支持的翻译库版本：{p0}",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
+  "ui22dbd975": "AI 번역 프로토콜이 아닙니다",
+  "@ui22dbd975": {
+    "description": "HaRu UI: 不是 AI 翻译协议"
+  },
+  "ui2970e3de": "HaRu 번역 라이브러리 파일이 아닙니다",
+  "@ui2970e3de": {
+    "description": "HaRu UI: 不是 HaRu 翻译库文件"
   },
   "ui34e49ede": "제한 없음",
   "@ui34e49ede": {
@@ -596,6 +616,10 @@
   "@ui72607f99": {
     "description": "HaRu UI: 举报评论"
   },
+  "ui2a3fe43c": "억",
+  "@ui2a3fe43c": {
+    "description": "HaRu UI: 亿"
+  },
   "ui11b84182": "Wi-Fi에서만 다운로드",
   "@ui11b84182": {
     "description": "HaRu UI: 仅 Wi-Fi 下载"
@@ -636,27 +660,6 @@
   "ui44ac200e": "처음부터 연속 재생",
   "@ui44ac200e": {
     "description": "HaRu UI: 从头连续播放"
-  },
-  "ui6d8b62f1": "미디어 라이브러리에서 로그인을 요청합니다. 범위=hanime1; 섹션={p0}",
-  "@ui6d8b62f1": {
-    "description": "HaRu UI: 从媒体库请求登录；范围=hanime1；section={p0}",
-    "placeholders": {
-      "p0": {
-        "type": "String"
-      }
-    }
-  },
-  "ui4aca9b31": "미디어 라이브러리에서 로그인을 요청합니다. 범위={p0}; 섹션={p1}",
-  "@ui4aca9b31": {
-    "description": "HaRu UI: 从媒体库请求登录；范围={p0}；section={p1}",
-    "placeholders": {
-      "p0": {
-        "type": "String"
-      },
-      "p1": {
-        "type": "String"
-      }
-    }
   },
   "ui794510bf": "재생목록에서 삭제",
   "@ui794510bf": {
@@ -763,6 +766,10 @@
   "@ui1d0485f9": {
     "description": "HaRu UI: 個月"
   },
+  "ui5545b6b8": "억",
+  "@ui5545b6b8": {
+    "description": "HaRu UI: 億"
+  },
   "ui4fcf2a14": "전체 화면",
   "@ui4fcf2a14": {
     "description": "HaRu UI: 全屏"
@@ -812,9 +819,22 @@
       }
     }
   },
+  "ui7aeb2e98": "총 {p0}화",
+  "@ui7aeb2e98": {
+    "description": "HaRu UI: 共{p0}集",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
   "ui64efd37a": "HaRu 소개",
   "@ui64efd37a": {
     "description": "HaRu UI: 关于 HaRu"
+  },
+  "ui361cc8b7": "닫기",
+  "@ui361cc8b7": {
+    "description": "HaRu UI: 关闭"
   },
   "ui29c40c72": "끄면 이 기기에 저장된 모든 재생 위치가 삭제됩니다.",
   "@ui29c40c72": {
@@ -848,17 +868,13 @@
   "@ui38d59e4d": {
     "description": "HaRu UI: 内置"
   },
-  "ui4d75ae49": "다운로드 준비; 사이트={p0}; 동영상={p1};",
-  "@ui4d75ae49": {
-    "description": "HaRu UI: 准备下载；站点={p0}；视频={p1}；",
-    "placeholders": {
-      "p0": {
-        "type": "String"
-      },
-      "p1": {
-        "type": "String"
-      }
-    }
+  "ui3245a83c": "업데이트 패키지를 작성하지 못했습니다. 기기 저장 공간을 확인한 후 다시 시도해 주세요.",
+  "@ui3245a83c": {
+    "description": "HaRu UI: 写入更新包失败，请检查设备存储空间后重试。"
+  },
+  "ui0ff3423a": "오류가 발생했습니다. 잠시 후 다시 시도하세요.",
+  "@ui0ff3423a": {
+    "description": "HaRu UI: 出错了，请稍后重试"
   },
   "ui2f5fd7d1": "공유",
   "@ui2f5fd7d1": {
@@ -1014,6 +1030,10 @@
       }
     }
   },
+  "ui50138d2b": "포그라운드 콘텐츠 로딩 시작됨",
+  "@ui50138d2b": {
+    "description": "HaRu UI: 前台内容开始加载"
+  },
   "ui7050fd74": "다음 동영상을 로드하지 못했습니다: {p0}",
   "@ui7050fd74": {
     "description": "HaRu UI: 加载下一视频失败：{p0}",
@@ -1044,6 +1064,10 @@
       }
     }
   },
+  "ui000f0cb3": "익명 사용자",
+  "@ui000f0cb3": {
+    "description": "HaRu UI: 匿名用户"
+  },
   "ui71c021b7": "동영상 1개 반복",
   "@ui71c021b7": {
     "description": "HaRu UI: 单集循环"
@@ -1060,6 +1084,10 @@
   "@ui6ffe0a80": {
     "description": "HaRu UI: 原文"
   },
+  "ui62f1bb01": "설정으로 이동",
+  "@ui62f1bb01": {
+    "description": "HaRu UI: 去设置"
+  },
   "ui54ec6c15": "원문 + 번역문",
   "@ui54ec6c15": {
     "description": "HaRu UI: 双语"
@@ -1075,6 +1103,10 @@
   "ui2e2d0cb3": "게시 시간",
   "@ui2e2d0cb3": {
     "description": "HaRu UI: 发布时间"
+  },
+  "ui676a6b3b": "새 버전이 발견되었습니다",
+  "@ui676a6b3b": {
+    "description": "HaRu UI: 发现新版本"
   },
   "ui0e705d18": "새 버전 {p0}을(를) 찾았습니다.",
   "@ui0e705d18": {
@@ -1152,6 +1184,10 @@
   "@ui35027352": {
     "description": "HaRu UI: 只会清除当前账号在这台设备上的搜索记录。"
   },
+  "ui51f9b5e4": "HTTPS 링크만 열 수 있습니다.",
+  "@ui51f9b5e4": {
+    "description": "HaRu UI: 只允许打开 HTTPS 链接。"
+  },
   "ui73b35752": "앱의 모든 다운로드 기록을 삭제합니다. Download/Flule34에 저장된 동영상은 유지되며 진행 중인 작업은 먼저 취소됩니다.",
   "@ui73b35752": {
     "description": "HaRu UI: 只删除 App 中的全部下载记录，已经保存到 Download/Flule34 的视频会保留。进行中的任务会先取消。"
@@ -1213,6 +1249,14 @@
   "@ui7f54b07b": {
     "description": "HaRu UI: 后台播放"
   },
+  "ui02a3d205": "백그라운드 구독 정리가 현재 작업에 양보되었습니다.",
+  "@ui02a3d205": {
+    "description": "HaRu UI: 后台订阅整理已让位于当前操作。"
+  },
+  "ui30c46183": "백그라운드 사전 로드가 현재 작업에 양보되었습니다.",
+  "@ui30c46183": {
+    "description": "HaRu UI: 后台预加载已让位于当前操作。"
+  },
   "ui4763b5c2": "아니요",
   "@ui4763b5c2": {
     "description": "HaRu UI: 否"
@@ -1249,6 +1293,10 @@
   "ui1b8fd367": "답장하다...",
   "@ui1b8fd367": {
     "description": "HaRu UI: 回复..."
+  },
+  "ui0efec179": "답글 내용은 비워둘 수 없습니다.",
+  "@ui0efec179": {
+    "description": "HaRu UI: 回复内容不能为空。"
   },
   "ui24039614": "답장 로드 실패: {p0}",
   "@ui24039614": {
@@ -1357,81 +1405,6 @@
   "@ui17588e00": {
     "description": "HaRu UI: 媒体库"
   },
-  "ui38869fe7": "미디어 라이브러리 보조 페이지 전환; 범위=hanime1; 섹션={p0}",
-  "@ui38869fe7": {
-    "description": "HaRu UI: 媒体库二级页切换；范围=hanime1；section={p0}",
-    "placeholders": {
-      "p0": {
-        "type": "String"
-      }
-    }
-  },
-  "ui7a3a4547": "미디어 라이브러리 보조 페이지 전환; 범위=로컬; 섹션={p0}",
-  "@ui7a3a4547": {
-    "description": "HaRu UI: 媒体库二级页切换；范围=local；section={p0}",
-    "placeholders": {
-      "p0": {
-        "type": "String"
-      }
-    }
-  },
-  "ui1c3a6602": "미디어 라이브러리 보조 페이지 전환; 범위=rule34video; 섹션={p0}",
-  "@ui1c3a6602": {
-    "description": "HaRu UI: 媒体库二级页切换；范围=rule34video；section={p0}",
-    "placeholders": {
-      "p0": {
-        "type": "String"
-      }
-    }
-  },
-  "ui0ee3985f": "미디어 라이브러리 목록 요청이 완료되었습니다. 범위=rule34video; 섹션={p0};",
-  "@ui0ee3985f": {
-    "description": "HaRu UI: 媒体库列表请求完成；范围=rule34video；section={p0}；",
-    "placeholders": {
-      "p0": {
-        "type": "String"
-      }
-    }
-  },
-  "ui1e113600": "미디어 라이브러리 목록 요청이 시작됩니다. 범위=rule34video; 섹션={p0};",
-  "@ui1e113600": {
-    "description": "HaRu UI: 媒体库列表请求开始；范围=rule34video；section={p0}；",
-    "placeholders": {
-      "p0": {
-        "type": "String"
-      }
-    }
-  },
-  "ui14cdfa21": "미디어 라이브러리 열기;범위={p0};",
-  "@ui14cdfa21": {
-    "description": "HaRu UI: 媒体库打开；范围={p0}；",
-    "placeholders": {
-      "p0": {
-        "type": "String"
-      }
-    }
-  },
-  "ui5e9a8d3f": "미디어 라이브러리 로그인 상태 변경; R34V={p0};",
-  "@ui5e9a8d3f": {
-    "description": "HaRu UI: 媒体库登录状态变化；R34V={p0}；",
-    "placeholders": {
-      "p0": {
-        "type": "String"
-      }
-    }
-  },
-  "ui21db214e": "미디어 라이브러리 범위 전환; ={p0}에서; ={p1}에",
-  "@ui21db214e": {
-    "description": "HaRu UI: 媒体库范围切换；from={p0}；to={p1}",
-    "placeholders": {
-      "p0": {
-        "type": "String"
-      },
-      "p1": {
-        "type": "String"
-      }
-    }
-  },
   "ui2a120a57": "미디어 라이브러리 범위 순서",
   "@ui2a120a57": {
     "description": "HaRu UI: 媒体库范围顺序"
@@ -1443,6 +1416,22 @@
   "ui60514b78": "안전하게 병합",
   "@ui60514b78": {
     "description": "HaRu UI: 安全合并"
+  },
+  "ui0a4deada": "보안 인증서 확인에 실패했습니다.",
+  "@ui0a4deada": {
+    "description": "HaRu UI: 安全证书验证失败"
+  },
+  "ui67804bce": "설치 패키지 서명이 설치된 버전과 일치하지 않으므로 설치를 덮어쓸 수 없습니다. 수동으로 다운로드하고 설치하려면 GitHub로 이동하세요.",
+  "@ui67804bce": {
+    "description": "HaRu UI: 安装包签名与已安装版本不一致，无法覆盖安装，请前往 GitHub 手动下载安装。"
+  },
+  "ui4573775f": "업데이트 패키지를 설치하지 못했습니다. 나중에 다시 시도해 주세요.",
+  "@ui4573775f": {
+    "description": "HaRu UI: 安装更新包失败，请稍后重试。"
+  },
+  "ui4768e1cf": "설치 시간이 초과되었습니다. 나중에 다시 시도해 주세요.",
+  "@ui4768e1cf": {
+    "description": "HaRu UI: 安装超时，请稍后重试。"
   },
   "ui2cfae1da": "광범위한 검색",
   "@ui2cfae1da": {
@@ -1544,6 +1533,10 @@
   "@ui17aba12e": {
     "description": "HaRu UI: 小時"
   },
+  "ui422fcf83": "설치 권한이 활성화되지 않았습니다. 나중에 다시 시도해 주세요.",
+  "@ui422fcf83": {
+    "description": "HaRu UI: 尚未开启安装权限，请稍后重试。"
+  },
   "ui2d851aa0": "로그인하지 않음",
   "@ui2d851aa0": {
     "description": "HaRu UI: 尚未登录"
@@ -1565,9 +1558,39 @@
   "@ui59bc6fa1": {
     "description": "HaRu UI: 展开"
   },
+  "ui605cc69a": "더보기 ({p0})",
+  "@ui605cc69a": {
+    "description": "HaRu UI: 展开({p0})",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
   "ui0543d520": "다운로드됨",
   "@ui0543d520": {
     "description": "HaRu UI: 已下载"
+  },
+  "ui21b8fcdc": "{p0} 다운로드됨",
+  "@ui21b8fcdc": {
+    "description": "HaRu UI: 已下载 {p0}",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
+  "ui419fd1e2": "{p0} / {p1} 다운로드됨",
+  "@ui419fd1e2": {
+    "description": "HaRu UI: 已下载 {p0} / {p1}",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      },
+      "p1": {
+        "type": "String"
+      }
+    }
   },
   "ui4c1b3a95": "“{p0}”에서 제거했습니다.",
   "@ui4c1b3a95": {
@@ -1649,6 +1672,14 @@
   "ui37453e63": "취소됨",
   "@ui37453e63": {
     "description": "HaRu UI: 已取消"
+  },
+  "ui2374725a": "업데이트 패키지 다운로드가 취소되었습니다.",
+  "@ui2374725a": {
+    "description": "HaRu UI: 已取消下载更新包。"
+  },
+  "ui0c5e75d4": "설치가 취소되었습니다.",
+  "@ui0c5e75d4": {
+    "description": "HaRu UI: 已取消安装。"
   },
   "ui7bbd0e24": "즐겨찾기에서 제거했습니다.",
   "@ui7bbd0e24": {
@@ -1812,10 +1843,6 @@
       }
     }
   },
-  "ui103ff6bd": "앱 초기화가 완료되었습니다.",
-  "@ui103ff6bd": {
-    "description": "HaRu UI: 应用初始化完成。"
-  },
   "ui75af3770": "앱 로그",
   "@ui75af3770": {
     "description": "HaRu UI: 应用日志"
@@ -1827,6 +1854,10 @@
   "ui390d6cf3": "적용(제한 없음)",
   "@ui390d6cf3": {
     "description": "HaRu UI: 应用（不限）"
+  },
+  "ui256813a5": "기반 네트워크 어댑터가 해제되어 요청을 시작할 수 없습니다.",
+  "@ui256813a5": {
+    "description": "HaRu UI: 底座网络适配器已释放，无法发起请求。"
   },
   "ui37fc4085": "하단 탐색 순서",
   "@ui37fc4085": {
@@ -1840,17 +1871,9 @@
   "@ui0a663237": {
     "description": "HaRu UI: 开启后，切换应用或关闭屏幕时继续播放声音。"
   },
-  "ui08cdac2b": "비디오 미리보기를 시작합니다. 사이트={p0}; 비디오={p1};",
-  "@ui08cdac2b": {
-    "description": "HaRu UI: 开始视频预览；site={p0}；video={p1}；",
-    "placeholders": {
-      "p0": {
-        "type": "String"
-      },
-      "p1": {
-        "type": "String"
-      }
-    }
+  "ui12e4a250": "시작일",
+  "@ui12e4a250": {
+    "description": "HaRu UI: 开始日期"
   },
   "ui13034753": "오픈소스 라이선스",
   "@ui13034753": {
@@ -1901,6 +1924,14 @@
       }
     }
   },
+  "ui09b4d081": "현재 환경에 쓸 수 있는 번역 데이터베이스가 없습니다",
+  "@ui09b4d081": {
+    "description": "HaRu UI: 当前环境没有可写入的翻译数据库"
+  },
+  "ui111ba46f": "현재 장치는 자동 설치를 지원하지 않습니다. 설치 패키지를 수동으로 다운로드하려면 GitHub로 이동하세요.",
+  "@ui111ba46f": {
+    "description": "HaRu UI: 当前设备不支持自动安装，请前往 GitHub 手动下载安装包。"
+  },
   "ui1ef7e413": "현재 계정 ID",
   "@ui1ef7e413": {
     "description": "HaRu UI: 当前账号 ID"
@@ -1933,15 +1964,6 @@
   "ui608e380c": "학습된 번역 복원",
   "@ui608e380c": {
     "description": "HaRu UI: 恢复已学习翻译"
-  },
-  "ui351ef4b1": "재생 재개, 플레이어 자동 펼치기 시작; video={p0};",
-  "@ui351ef4b1": {
-    "description": "HaRu UI: 恢复播放，开始自动展开播放器；video={p0}；",
-    "placeholders": {
-      "p0": {
-        "type": "String"
-      }
-    }
   },
   "ui67d3b06d": "내 정보",
   "@ui67d3b06d": {
@@ -2022,10 +2044,6 @@
   "@ui7d6a579d": {
     "description": "HaRu UI: 拉取模型列表"
   },
-  "ui1a86336b": "드래그하여 조정하세요. 콜드 스타트 ​​중에는 첫 번째 항목이 기본값입니다.",
-  "@ui1a86336b": {
-    "description": "HaRu UI: 拖动调整；冷启动时默认进入第一项。"
-  },
   "ui4c4f7a5b": "월 지정…",
   "@ui4c4f7a5b": {
     "description": "HaRu UI: 指定月份…"
@@ -2045,10 +2063,6 @@
   "ui7ab117f8": "출처순",
   "@ui7ab117f8": {
     "description": "HaRu UI: 按来源排序"
-  },
-  "ui70c4de19": "태그와 주제로 탐색",
-  "@ui70c4de19": {
-    "description": "HaRu UI: 按标签和内容主题探索"
   },
   "ui0db93df0": "조회수로 인기 콘텐츠 탐색",
   "@ui0db93df0": {
@@ -2086,10 +2100,6 @@
   "ui549d6c00": "제외:",
   "@ui549d6c00": {
     "description": "HaRu UI: 排除："
-  },
-  "ui3cca6594": "콘텐츠 탐색",
-  "@ui3cca6594": {
-    "description": "HaRu UI: 探索内容"
   },
   "ui6ec4c172": "API 형식",
   "@ui6ec4c172": {
@@ -2243,6 +2253,10 @@
   "@ui264bb7d8": {
     "description": "HaRu UI: 播放列表会从网站账号中删除。"
   },
+  "ui25177a33": "재생목록 페이지 이동에 진전이 없습니다. 새로고침 후 다시 시도해 주세요.",
+  "@ui25177a33": {
+    "description": "HaRu UI: 播放列表分页未取得进展，请刷新重试。"
+  },
   "ui766b41bc": "재생목록 로드 실패: {p0}",
   "@ui766b41bc": {
     "description": "HaRu UI: 播放列表加载失败：{p0}",
@@ -2280,106 +2294,17 @@
   "@ui201d2aa4": {
     "description": "HaRu UI: 播放列表操作"
   },
+  "ui59fbd342": "재생목록 작업에 실패했습니다.",
+  "@ui59fbd342": {
+    "description": "HaRu UI: 播放列表操作失败。"
+  },
+  "ui6ef9f29e": "재생목록 편집 페이지에 제목 필드가 없습니다.",
+  "@ui6ef9f29e": {
+    "description": "HaRu UI: 播放列表编辑页面缺少标题字段。"
+  },
   "ui7e8be483": "플레이어 초기화 후 동영상 길이 정보가 제공되지 않았습니다.",
   "@ui7e8be483": {
     "description": "HaRu UI: 播放器初始化后未提供视频时长。"
-  },
-  "ui536e06b3": "플레이어가 자동으로 재개되기 시작합니다. 시도={p0};",
-  "@ui536e06b3": {
-    "description": "HaRu UI: 播放器开始自动恢复；attempt={p0}；",
-    "placeholders": {
-      "p0": {
-        "type": "String"
-      }
-    }
-  },
-  "ui7479d54b": "플레이어 접기 권한 업데이트; video={p0};",
-  "@ui7479d54b": {
-    "description": "HaRu UI: 播放器折叠权限更新；video={p0}；",
-    "placeholders": {
-      "p0": {
-        "type": "String"
-      }
-    }
-  },
-  "ui5b401ab2": "플레이어 오류 보고: {p0};",
-  "@ui5b401ab2": {
-    "description": "HaRu UI: 播放器报告异常：{p0}；",
-    "placeholders": {
-      "p0": {
-        "type": "String"
-      }
-    }
-  },
-  "ui5a50b4ab": "플레이어 자동 펼치기 완료; video={p0};",
-  "@ui5a50b4ab": {
-    "description": "HaRu UI: 播放器自动展开完成；video={p0}；",
-    "placeholders": {
-      "p0": {
-        "type": "String"
-      }
-    }
-  },
-  "ui78522c85": "플레이어 자동 복구에 실패했습니다. 이유=대체 소스 없음;",
-  "@ui78522c85": {
-    "description": "HaRu UI: 播放器自动恢复失败；reason=no-alternate-source；"
-  },
-  "ui0dd3d83f": "플레이어 자동 복구 예외; {p0};",
-  "@ui0dd3d83f": {
-    "description": "HaRu UI: 播放器自动恢复异常；{p0}；",
-    "placeholders": {
-      "p0": {
-        "type": "String"
-      }
-    }
-  },
-  "ui19faffc9": "플레이어가 자동으로 성공적으로 재개되었습니다. {p0}; 시간 소비 = {p1}ms",
-  "@ui19faffc9": {
-    "description": "HaRu UI: 播放器自动恢复成功；{p0}；耗时={p1}ms",
-    "placeholders": {
-      "p0": {
-        "type": "String"
-      },
-      "p1": {
-        "type": "String"
-      }
-    }
-  },
-  "ui0146f5aa": "플레이어 자동 복구를 로드하지 못했습니다. {p0};",
-  "@ui0146f5aa": {
-    "description": "HaRu UI: 播放器自动恢复装载失败；{p0}；",
-    "placeholders": {
-      "p0": {
-        "type": "String"
-      }
-    }
-  },
-  "ui4e45686b": "플레이어는 자동으로 대체 소스 선택을 재개합니다. ={p0}에서;",
-  "@ui4e45686b": {
-    "description": "HaRu UI: 播放器自动恢复选择备用源；from={p0}；",
-    "placeholders": {
-      "p0": {
-        "type": "String"
-      }
-    }
-  },
-  "ui4cee68a6": "플레이어 로드 실패: {p0};",
-  "@ui4cee68a6": {
-    "description": "HaRu UI: 播放器装载失败：{p0}；",
-    "placeholders": {
-      "p0": {
-        "type": "String"
-      }
-    }
-  },
-  "ui09679598": "재생 중 상세 스크롤이 경계에 도달하여 시각적 오버스크롤 비활성화; video={p0};",
-  "@ui09679598": {
-    "description": "HaRu UI: 播放态详情滚动触发边界反馈，已禁用视觉拉伸；video={p0}；",
-    "placeholders": {
-      "p0": {
-        "type": "String"
-      }
-    }
   },
   "ui206c2436": "파일 재생",
   "@ui206c2436": {
@@ -2422,6 +2347,14 @@
   "@ui31d7af87": {
     "description": "HaRu UI: 操作未能完成，请稍后重试。"
   },
+  "ui28c15475": "작업 시간이 초과되었습니다. 잠시 후 다시 시도하세요.",
+  "@ui28c15475": {
+    "description": "HaRu UI: 操作超时，请稍后重试"
+  },
+  "ui5e1b9757": "Google 원터치 로그인 또는 공식 웹사이트 이메일/비밀번호 로그인을 지원하며, 완료 후 자동으로 돌아옵니다.",
+  "@ui5e1b9757": {
+    "description": "HaRu UI: 支持 Google 一键登入或官网邮箱密码登录，登录完成后会自动返回。"
+  },
   "ui0d933ab7": "즐겨찾기",
   "@ui0d933ab7": {
     "description": "HaRu UI: 收藏"
@@ -2449,6 +2382,10 @@
   "ui053602da": "데이터베이스 구조",
   "@ui053602da": {
     "description": "HaRu UI: 数据库结构"
+  },
+  "ui146d33d9": "데이터 분석에 실패했습니다. 사이트 구조가 업데이트되었을 수 있습니다.",
+  "@ui146d33d9": {
+    "description": "HaRu UI: 数据解析失败，站点结构可能已更新"
   },
   "ui1ce03cf7": "파일이 존재하지 않습니다",
   "@ui1ce03cf7": {
@@ -2491,6 +2428,32 @@
   "@ui742da263": {
     "description": "HaRu UI: 新建翻译服务"
   },
+  "ui0d7ee0fa": "새 버전 {p0}이 출시되었습니다. 지금 다운로드하여 설치하시겠습니까?",
+  "@ui0d7ee0fa": {
+    "description": "HaRu UI: 新版本 {p0} 已发布，是否立即下载并安装？",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
+  "ui7bd4dd1e": "없음",
+  "@ui7bd4dd1e": {
+    "description": "HaRu UI: 无"
+  },
+  "ui196ad4c7": "시스템 설치 프로그램을 시작할 수 없습니다. 나중에 다시 시도해 주세요.",
+  "@ui196ad4c7": {
+    "description": "HaRu UI: 无法启动系统安装器，请稍后重试。"
+  },
+  "ui6f78c40a": "시스템 설치 프로그램을 시작할 수 없습니다: {p0}",
+  "@ui6f78c40a": {
+    "description": "HaRu UI: 无法启动系统安装器：{p0}",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
   "ui3180d36c": "동영상을 Download/Flule34에 저장할 수 없습니다.",
   "@ui3180d36c": {
     "description": "HaRu UI: 无法将视频保存到 Download/Flule34。"
@@ -2498,6 +2461,15 @@
   "ui180bd386": "공유 패널을 열 수 없습니다: {p0}",
   "@ui180bd386": {
     "description": "HaRu UI: 无法打开分享面板：{p0}",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
+  "ui07590f5f": "링크를 열 수 없습니다: {p0}",
+  "@ui07590f5f": {
+    "description": "HaRu UI: 无法打开链接：{p0}",
     "placeholders": {
       "p0": {
         "type": "String"
@@ -2522,6 +2494,47 @@
       }
     }
   },
+  "ui44f277c1": "사고 파라미터 호환 방식을 확인할 수 없습니다",
+  "@ui44f277c1": {
+    "description": "HaRu UI: 无法确定思考参数兼容方式"
+  },
+  "ui50aa2314": "작업 토큰을 가져올 수 없습니다.",
+  "@ui50aa2314": {
+    "description": "HaRu UI: 无法获取操作令牌。"
+  },
+  "ui79cdaeac": "로그인 양식의 검증 토큰을 가져올 수 없습니다.",
+  "@ui79cdaeac": {
+    "description": "HaRu UI: 无法获取登录表单的校验令牌。"
+  },
+  "ui06546e23": "업로더 프로필을 분석하지 못했습니다. 잠시 후 다시 시도해 주세요.",
+  "@ui06546e23": {
+    "description": "HaRu UI: 无法解析上传者资料，请稍后重试。"
+  },
+  "ui57f26ed1": "현재 계정 프로필을 분석하지 못했습니다. 잠시 후 다시 시도해 주세요.",
+  "@ui57f26ed1": {
+    "description": "HaRu UI: 无法解析当前账号资料，请稍后重试。"
+  },
+  "ui33dbf598": "계정 편집 정보를 분석할 수 없습니다.",
+  "@ui33dbf598": {
+    "description": "HaRu UI: 无法解析账号编辑资料。"
+  },
+  "ui15bf560f": "비디오 작성자를 식별할 수 없습니다.",
+  "@ui15bf560f": {
+    "description": "HaRu UI: 无法识别视频作者。"
+  },
+  "ui5825923c": "이 업로더의 구독 정보를 식별할 수 없습니다.",
+  "@ui5825923c": {
+    "description": "HaRu UI: 无法识别这个上传者的订阅信息。"
+  },
+  "ui6f7f557a": "이 구독을 식별할 수 없습니다. 관련 동영상 상세 페이지에서 {p0}하세요.",
+  "@ui6f7f557a": {
+    "description": "HaRu UI: 无法识别这个订阅，请从相关视频详情页{p0}。",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
   "ui2dfcd562": "웹페이지 콘텐츠를 읽을 수 없습니다. 클릭하여 다시 시도해 주세요.",
   "@ui2dfcd562": {
     "description": "HaRu UI: 无法读取网页内容，可以点重试。"
@@ -2529,6 +2542,23 @@
   "ui0b6ddbbb": "GitHub에 연결할 수 없습니다. 네트워크를 확인한 후 다시 시도하세요.",
   "@ui0b6ddbbb": {
     "description": "HaRu UI: 无法连接 GitHub，请检查网络后重试。"
+  },
+  "ui5262de17": "웹사이트에 연결할 수 없습니다",
+  "@ui5262de17": {
+    "description": "HaRu UI: 无法连接到网站"
+  },
+  "ui67fe026b": "웹사이트에 연결할 수 없습니다. 네트워크를 확인해 주세요.",
+  "@ui67fe026b": {
+    "description": "HaRu UI: 无法连接到网站，请检查网络。"
+  },
+  "ui6991b83f": "날짜: {p0}",
+  "@ui6991b83f": {
+    "description": "HaRu UI: 日期：{p0}",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
   },
   "ui22636da6": "일본 IP는 확인에 실패할 수 있습니다.",
   "@ui22636da6": {
@@ -2583,6 +2613,10 @@
   "@ui7b1cd931": {
     "description": "HaRu UI: 暂停"
   },
+  "ui7167f83b": "진단 정보가 없습니다.",
+  "@ui7167f83b": {
+    "description": "HaRu UI: 暂无诊断信息。"
+  },
   "ui585c23ff": "현재 업데이트를 확인할 수 없습니다. 잠시 후 다시 시도하세요.",
   "@ui585c23ff": {
     "description": "HaRu UI: 暂时无法检查更新，请稍后重试。"
@@ -2615,6 +2649,34 @@
   "@ui2d102f6b": {
     "description": "HaRu UI: 更换头像"
   },
+  "ui0b0c36f2": "업데이트 패키지 다운로드에 실패했습니다. 나중에 다시 시도해 주세요.",
+  "@ui0b0c36f2": {
+    "description": "HaRu UI: 更新包下载失败，请稍后重试。"
+  },
+  "ui1a5d4948": "업데이트 패키지가 현재 시스템과 호환되지 않습니다.",
+  "@ui1a5d4948": {
+    "description": "HaRu UI: 更新包与当前系统不兼容。"
+  },
+  "ui59cb7d12": "업데이트 패키지가 완전히 저장되지 않았습니다. 다시 시도해 주세요.",
+  "@ui59cb7d12": {
+    "description": "HaRu UI: 更新包保存不完整，请重试。"
+  },
+  "ui4ebfc1da": "업데이트 패키지 크기 확인에 실패했습니다. 다시 시도해 주세요.",
+  "@ui4ebfc1da": {
+    "description": "HaRu UI: 更新包大小校验失败，请重试。"
+  },
+  "ui75071796": "업데이트 패키지가 설치되었습니다.",
+  "@ui75071796": {
+    "description": "HaRu UI: 更新包已安装完成。"
+  },
+  "ui7999a1cf": "업데이트 패키지가 잘못되었거나 손상되었습니다. 다시 다운로드하세요.",
+  "@ui7999a1cf": {
+    "description": "HaRu UI: 更新包无效或已损坏，请重新下载。"
+  },
+  "ui154411ba": "업데이트 패키지 확인에 실패했습니다. 다시 시도해 주세요.",
+  "@ui154411ba": {
+    "description": "HaRu UI: 更新包校验失败，请重试。"
+  },
   "ui2bef8164": "업데이트 실패: {p0}",
   "@ui2bef8164": {
     "description": "HaRu UI: 更新失败：{p0}",
@@ -2645,9 +2707,17 @@
       }
     }
   },
+  "ui19f3097b": "업데이트 지침",
+  "@ui19f3097b": {
+    "description": "HaRu UI: 更新说明"
+  },
   "ui1d030a86": "업데이트 채널",
   "@ui1d030a86": {
     "description": "HaRu UI: 更新通道"
+  },
+  "ui7e47c566": "이전 구독 항목이 아직 정리 중입니다. 다시 불러와 주세요.",
+  "@ui7e47c566": {
+    "description": "HaRu UI: 更早的关注内容仍在整理，请重试加载。"
   },
   "ui69112ae8": "최소 투표 수",
   "@ui69112ae8": {
@@ -2697,6 +2767,10 @@
   "@ui4124f57e": {
     "description": "HaRu UI: 最热"
   },
+  "ui7437a4c3": "최소 길이 (초)",
+  "@ui7437a4c3": {
+    "description": "HaRu UI: 最短时长（秒）"
+  },
   "ui23dfffd1": "최근 수정순",
   "@ui23dfffd1": {
     "description": "HaRu UI: 最近修改"
@@ -2717,6 +2791,14 @@
   "@ui3f66748c": {
     "description": "HaRu UI: 最长"
   },
+  "ui31829b08": "최대 길이는 최소 길이보다 작을 수 없습니다",
+  "@ui31829b08": {
+    "description": "HaRu UI: 最长时长不能小于最短时长"
+  },
+  "ui1965e2dd": "최대 길이 (초)",
+  "@ui1965e2dd": {
+    "description": "HaRu UI: 最长时长（秒）"
+  },
   "ui72d8c6d5": "사용 가능한 최고 화질",
   "@ui72d8c6d5": {
     "description": "HaRu UI: 最高可用"
@@ -2733,25 +2815,69 @@
   "@ui625d464f": {
     "description": "HaRu UI: 月份"
   },
+  "ui06e923cf": "{p0}개의 구독을 현재 더 이상 불러올 수 없습니다.",
+  "@ui06e923cf": {
+    "description": "HaRu UI: 有 {p0} 个订阅暂时无法继续读取。",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
+  "ui24ed3263": "{p0}개의 구독을 현재 읽어올 수 없습니다.",
+  "@ui24ed3263": {
+    "description": "HaRu UI: 有 {p0} 个订阅暂时无法读取。",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
   "ui7ee4b38a": "서비스 이름",
   "@ui7ee4b38a": {
     "description": "HaRu UI: 服务名称"
   },
-  "ui0b0f8079": "마운트되지 않음",
-  "@ui0b0f8079": {
-    "description": "HaRu UI: 未挂载"
-  },
-  "ui5801f5b9": "처리되지 않은 비동기 예외: {p0}\n{p1}",
-  "@ui5801f5b9": {
-    "description": "HaRu UI: 未捕获异步异常：{p0}\n{p1}",
+  "ui46b673b1": "서버 응답 이상 ({p0})",
+  "@ui46b673b1": {
+    "description": "HaRu UI: 服务器响应异常 ({p0})",
     "placeholders": {
       "p0": {
         "type": "String"
-      },
-      "p1": {
+      }
+    }
+  },
+  "ui21fa42fa": "서버에서 HTTP {p0}을(를) 반환했습니다.",
+  "@ui21fa42fa": {
+    "description": "HaRu UI: 服务器返回了 HTTP {p0}。",
+    "placeholders": {
+      "p0": {
         "type": "String"
       }
     }
+  },
+  "ui34f469a4": "서버가 대상 주소가 없는 리디렉션을 반환했습니다.",
+  "@ui34f469a4": {
+    "description": "HaRu UI: 服务器返回了缺少目标地址的重定向。"
+  },
+  "ui496de832": "서버 리디렉션 횟수가 너무 많습니다.",
+  "@ui496de832": {
+    "description": "HaRu UI: 服务器重定向次数过多。"
+  },
+  "ui7f356142": "이름 없는 재생목록",
+  "@ui7f356142": {
+    "description": "HaRu UI: 未命名播放列表"
+  },
+  "ui441a34c3": "이름 없는 시리즈",
+  "@ui441a34c3": {
+    "description": "HaRu UI: 未命名系列"
+  },
+  "ui10bbdc2d": "제목 없는 비디오",
+  "@ui10bbdc2d": {
+    "description": "HaRu UI: 未命名视频"
+  },
+  "ui0b0f8079": "마운트되지 않음",
+  "@ui0b0f8079": {
+    "description": "HaRu UI: 未挂载"
   },
   "ui1d2649c7": "제외된 {p0} 없음",
   "@ui1d2649c7": {
@@ -2762,13 +2888,33 @@
       }
     }
   },
+  "ui5134b0d1": "미설정",
+  "@ui5134b0d1": {
+    "description": "HaRu UI: 未注入"
+  },
   "ui6c16defb": "로그인되지 않았습니다.",
   "@ui6c16defb": {
     "description": "HaRu UI: 未登录 Hanime"
   },
+  "ui2219a9fe": "알 수 없는 번역 유형",
+  "@ui2219a9fe": {
+    "description": "HaRu UI: 未知翻译类型"
+  },
+  "ui3b6c4912": "알 수 없는 오류",
+  "@ui3b6c4912": {
+    "description": "HaRu UI: 未知错误"
+  },
+  "ui32a1bf89": "업데이트 정보를 가져오지 못했습니다.",
+  "@ui32a1bf89": {
+    "description": "HaRu UI: 未获取到更新信息。"
+  },
   "ui73b71caa": "구성되지 않음",
   "@ui73b71caa": {
     "description": "HaRu UI: 未配置"
+  },
+  "ui440ed665": "API 키가 구성되지 않았습니다",
+  "@ui440ed665": {
+    "description": "HaRu UI: 未配置 API Key"
   },
   "ui593a76ae": "로컬 라이브러리",
   "@ui593a76ae": {
@@ -2778,9 +2924,17 @@
   "@ui0760582c": {
     "description": "HaRu UI: 本地库"
   },
+  "ui12e85520": "로컬 데이터베이스 읽기/쓰기 오류입니다. 다시 시도하세요.",
+  "@ui12e85520": {
+    "description": "HaRu UI: 本地数据库读写异常，请重试"
+  },
   "ui5af2b9c7": "로컬 진단 로그",
   "@ui5af2b9c7": {
     "description": "HaRu UI: 本地诊断日志"
+  },
+  "ui78d79e7d": "로컬 언어 식별",
+  "@ui78d79e7d": {
+    "description": "HaRu UI: 本地语言识别"
   },
   "ui42457eeb": "로컬 머신",
   "@ui42457eeb": {
@@ -2806,10 +2960,6 @@
   "@ui06231f4e": {
     "description": "HaRu UI: 构建模式"
   },
-  "ui3a3a5f44": "아티스트 페이지 찾기",
-  "@ui3a3a5f44": {
-    "description": "HaRu UI: 查找艺术家页面"
-  },
   "ui29d7c1b1": "HaRu 및 타사 Flutter 종속 항목의 라이선스 보기",
   "@ui29d7c1b1": {
     "description": "HaRu UI: 查看 HaRu 与第三方 Flutter 依赖许可"
@@ -2834,6 +2984,10 @@
   "ui682b70e0": "자격 증명을 제외한 실행 환경 요약 보기 및 복사",
   "@ui682b70e0": {
     "description": "HaRu UI: 查看并复制不含凭据的运行环境摘要"
+  },
+  "ui7c04d205": "더 보기",
+  "@ui7c04d205": {
+    "description": "HaRu UI: 查看更多"
   },
   "ui37042e79": "진단 정보 보기",
   "@ui37042e79": {
@@ -2881,6 +3035,10 @@
       }
     }
   },
+  "ui0acd808e": "모델 목록 응답 형식이 올바르지 않습니다",
+  "@ui0acd808e": {
+    "description": "HaRu UI: 模型列表返回格式无效"
+  },
   "ui703ce28e": "모델 이름",
   "@ui703ce28e": {
     "description": "HaRu UI: 模型名"
@@ -2888,6 +3046,15 @@
   "ui1375925f": "동영상 썸네일 흐리게",
   "@ui1375925f": {
     "description": "HaRu UI: 模糊视频封面"
+  },
+  "ui61cd3d84": "돌아오신 것을 환영합니다, {p0}님! Hanime에 성공적으로 로그인했습니다.",
+  "@ui61cd3d84": {
+    "description": "HaRu UI: 欢迎回来，{p0}！已成功登录 Hanime。",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
   },
   "ui43f69efd": "다운로드 중",
   "@ui43f69efd": {
@@ -2902,6 +3069,10 @@
       }
     }
   },
+  "ui68d41e66": "업데이트 패키지 다운로드 중",
+  "@ui68d41e66": {
+    "description": "HaRu UI: 正在下载更新包"
+  },
   "ui34d9a170": "동영상 URL 새로고침 중…",
   "@ui34d9a170": {
     "description": "HaRu UI: 正在刷新视频地址…"
@@ -2910,21 +3081,13 @@
   "@ui57036f5e": {
     "description": "HaRu UI: 正在处理"
   },
+  "ui0d9565c5": "재생 중",
+  "@ui0d9565c5": {
+    "description": "HaRu UI: 正在播放"
+  },
   "ui1e85b6dc": "미디어 재생 중",
   "@ui1e85b6dc": {
     "description": "HaRu UI: 正在播放媒体"
-  },
-  "ui0e786c06": "구독 콘텐츠 정리 {p0}/{p1}",
-  "@ui0e786c06": {
-    "description": "HaRu UI: 正在整理订阅内容 {p0}/{p1}",
-    "placeholders": {
-      "p0": {
-        "type": "String"
-      },
-      "p1": {
-        "type": "String"
-      }
-    }
   },
   "ui3dcae6c0": "확인 결과를 기다리는 중입니다... 오랫동안 응답이 없으면 재시도를 클릭해 주세요.",
   "@ui3dcae6c0": {
@@ -2986,6 +3149,14 @@
   "@ui108cc700": {
     "description": "HaRu UI: 此构建未配置 GitHub Releases 更新源。"
   },
+  "ui4ddaf211": "이 유형은 구독을 지원하지 않습니다.",
+  "@ui4ddaf211": {
+    "description": "HaRu UI: 此类型不支持订阅。"
+  },
+  "ui4e1b0f19": "이 유형은 현재 앱 내에서 구독 취소를 지원하지 않습니다.",
+  "@ui4e1b0f19": {
+    "description": "HaRu UI: 此类型暂不支持在 App 内取消订阅。"
+  },
   "ui3a0a0c97": "이 동영상에는 바로 재생할 수 있는 MP4 소스가 없습니다.",
   "@ui3a0a0c97": {
     "description": "HaRu UI: 此视频未提供可直接播放的 MP4 源。"
@@ -2997,10 +3168,6 @@
   "ui7cb7a0c5": "이 동영상 소스를 아직 사용할 수 없습니다. 동영상 URL을 다시 새로고침하세요.",
   "@ui7cb7a0c5": {
     "description": "HaRu UI: 此视频源仍不可用，请重试刷新视频地址。"
-  },
-  "ui62dcc4bc": "매번 새로운 무작위 동영상 묶음 불러오기",
-  "@ui62dcc4bc": {
-    "description": "HaRu UI: 每次加载一批随机视频"
   },
   "ui51c846f1": "매번 확인",
   "@ui51c846f1": {
@@ -3029,6 +3196,10 @@
   "ui29c894b2": "사용 가능한 백업 정의가 없습니다. 나중에 다시 시도해 주세요.",
   "@ui29c894b2": {
     "description": "HaRu UI: 没有可用的备用清晰度，请稍后重试。"
+  },
+  "ui59f601fd": "번역 서비스가 활성화되지 않았습니다.",
+  "@ui59f601fd": {
+    "description": "HaRu UI: 没有启用翻译服务。"
   },
   "ui61fe8d4a": "\"{p0}\"에 대해 일치하는 {p1}을(를) 찾을 수 없습니다.",
   "@ui61fe8d4a": {
@@ -3100,6 +3271,10 @@
   "@ui1408d9d3": {
     "description": "HaRu UI: 没有符合条件的译文。"
   },
+  "ui3ca6cd4f": "사용 가능한 모델이 반환되지 않았습니다",
+  "@ui3ca6cd4f": {
+    "description": "HaRu UI: 没有返回可用模型"
+  },
   "ui522cef73": "인스턴트 국수",
   "@ui522cef73": {
     "description": "HaRu UI: 泡面番"
@@ -3124,62 +3299,6 @@
   "@ui06cf3f13": {
     "description": "HaRu UI: 测试连接"
   },
-  "ui1d96670f": "브라우저의 기본 페이지를 로드하지 못했습니다. 오류 코드 = {p0};",
-  "@ui1d96670f": {
-    "description": "HaRu UI: 浏览器主页面加载失败；错误码={p0}；",
-    "placeholders": {
-      "p0": {
-        "type": "String"
-      }
-    }
-  },
-  "ui33fbe6ce": "브라우저 챌린지 화면 종료; cf_clearance 대기 중;",
-  "@ui33fbe6ce": {
-    "description": "HaRu UI: 浏览器挑战界面已消失，正在等待 cf_clearance；"
-  },
-  "ui129ae59c": "브라우저에서 Cloudflare 챌린지 감지; 경로={p0};",
-  "@ui129ae59c": {
-    "description": "HaRu UI: 浏览器检测到 Cloudflare 挑战；路径={p0}；",
-    "placeholders": {
-      "p0": {
-        "type": "String"
-      }
-    }
-  },
-  "ui67cd734f": "브라우저 지원 확인이 완료되었습니다. 트리거={p0}; 경로={p1};",
-  "@ui67cd734f": {
-    "description": "HaRu UI: 浏览器辅助验证完成；触发={p0}；路径={p1}；",
-    "placeholders": {
-      "p0": {
-        "type": "String"
-      },
-      "p1": {
-        "type": "String"
-      }
-    }
-  },
-  "ui2c065af1": "브라우저 지원 확인 팝업 창이 표시되었습니다. 경로={p0}",
-  "@ui2c065af1": {
-    "description": "HaRu UI: 浏览器辅助验证弹窗已显示；路径={p0}",
-    "placeholders": {
-      "p0": {
-        "type": "String"
-      }
-    }
-  },
-  "ui521398c6": "브라우저 페이지 로드 시작; 경로={p0}",
-  "@ui521398c6": {
-    "description": "HaRu UI: 浏览器页面开始加载；路径={p0}",
-    "placeholders": {
-      "p0": {
-        "type": "String"
-      }
-    }
-  },
-  "ui2bce8045": "사이트 콘텐츠 카테고리 찾아보기",
-  "@ui2bce8045": {
-    "description": "HaRu UI: 浏览站点内容分类"
-  },
   "ui1bdcacb9": "웹사이트의 최고 평점 동영상 탐색",
   "@ui1bdcacb9": {
     "description": "HaRu UI: 浏览站点评分最高的视频"
@@ -3195,15 +3314,6 @@
   "ui28b4fe80": "화질",
   "@ui28b4fe80": {
     "description": "HaRu UI: 清晰度"
-  },
-  "ui57e9c7ab": "화질={p0}",
-  "@ui57e9c7ab": {
-    "description": "HaRu UI: 清晰度={p0}",
-    "placeholders": {
-      "p0": {
-        "type": "String"
-      }
-    }
   },
   "ui1226aec8": "지우기",
   "@ui1226aec8": {
@@ -3305,6 +3415,10 @@
   "@ui1894e352": {
     "description": "HaRu UI: 点赞率必须配合投票数判断，避免少量投票造成虚高。"
   },
+  "ui4992052a": "싫어요",
+  "@ui4992052a": {
+    "description": "HaRu UI: 点踩"
+  },
   "ui71e94df2": "인기",
   "@ui71e94df2": {
     "description": "HaRu UI: 热门"
@@ -3320,10 +3434,6 @@
   "ui795ab7fb": "인기 동영상",
   "@ui795ab7fb": {
     "description": "HaRu UI: 热门视频"
-  },
-  "ui5137980d": "인기 동영상, 최고 평점 동영상 및 아티스트 순위",
-  "@ui5137980d": {
-    "description": "HaRu UI: 热门视频、高评分视频和艺术家排行"
   },
   "ui0ac00f7c": "증오심이나 악의적인 콘텐츠를 조장합니다.",
   "@ui0ac00f7c": {
@@ -3362,6 +3472,10 @@
   "@ui1be4cbb9": {
     "description": "HaRu UI: 用户"
   },
+  "ui6bab46da": "사용자 ID 형식이 잘못되었습니다",
+  "@ui6bab46da": {
+    "description": "HaRu UI: 用户 ID 格式无效"
+  },
   "ui2ff2035d": "사용자 ID: {p0}",
   "@ui2ff2035d": {
     "description": "HaRu UI: 用户 ID：{p0}",
@@ -3371,14 +3485,9 @@
       }
     }
   },
-  "ui19930fad": "사용자가 확인 페이지 새로고침을 수동으로 다시 시도합니다. 경로={p0};",
-  "@ui19930fad": {
-    "description": "HaRu UI: 用户手动重试刷新验证页面；路径={p0}；",
-    "placeholders": {
-      "p0": {
-        "type": "String"
-      }
-    }
+  "ui04f9f7a4": "사용자가 더 높은 우선순위의 작업을 시작했습니다",
+  "@ui04f9f7a4": {
+    "description": "HaRu UI: 用户开始了更高优先级的操作"
   },
   "ui07df625b": "사용자 번역: {p0}개.\n\n",
   "@ui07df625b": {
@@ -3457,6 +3566,18 @@
   "ui4bd42f4c": "로그인하면 검색 기록이 계정별로 안전하게 저장됩니다.",
   "@ui4bd42f4c": {
     "description": "HaRu UI: 登录后，搜索历史会按账号安全保存。"
+  },
+  "ui1179dcd5": "로그인에 실패했습니다. 계정, 비밀번호 또는 인증 요구사항을 확인해 주세요.",
+  "@ui1179dcd5": {
+    "description": "HaRu UI: 登录失败，请检查账号、密码或验证码要求。"
+  },
+  "ui5a4df1a7": "로그인에 실패했습니다. 계정과 비밀번호를 확인해 주세요.",
+  "@ui5a4df1a7": {
+    "description": "HaRu UI: 登录失败，请检查账号和密码。"
+  },
+  "ui7d58135d": "로그인 상태가 만료되었습니다. 다시 로그인해 주세요.",
+  "@ui7d58135d": {
+    "description": "HaRu UI: 登录状态已过期，请重新登录。"
   },
   "ui257d2512": "대상 언어",
   "@ui257d2512": {
@@ -3547,6 +3668,10 @@
   "@ui68bc4e82": {
     "description": "HaRu UI: 站内消息"
   },
+  "ui1becc780": "사이트 서비스를 일시적으로 사용할 수 없습니다. 잠시 후 다시 시도하세요.",
+  "@ui1becc780": {
+    "description": "HaRu UI: 站点服务暂时不可用，请稍后重试"
+  },
   "ui6fe1719c": "쿠키를 기다릴 수 없습니다 → 새로 고침 → 다시 도전",
   "@ui6fe1719c": {
     "description": "HaRu UI: 等不到 cookie → 重刷 → 再挑战"
@@ -3558,10 +3683,6 @@
   "ui106c1db7": "재시도를 기다리는 중",
   "@ui106c1db7": {
     "description": "HaRu UI: 等待重试"
-  },
-  "ui50c5f340": "10초 이상 확인 결과를 기다린 후 사용자에게 수동으로 다시 시도하라는 메시지가 표시됩니다.",
-  "@ui50c5f340": {
-    "description": "HaRu UI: 等待验证结果已超 10 秒，提示用户可手动重试；"
   },
   "ui373ece32": "필터",
   "@ui373ece32": {
@@ -3612,18 +3733,6 @@
   "@ui7aa38d36": {
     "description": "HaRu UI: 类型"
   },
-  "ui6107c243": "유형={p0}; 시간 소비={p1}ms",
-  "@ui6107c243": {
-    "description": "HaRu UI: 类型={p0}；耗时={p1}ms",
-    "placeholders": {
-      "p0": {
-        "type": "String"
-      },
-      "p1": {
-        "type": "String"
-      }
-    }
-  },
   "ui0dbe3ac7": "추천 라이브러리 {p0}에 중복된 동영상이 있습니다.",
   "@ui0dbe3ac7": {
     "description": "HaRu UI: 精选库 {p0} 包含重复视频。",
@@ -3661,9 +3770,9 @@
   "@ui3c28fff7": {
     "description": "HaRu UI: 精选视频条目缺少必要字段。"
   },
-  "ui058d6015": "系统中断|网络连接中断|connection reset|socketexception|timed?\\s*out|broken pipe",
-  "@ui058d6015": {
-    "description": "HaRu UI: 系统中断|网络连接中断|connection reset|socketexception|timed?\\s*out|broken pipe"
+  "ui54ac0aa3": "시리즈 동영상",
+  "@ui54ac0aa3": {
+    "description": "HaRu UI: 系列视频"
   },
   "ui05a078da": "시스템에서 공용 다운로드 폴더에 대한 쓰기 권한을 허용하지 않았습니다.",
   "@ui05a078da": {
@@ -3676,6 +3785,18 @@
   "ui111afc5c": "시스템에서 다운로드 작업을 대기열에 다시 추가하지 못했습니다.",
   "@ui111afc5c": {
     "description": "HaRu UI: 系统未能重新加入下载任务。"
+  },
+  "ui3dbce44e": "시스템이 이 설치를 차단했습니다. \"알 수 없는 애플리케이션 설치\" 권한을 확인해주세요.",
+  "@ui3dbce44e": {
+    "description": "HaRu UI: 系统阻止了本次安装，请检查「安装未知应用」权限。"
+  },
+  "ui7344fe1b": "종료일",
+  "@ui7344fe1b": {
+    "description": "HaRu UI: 结束日期"
+  },
+  "ui7df2c519": "종료일은 시작일보다 빠를 수 없습니다",
+  "@ui7df2c519": {
+    "description": "HaRu UI: 结束日期不能早于开始日期"
   },
   "ui5cb65115": "계속",
   "@ui5cb65115": {
@@ -3753,9 +3874,45 @@
   "@ui5c5b8e6e": {
     "description": "HaRu UI: 网络播放策略"
   },
+  "ui2d500e9d": "네트워크 요청 시간이 초과되었습니다",
+  "@ui2d500e9d": {
+    "description": "HaRu UI: 网络请求超时"
+  },
+  "ui23b94735": "네트워크 요청 시간이 초과되었습니다. 잠시 후 다시 시도해 주세요.",
+  "@ui23b94735": {
+    "description": "HaRu UI: 网络请求超时，请稍后重试。"
+  },
+  "ui3778b430": "네트워크 요청에 문제가 발생했습니다. 다시 시도하세요.",
+  "@ui3778b430": {
+    "description": "HaRu UI: 网络请求遇到问题，请重试"
+  },
   "ui5d909650": "네트워크 연결이 중단되었습니다. 네트워크를 확인한 후 다시 시도하세요.",
   "@ui5d909650": {
     "description": "HaRu UI: 网络连接中断，请检查网络后重试。"
+  },
+  "ui24c5d5a2": "네트워크 연결에 실패했습니다. 네트워크 상태를 확인하세요.",
+  "@ui24c5d5a2": {
+    "description": "HaRu UI: 网络连接失败，请检查网络是否畅通"
+  },
+  "ui5717be7d": "네트워크 연결 오류입니다. 네트워크를 확인하세요.",
+  "@ui5717be7d": {
+    "description": "HaRu UI: 网络连接异常，请检查网络"
+  },
+  "ui21d8799f": "네트워크 연결 오류입니다. 네트워크를 확인한 후 다시 시도하세요.",
+  "@ui21d8799f": {
+    "description": "HaRu UI: 网络连接异常，请检查网络后重试"
+  },
+  "ui121f0e14": "네트워크 오류",
+  "@ui121f0e14": {
+    "description": "HaRu UI: 网络错误"
+  },
+  "ui3ce8e370": "웹 / Google 계정 로그인",
+  "@ui3ce8e370": {
+    "description": "HaRu UI: 网页 / Google 账号登入"
+  },
+  "ui7fe12441": "번역은 비워둘 수 없습니다",
+  "@ui7fe12441": {
+    "description": "HaRu UI: 翻译不能为空"
   },
   "ui4c8d7732": "번역 실패: {p0}",
   "@ui4c8d7732": {
@@ -3770,9 +3927,42 @@
   "@ui20251330": {
     "description": "HaRu UI: 翻译库"
   },
+  "ui6053d6fa": "번역 라이브러리에 지원되지 않는 대상 언어가 포함되어 있습니다: {p0}",
+  "@ui6053d6fa": {
+    "description": "HaRu UI: 翻译库包含不支持的目标语言：{p0}",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
+  "ui3a3c90e9": "번역 라이브러리에 비정상적인 길이의 필드가 포함되어 있습니다",
+  "@ui3a3c90e9": {
+    "description": "HaRu UI: 翻译库包含长度异常的字段"
+  },
+  "ui2cec6aea": "번역 라이브러리 파일은 10 MB를 초과할 수 없습니다",
+  "@ui2cec6aea": {
+    "description": "HaRu UI: 翻译库文件不能超过 10 MB"
+  },
+  "ui06ac6475": "번역 라이브러리에 entries가 없습니다",
+  "@ui06ac6475": {
+    "description": "HaRu UI: 翻译库缺少 entries"
+  },
+  "ui04eb7dc2": "번역 라이브러리 항목 수가 100,000개를 초과합니다",
+  "@ui04eb7dc2": {
+    "description": "HaRu UI: 翻译库词条数量超过 100000 条"
+  },
+  "ui0250a335": "번역 라이브러리 키 필드에 잘못된 문자가 포함되어 있습니다",
+  "@ui0250a335": {
+    "description": "HaRu UI: 翻译库键字段包含非法字符"
+  },
   "ui0e144c39": "번역 서비스",
   "@ui0e144c39": {
     "description": "HaRu UI: 翻译服务"
+  },
+  "ui071ebcfb": "번역 서비스가 아직 구성되지 않았습니다",
+  "@ui071ebcfb": {
+    "description": "HaRu UI: 翻译服务尚未配置"
   },
   "ui4e721b57": "번역 대상 언어",
   "@ui4e721b57": {
@@ -3782,18 +3972,9 @@
   "@ui7312260a": {
     "description": "HaRu UI: 翻译设置"
   },
-  "ui56a4f7ec": "소요 시간={p0}ms",
-  "@ui56a4f7ec": {
-    "description": "HaRu UI: 耗时={p0}ms",
-    "placeholders": {
-      "p0": {
-        "type": "String"
-      }
-    }
-  },
-  "ui0cfe710c": "시간 소모={p0}ms;",
-  "@ui0cfe710c": {
-    "description": "HaRu UI: 耗时={p0}ms；",
+  "ui6f7c8396": "번역 에셋이 JSON 객체가 아닙니다: {p0}",
+  "@ui6f7c8396": {
+    "description": "HaRu UI: 翻译资产不是 JSON 对象：{p0}",
     "placeholders": {
       "p0": {
         "type": "String"
@@ -3804,6 +3985,10 @@
   "@ui42682f0b": {
     "description": "HaRu UI: 自动"
   },
+  "ui653fb447": "업데이트 패키지를 자동으로 설치하려면 \"알 수 없는 응용 프로그램 설치\" 권한이 필요합니다. 하루가 시스템 설정에서 애플리케이션을 설치하도록 허용하고 돌아오세요.",
+  "@ui653fb447": {
+    "description": "HaRu UI: 自动安装更新包需要「安装未知应用」权限。请在系统设置中允许 HaRu 安装应用后返回。"
+  },
   "ui3a3ee33c": "자동 또는 수동 번역 요청마다 현재 제목, 태그 또는 카테고리 하나만 전송합니다. 서비스는 현재 순서대로 시도하며 실패하면 다음 서비스를 자동으로 사용합니다. 일반적으로 더 자연스럽고 정확한 AI 번역을 권장합니다.",
   "@ui3a3ee33c": {
     "description": "HaRu UI: 自动或手动翻译时，每次只发送当前标题、标签或分类。服务按当前顺序依次尝试，失败后自动使用下一项。建议优先使用 AI 翻译，结果通常更自然、准确。"
@@ -3811,6 +3996,22 @@
   "ui4e37cc82": "자동 번역",
   "@ui4e37cc82": {
     "description": "HaRu UI: 自动翻译"
+  },
+  "ui1a28517b": "사용자 지정...",
+  "@ui1a28517b": {
+    "description": "HaRu UI: 自定义…"
+  },
+  "ui401af108": "사용자 지정 날짜",
+  "@ui401af108": {
+    "description": "HaRu UI: 自定义日期"
+  },
+  "ui1b64dd4b": "사용자 지정 길이",
+  "@ui1b64dd4b": {
+    "description": "HaRu UI: 自定义时长"
+  },
+  "ui50983ec8": "사용자 지정 필터 범위가 잘못되었습니다.",
+  "@ui50983ec8": {
+    "description": "HaRu UI: 自定义筛选范围无效。"
   },
   "ui1d2c54c2": "아티스트",
   "@ui1d2c54c2": {
@@ -3820,17 +4021,46 @@
   "@ui273d81af": {
     "description": "HaRu UI: 艺术家排行榜"
   },
+  "ui2947cbbe": "아티스트 구독",
+  "@ui2947cbbe": {
+    "description": "HaRu UI: 艺术家订阅"
+  },
   "ui296bcd5e": "데이터 절약",
   "@ui296bcd5e": {
     "description": "HaRu UI: 节省流量"
+  },
+  "ui0559c77a": "재생목록 보안 토큰을 가져오지 못했습니다. 새로고침 후 다시 시도해 주세요.",
+  "@ui0559c77a": {
+    "description": "HaRu UI: 获取播放列表安全令牌失败，请刷新后重试。"
+  },
+  "ui3451174b": "만",
+  "@ui3451174b": {
+    "description": "HaRu UI: 萬"
   },
   "ui5c249ba5": "리판",
   "@ui5c249ba5": {
     "description": "HaRu UI: 裏番"
   },
+  "ui38959118": "조회수",
+  "@ui38959118": {
+    "description": "HaRu UI: 觀看次數"
+  },
+  "ui67fc978a": "조회수",
+  "@ui67fc978a": {
+    "description": "HaRu UI: 观看次数"
+  },
   "ui7f179fc8": "동영상",
   "@ui7f179fc8": {
     "description": "HaRu UI: 视频"
+  },
+  "ui248185b4": "동영상 {p0}",
+  "@ui248185b4": {
+    "description": "HaRu UI: 视频 {p0}",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
   },
   "ui4fbae4c2": "동영상 저장 위치: Download/Flule34",
   "@ui4fbae4c2": {
@@ -3860,25 +4090,13 @@
   "@ui6b6d2d3c": {
     "description": "HaRu UI: 视频直接写入所选公共目录；默认目录为 Downloads/Flule34，可从“我的 → 下载”右上角进入设置。"
   },
-  "ui3c64ae15": "동영상 세부정보",
-  "@ui3c64ae15": {
-    "description": "HaRu UI: 视频详情"
+  "ui0ee94f25": "비디오 상세 응답이 비정상입니다. 잠시 후 다시 시도해 주세요.",
+  "@ui0ee94f25": {
+    "description": "HaRu UI: 视频详情响应异常，请稍后重试。"
   },
   "ui6fbc2348": "동영상 미리보기",
   "@ui6fbc2348": {
     "description": "HaRu UI: 视频预览"
-  },
-  "ui2d82e410": "비디오 미리보기에 실패했습니다. 사이트={p0}; 비디오={p1}",
-  "@ui2d82e410": {
-    "description": "HaRu UI: 视频预览失败；site={p0}；video={p1}",
-    "placeholders": {
-      "p0": {
-        "type": "String"
-      },
-      "p1": {
-        "type": "String"
-      }
-    }
   },
   "ui7b8f2379": "컨트롤 잠금 해제",
   "@ui7b8f2379": {
@@ -3916,6 +4134,14 @@
   "@ui592e7edb": {
     "description": "HaRu UI: 设备"
   },
+  "ui2e92dd76": "장치에 업데이트 패키지를 설치할 저장 공간이 부족합니다.",
+  "@ui2e92dd76": {
+    "description": "HaRu UI: 设备存储空间不足，无法安装更新包。"
+  },
+  "ui17add25c": "접근이 제한되었습니다. 보안 인증이 필요할 수 있습니다.",
+  "@ui17add25c": {
+    "description": "HaRu UI: 访问受限，可能需要安全验证"
+  },
   "ui11313487": "최고 평점",
   "@ui11313487": {
     "description": "HaRu UI: 评分最高"
@@ -3923,6 +4149,10 @@
   "ui491e642c": "코멘트",
   "@ui491e642c": {
     "description": "HaRu UI: 评论"
+  },
+  "ui22cd66c8": "댓글 내용은 비워둘 수 없습니다.",
+  "@ui22cd66c8": {
+    "description": "HaRu UI: 评论内容不能为空。"
   },
   "ui7d9b7107": "댓글을 로드하지 못했습니다. 다시 시도하려면 클릭하세요.",
   "@ui7d9b7107": {
@@ -3952,6 +4182,22 @@
   "@ui5e9e6941": {
     "description": "HaRu UI: 译文不能为空"
   },
+  "ui139f12da": "클라이언트가 종료되어 요청을 시작할 수 없습니다.",
+  "@ui139f12da": {
+    "description": "HaRu UI: 该客户端已被关闭，无法发起请求。"
+  },
+  "ui6ebae107": "이 버전에는 다운로드 가능한 설치 패키지가 없습니다.",
+  "@ui6ebae107": {
+    "description": "HaRu UI: 该版本没有可下载的安装包。"
+  },
+  "ui5accb58a": "이 버전에는 다운로드 가능한 설치 패키지가 없으며 GitHub 릴리스 페이지가 열렸습니다.",
+  "@ui5accb58a": {
+    "description": "HaRu UI: 该版本没有可下载的安装包，已打开 GitHub 发布页。"
+  },
+  "ui244129bf": "이 유형은 번역이 허용되지 않습니다",
+  "@ui244129bf": {
+    "description": "HaRu UI: 该类型不允许翻译"
+  },
   "ui52575ad3": "언어 표시 모드",
   "@ui52575ad3": {
     "description": "HaRu UI: 语言显示模式"
@@ -3959,6 +4205,10 @@
   "ui16d86fec": "설명",
   "@ui16d86fec": {
     "description": "HaRu UI: 说明"
+  },
+  "ui4e258c29": "먼저 API 키를 입력해 주세요",
+  "@ui4e258c29": {
+    "description": "HaRu UI: 请先填写 API Key"
   },
   "ui7894fed1": "유효한 기본 URL을 먼저 입력하세요.",
   "@ui7894fed1": {
@@ -3968,6 +4218,14 @@
   "@ui19e258a9": {
     "description": "HaRu UI: 请先登录 Hanime"
   },
+  "ui3ee081eb": "먼저 Hanime 계정에 로그인해 주세요.",
+  "@ui3ee081eb": {
+    "description": "HaRu UI: 请先登录 Hanime 账号。"
+  },
+  "ui57f971fd": "이 기능을 사용하려면 먼저 로그인해 주세요.",
+  "@ui57f971fd": {
+    "description": "HaRu UI: 请先登录后再使用此功能。"
+  },
   "ui7ce74a5f": "페이지에서 인증을 완료해 주세요. 성공하면 앱으로 자동으로 돌아갑니다.",
   "@ui7ce74a5f": {
     "description": "HaRu UI: 请在网页中完成验证，成功后会自动返回。"
@@ -3976,9 +4234,42 @@
   "@ui190ff633": {
     "description": "HaRu UI: 请完整填写名称、基址、模型和密钥。"
   },
+  "ui2033b3c1": "요청 실패",
+  "@ui2033b3c1": {
+    "description": "HaRu UI: 请求失败"
+  },
+  "ui673534a9": "요청이 실패했습니다. 잠시 후 다시 시도해 주세요.",
+  "@ui673534a9": {
+    "description": "HaRu UI: 请求失败，请稍后重试。"
+  },
+  "ui64ba2be4": "요청 실패: {p0}",
+  "@ui64ba2be4": {
+    "description": "HaRu UI: 请求失败：{p0}",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
+  "ui0d97efea": "요청이 취소되었습니다.",
+  "@ui0d97efea": {
+    "description": "HaRu UI: 请求已取消"
+  },
+  "ui4bc1c631": "요청한 콘텐츠가 존재하지 않거나 삭제되었습니다.",
+  "@ui4bc1c631": {
+    "description": "HaRu UI: 请求的内容不存在或已被删除"
+  },
+  "ui3a579d8a": "요청 시간이 초과되었습니다. 다시 시도하세요.",
+  "@ui3a579d8a": {
+    "description": "HaRu UI: 请求超时，请重试"
+  },
   "ui61ca1aa4": "2자 이상 입력해주세요.",
   "@ui61ca1aa4": {
     "description": "HaRu UI: 请至少输入 2 个字符。"
+  },
+  "ui7d47ba9d": "0부터 36000 사이의 정수를 입력하세요",
+  "@ui7d47ba9d": {
+    "description": "HaRu UI: 请输入 0 至 36000 的整数"
   },
   "ui61cb4e40": "비밀번호를 입력해주세요.",
   "@ui61cb4e40": {
@@ -3996,10 +4287,6 @@
   "@ui77044f29": {
     "description": "HaRu UI: 请返回“我的”页面登录后查看账号信息。"
   },
-  "ui4af5a957": "본 기기, R34V 및 Hanime의 표시 순서를 조정합니다.",
-  "@ui4af5a957": {
-    "description": "HaRu UI: 调整本机、R34V 与 Hanime 的显示顺序。"
-  },
   "ui6447b2e3": "계정 및 라이브러리",
   "@ui6447b2e3": {
     "description": "HaRu UI: 账号与媒体库"
@@ -4007,6 +4294,14 @@
   "ui6527aff1": "계정에 아직 재생목록이 없습니다.",
   "@ui6527aff1": {
     "description": "HaRu UI: 账号中还没有播放列表。"
+  },
+  "ui65413ec5": "계정과 비밀번호는 비워둘 수 없습니다.",
+  "@ui65413ec5": {
+    "description": "HaRu UI: 账号和密码不能为空。"
+  },
+  "ui2d477648": "계정 상태가 변경되었습니다",
+  "@ui2d477648": {
+    "description": "HaRu UI: 账号状态发生变化"
   },
   "ui04e867ba": "계정 정보가 업데이트되었습니다.",
   "@ui04e867ba": {
@@ -4027,18 +4322,6 @@
   "ui1c47ee05": "시스템 설정 따르기",
   "@ui1c47ee05": {
     "description": "HaRu UI: 跟随系统"
-  },
-  "ui58ccc0dc": "경로={p0}; 진행률={p1};",
-  "@ui58ccc0dc": {
-    "description": "HaRu UI: 路径={p0}；进度={p1}；",
-    "placeholders": {
-      "p0": {
-        "type": "String"
-      },
-      "p1": {
-        "type": "String"
-      }
-    }
   },
   "ui76da0fc0": "{p0} 건너뜀,",
   "@ui76da0fc0": {
@@ -4088,6 +4371,10 @@
   "ui58a37252": "뒤로",
   "@ui58a37252": {
     "description": "HaRu UI: 返回"
+  },
+  "ui3caf8ced": "빈 번역문이 반환되었습니다",
+  "@ui3caf8ced": {
+    "description": "HaRu UI: 返回了空译文"
   },
   "ui10524b4c": "아직 다운로드 작업이 없습니다.",
   "@ui10524b4c": {
@@ -4162,6 +4449,10 @@
       }
     }
   },
+  "ui2c70d970": "연결 시간이 초과되었습니다. 네트워크 설정을 확인하고 다시 시도하세요.",
+  "@ui2c70d970": {
+    "description": "HaRu UI: 连接超时，请检查网络设置后重试"
+  },
   "ui15cf6bb2": "종료",
   "@ui15cf6bb2": {
     "description": "HaRu UI: 退出"
@@ -4186,10 +4477,6 @@
   "@ui0c4a5e14": {
     "description": "HaRu UI: 退出登录？"
   },
-  "ui2b4f5fd9": "R34V, Hanime 홈페이지, 일반 동영상 목록, 검색결과, 지역 카테고리 라이브러리에 적용됩니다.",
-  "@ui2b4f5fd9": {
-    "description": "HaRu UI: 适用于 R34V、Hanime 首页和普通视频列表，以及搜索结果和本地分类库。"
-  },
   "ui736d6f73": "카테고리를 선택하여 탐색을 시작하거나 바로 위에 키워드 검색을 입력할 수 있습니다.",
   "@ui736d6f73": {
     "description": "HaRu UI: 选择一个分类开始浏览，也可以直接在上方输入关键词搜索。"
@@ -4210,10 +4497,6 @@
   "@ui2bbcf0c4": {
     "description": "HaRu UI: 选择模型"
   },
-  "ui53e6ce38": "시스템 언어를 따르거나 인터페이스 언어를 고정합니다",
-  "@ui53e6ce38": {
-    "description": "HaRu UI: 选择跟随系统或固定使用一种界面语言"
-  },
   "ui5b975d06": "설정된 GitHub Releases 소스에서 확인",
   "@ui5b975d06": {
     "description": "HaRu UI: 通过配置的 GitHub Releases 源检查"
@@ -4233,6 +4516,10 @@
   "ui273538ab": "일부 자동 완성 제안을 일시적으로 사용할 수 없습니다.",
   "@ui273538ab": {
     "description": "HaRu UI: 部分自动补全暂时不可用。"
+  },
+  "ui5e31cf42": "일부 구독을 현재 읽어올 수 없습니다. 잠시 후 다시 시도해 주세요.",
+  "@ui5e31cf42": {
+    "description": "HaRu UI: 部分订阅暂时无法读取，请稍后重试。"
   },
   "ui40cbba27": "리판",
   "@ui40cbba27": {
@@ -4282,10 +4569,6 @@
   "@ui06efd73d": {
     "description": "HaRu UI: 随机"
   },
-  "ui74a56f94": "무작위 탐색",
-  "@ui74a56f94": {
-    "description": "HaRu UI: 随机探索"
-  },
   "ui5d3798d3": "개인정보 보호 및 데이터",
   "@ui5d3798d3": {
     "description": "HaRu UI: 隐私与数据"
@@ -4301,6 +4584,10 @@
   "ui4b4e6624": "비밀번호 숨기기",
   "@ui4b4e6624": {
     "description": "HaRu UI: 隐藏密码"
+  },
+  "ui36eeedcb": "설치 권한이 필요합니다",
+  "@ui36eeedcb": {
+    "description": "HaRu UI: 需要安装权限"
   },
   "ui25621c61": "백그라운드 다운로드 진행률을 안정적으로 표시하려면 알림 권한이 필요합니다.",
   "@ui25621c61": {
@@ -4330,6 +4617,10 @@
   "ui7f532d14": "순서대로 재생",
   "@ui7f532d14": {
     "description": "HaRu UI: 顺序播放"
+  },
+  "ui1ebb446b": "사전 로드 서비스가 해제되었습니다",
+  "@ui1ebb446b": {
+    "description": "HaRu UI: 预加载服务已销毁"
   },
   "ui73db46a3": "사전 출시 버전",
   "@ui73db46a3": {

@@ -1,9 +1,9 @@
 import 'package:flutter/foundation.dart';
 
-import '../../../core/models/video_models.dart';
 import '../../../core/models/content_source.dart';
-import '../domain/app_settings.dart';
 import '../../../core/models/translation_models.dart';
+import '../../../core/models/video_models.dart';
+import '../domain/app_settings.dart';
 import 'app_settings_store.dart';
 
 final class AppSettingsRepository extends ChangeNotifier {

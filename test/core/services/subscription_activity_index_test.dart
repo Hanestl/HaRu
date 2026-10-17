@@ -1,7 +1,6 @@
-import 'package:flutter_test/flutter_test.dart';
-
 import 'package:flule34/core/models/video_models.dart';
 import 'package:flule34/core/services/subscription_activity_index.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 import '../../helpers/test_session_harness.dart';
 

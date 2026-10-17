@@ -4,6 +4,7 @@ enum NetworkClass { wifi, mobile, offline, other }
 
 abstract interface class NetworkStatusService {
   Future<NetworkClass> current();
+  Stream<NetworkClass> get onStatusChanged;
 }
 
 final class ConnectivityNetworkStatusService implements NetworkStatusService {
@@ -12,9 +13,7 @@ final class ConnectivityNetworkStatusService implements NetworkStatusService {
 
   final Connectivity _connectivity;
 
-  @override
-  Future<NetworkClass> current() async {
-    final results = await _connectivity.checkConnectivity();
+  static NetworkClass classify(List<ConnectivityResult> results) {
     if (results.contains(ConnectivityResult.wifi) ||
         results.contains(ConnectivityResult.ethernet)) {
       return NetworkClass.wifi;
@@ -29,4 +28,14 @@ final class ConnectivityNetworkStatusService implements NetworkStatusService {
     }
     return NetworkClass.other;
   }
+
+  @override
+  Future<NetworkClass> current() async {
+    final results = await _connectivity.checkConnectivity();
+    return classify(results);
+  }
+
+  @override
+  Stream<NetworkClass> get onStatusChanged =>
+      _connectivity.onConnectivityChanged.map(classify).distinct();
 }

@@ -2,9 +2,7 @@ import 'dart:async';
 import 'dart:io' show Cookie, Platform;
 
 import 'package:dio/dio.dart';
-import 'package:dio/io.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
-import 'package:native_dio_adapter/native_dio_adapter.dart';
 
 import '../logging/app_log_service.dart';
 import '../models/account_models.dart';
@@ -16,8 +14,10 @@ import '../models/hanime_search_models.dart';
 import '../models/video_models.dart';
 import '../security/error_redaction.dart';
 import '../session/session_store.dart';
-import 'rule34video_api.dart';
 import 'hanime1_parser.dart';
+import 'http_adapter_factory.dart';
+import 'parse_isolate.dart';
+import 'rule34video_api.dart';
 
 final class Hanime1Api {
   static const _homeCacheTtl = Duration(minutes: 30);
@@ -47,32 +47,18 @@ final class Hanime1Api {
               'text/html,application/xhtml+xml,application/json;q=0.9,*/*;q=0.8',
           'Accept-Language': 'en-US,en;q=0.9',
         },
-        validateStatus: (status) => status != null && status < 500,
+        validateStatus: (status) => status != null && status < 600,
       ),
     );
     if (httpClientAdapter != null) {
       _dio.httpClientAdapter = httpClientAdapter;
       _transportLabel = 'injected';
-    } else if (Platform.isAndroid) {
-      _dio.httpClientAdapter = NativeAdapter(
-        createCronetEngine: () => CronetEngine.build(
-          userAgent: browserUserAgent,
-          enableHttp2: true,
-          enableQuic: false,
-        ),
-        createFallbackAdapter: (error, stackTrace) {
-          unawaited(
-            AppLogService.instance.warning(
-              'Cronet 不可用，已自动降级至 IOHttpClientAdapter: $error',
-              component: 'hanime1_api',
-            ),
-          );
-          return IOHttpClientAdapter();
-        },
-      );
-      _transportLabel = 'cronet';
     } else {
-      _transportLabel = 'dio';
+      _dio.httpClientAdapter = createHttpAdapter(
+        userAgent: browserUserAgent,
+        component: 'hanime1_api',
+      );
+      _transportLabel = Platform.isAndroid ? 'cronet' : 'dio';
     }
     _dio.interceptors.add(
       CookieManager(sessionStore.cookieJar, ignoreInvalidCookies: true),
@@ -117,8 +103,8 @@ final class Hanime1Api {
         _get(
           '/',
           allowForegroundVerification: allowForegroundVerification,
-        ).then((body) {
-          final sections = HanimePageParser.homeSections(body);
+        ).then((body) async {
+          final sections = await _parseHomeSections(body);
           _homeCache['home'] = _HanimeHomeCacheEntry(
             sections: sections,
             createdAt: DateTime.now(),
@@ -253,7 +239,7 @@ final class Hanime1Api {
     }
     final path = page > 1 ? '/?page=$page' : '/';
     final body = await _get(path);
-    final items = HanimePageParser.videoList(body);
+    final items = await _parseVideoList(body);
     if (kind == FeedKind.newest || items.length < 2) return items;
     final sorted = items.toList();
     if (kind == FeedKind.popular) {
@@ -284,7 +270,7 @@ final class Hanime1Api {
       query: queryParameters,
       cancelToken: cancelToken,
     );
-    final items = HanimePageParser.videoList(body);
+    final items = await _parseVideoList(body);
     await AppLogService.instance.info(
       'Hanime 搜索完成；query=${_logSearchQuery(normalized)}；'
       '筛选=${_filtersSummary(filters)}；页码=$page；结果=${items.length}；'
@@ -341,10 +327,7 @@ final class Hanime1Api {
       query: {'v': video.id},
       cancelToken: cancelToken,
     );
-    final details = HanimePageParser.videoDetails(
-      source: body,
-      fallback: video,
-    );
+    final details = await _parseVideoDetails(body, video);
     if (details.sources.isEmpty) {
       throw const ApiException('Hanime 详情页没有返回可播放的视频源。');
     }
@@ -359,6 +342,28 @@ final class Hanime1Api {
       ),
     );
     return details;
+  }
+
+  static Future<List<HanimeHomeSection>> _parseHomeSections(String body) {
+    return parseHtmlOffThread(body, () => HanimePageParser.homeSections(body));
+  }
+
+  static Future<List<HanimeComment>> _parseComments(String body) {
+    return parseHtmlOffThread(body, () => HanimePageParser.comments(body));
+  }
+
+  static Future<List<VideoItem>> _parseVideoList(String body) {
+    return parseHtmlOffThread(body, () => HanimePageParser.videoList(body));
+  }
+
+  static Future<VideoDetails> _parseVideoDetails(
+    String body,
+    VideoItem fallback,
+  ) {
+    return parseHtmlOffThread(
+      body,
+      () => HanimePageParser.videoDetails(source: body, fallback: fallback),
+    );
   }
 
   Future<String?> sessionCookieHeader() {
@@ -417,7 +422,7 @@ final class Hanime1Api {
             'Referer': '${ContentSite.hanime1.baseUrl}/login',
           },
           followRedirects: false,
-          validateStatus: (status) => status != null && status < 500,
+          validateStatus: (status) => status != null && status < 600,
         ),
       );
     } on DioException catch (error) {
@@ -425,7 +430,9 @@ final class Hanime1Api {
         'Hanime 登录请求失败；类型=${error.type.name}',
         component: 'hanime_auth',
       );
-      throw ApiException('Hanime 登录请求失败：${error.message ?? '未知错误'}');
+      throw ApiException(
+        'Hanime 登录请求失败：${redactSensitiveText(error.message ?? '未知错误')}',
+      );
     }
     final status = response.statusCode ?? 0;
     if (status >= 400) {
@@ -447,7 +454,10 @@ final class Hanime1Api {
     // （浏览器实测确认），随后首页 user-modal 区块携带登录账号信息。
     // 直接解析首页账号即可判定成功，避免依赖 302/404 的具体差异。
     final home = await _get('/');
-    final account = HanimePageParser.accountInfo(home);
+    final account = await parseHtmlOffThread(
+      home,
+      () => HanimePageParser.accountInfo(home),
+    );
     final userId = account?.id;
     if (userId == null) {
       await AppLogService.instance.warning(
@@ -461,12 +471,17 @@ final class Hanime1Api {
     var profile = account!;
     try {
       final userPage = await _get('/user/$userId');
+      final displayName = account.displayName;
+      final avatarUrl = account.avatarUrl;
       profile =
-          HanimePageParser.userPageStats(
+          await parseHtmlOffThread(
             userPage,
-            userId: userId,
-            displayName: account.displayName,
-            avatarUrl: account.avatarUrl,
+            () => HanimePageParser.userPageStats(
+              userPage,
+              userId: userId,
+              displayName: displayName,
+              avatarUrl: avatarUrl,
+            ),
           ) ??
           account;
     } on Object {
@@ -486,7 +501,7 @@ final class Hanime1Api {
       await _dio.get<String>(
         '/logout',
         options: Options(
-          validateStatus: (status) => status != null && status < 500,
+          validateStatus: (status) => status != null && status < 600,
         ),
       );
     } on Object catch (error) {
@@ -526,7 +541,10 @@ final class Hanime1Api {
 
   Future<HanimeAccountProfile?> _fetchHanimeAccountProfile() async {
     final body = await _get('/');
-    final account = HanimePageParser.accountInfo(body);
+    final account = await parseHtmlOffThread(
+      body,
+      () => HanimePageParser.accountInfo(body),
+    );
     if (account == null) {
       await sessionStore.clearHanime();
       await AppLogService.instance.info(
@@ -552,7 +570,7 @@ final class Hanime1Api {
   Future<List<VideoItem>> loadLikes(int page) async {
     final userId = _requireHanimeLogin();
     final body = await _get('/user/$userId/likes', query: {'page': page});
-    final items = HanimePageParser.videoList(body);
+    final items = await _parseVideoList(body);
     await AppLogService.instance.info(
       'Hanime 点赞列表加载；页码=$page；结果=${items.length}',
       component: 'hanime_library',
@@ -565,7 +583,7 @@ final class Hanime1Api {
     final userId = _requireHanimeLogin();
     final stopwatch = Stopwatch()..start();
     final body = await _get('/user/$userId/saves', query: {'page': page});
-    final items = HanimePageParser.videoList(body);
+    final items = await _parseVideoList(body);
     await AppLogService.instance.info(
       'Hanime 稍后观看加载；页码=$page；结果=${items.length}；'
       '耗时=${stopwatch.elapsedMilliseconds}ms',
@@ -585,7 +603,7 @@ final class Hanime1Api {
       '/user/$userId/histories',
       query: {'sort': sort.queryValue, 'page': page},
     );
-    final items = HanimePageParser.videoList(body);
+    final items = await _parseVideoList(body);
     await AppLogService.instance.info(
       'Hanime 在线历史加载；排序=${sort.queryValue}；页码=$page；'
       '结果=${items.length}；耗时=${stopwatch.elapsedMilliseconds}ms',
@@ -599,7 +617,10 @@ final class Hanime1Api {
     _requireHanimeLogin();
     final stopwatch = Stopwatch()..start();
     final body = await _get('/subscriptions', query: {'page': page});
-    final result = HanimePageParser.subscriptionPage(body);
+    final result = await parseHtmlOffThread(
+      body,
+      () => HanimePageParser.subscriptionPage(body),
+    );
     await AppLogService.instance.info(
       'Hanime 订阅加载；页码=$page；作者=${result.artists.length}；'
       '视频=${result.videos.length}；耗时=${stopwatch.elapsedMilliseconds}ms',
@@ -612,7 +633,10 @@ final class Hanime1Api {
   Future<List<HanimePlaylist>> loadPlaylists(int page) async {
     final userId = _requireHanimeLogin();
     final body = await _get('/user/$userId/playlists', query: {'page': page});
-    final items = HanimePageParser.playlists(body);
+    final items = await parseHtmlOffThread(
+      body,
+      () => HanimePageParser.playlists(body),
+    );
     await AppLogService.instance.info(
       'Hanime 播放列表加载；页码=$page；结果=${items.length}',
       component: 'hanime_library',
@@ -626,7 +650,7 @@ final class Hanime1Api {
       '/playlist',
       query: {'list': listCode, 'page': page},
     );
-    final items = HanimePageParser.videoList(body);
+    final items = await _parseVideoList(body);
     await AppLogService.instance.info(
       'Hanime 播放列表内容加载；list=$listCode；页码=$page；结果=${items.length}',
       component: 'hanime_library',
@@ -668,17 +692,16 @@ final class Hanime1Api {
       options: Options(
         contentType: Headers.formUrlEncodedContentType,
         headers: {'X-CSRF-TOKEN': token},
-        validateStatus: (status) => status != null && status < 500,
+        followRedirects: false,
+        validateStatus: (status) => status != null && status < 600,
       ),
     );
-    final status = response.statusCode ?? 0;
-    if (status >= 400) {
-      await AppLogService.instance.warning(
-        'Hanime 点赞操作失败；HTTP=$status；video=$videoId；liked=$liked',
-        component: 'hanime_library',
-      );
-      throw HttpStatusException(status);
-    }
+    _checkResponseStatus(
+      response,
+      action: 'Hanime 点赞操作',
+      component: 'hanime_library',
+      path: '/like',
+    );
     await AppLogService.instance.info(
       'Hanime 点赞${liked ? '已添加' : '已取消'}；video=$videoId；'
       '耗时=${stopwatch.elapsedMilliseconds}ms',
@@ -742,45 +765,75 @@ final class Hanime1Api {
       options: Options(
         contentType: Headers.formUrlEncodedContentType,
         headers: {'X-CSRF-TOKEN': token},
-        validateStatus: (status) => status != null && status < 500,
+        followRedirects: false,
+        validateStatus: (status) => status != null && status < 600,
       ),
     );
-    final status = response.statusCode ?? 0;
-    if (status >= 400) {
-      await AppLogService.instance.warning(
-        'Hanime 历史删除失败；HTTP=$status',
-        component: 'hanime_library',
-      );
-      throw HttpStatusException(status);
-    }
+    _checkResponseStatus(
+      response,
+      action: 'Hanime 历史删除',
+      component: 'hanime_library',
+      path: '/user/tab-item/$videoId',
+    );
     await AppLogService.instance.info(
       'Hanime 历史已删除；耗时=${stopwatch.elapsedMilliseconds}ms',
       component: 'hanime_library',
     );
   }
 
-  Future<void> _postLibraryForm(
-    String path,
-    Map<String, String> data, {
-    Set<int> acceptedErrorStatuses = const {},
-  }) async {
+  void _checkResponseStatus(
+    Response<dynamic> response, {
+    required String action,
+    required String component,
+    String? path,
+  }) {
+    final status = response.statusCode ?? 0;
+    final location = response.headers.value('location') ?? '';
+    if ((status >= 300 && status < 400 && location.contains('/login')) ||
+        status >= 400) {
+      unawaited(
+        AppLogService.instance.warning(
+          '$action失败；${path != null ? '路径=$path；' : ''}HTTP=$status；Location=$location',
+          component: component,
+        ),
+      );
+      if (location.contains('/login')) {
+        throw const SessionExpiredException();
+      }
+      throw HttpStatusException(status);
+    }
+    if (status >= 300 && status < 400) {
+      // followRedirects=false 时非登录重定向会被当作成功返回；站点在校验失败、
+      // CSRF 失效或限流时也可能 302 回原页面，这里保留 warning 以便排查，
+      // 但仍按成功处理（库操作成功后是否返回 302 尚未抓包确认，见
+      // review-v6 新问题 A）。
+      unawaited(
+        AppLogService.instance.warning(
+          '$action返回重定向，按成功处理；${path != null ? '路径=$path；' : ''}'
+          'HTTP=$status；Location=${location.isEmpty ? '(无)' : location}',
+          component: component,
+        ),
+      );
+    }
+  }
+
+  Future<void> _postLibraryForm(String path, Map<String, String> data) async {
     final response = await _dio.post<String>(
       path,
       data: data,
       options: Options(
         contentType: Headers.formUrlEncodedContentType,
         headers: {'X-CSRF-TOKEN': data['_token'] ?? ''},
+        followRedirects: false,
         validateStatus: (status) => status != null && status < 600,
       ),
     );
-    final status = response.statusCode ?? 0;
-    if (status >= 400 && !acceptedErrorStatuses.contains(status)) {
-      await AppLogService.instance.warning(
-        'Hanime 媒体库操作失败；路径=$path；HTTP=$status',
-        component: 'hanime_library',
-      );
-      throw HttpStatusException(status);
-    }
+    _checkResponseStatus(
+      response,
+      action: 'Hanime 媒体库操作',
+      component: 'hanime_library',
+      path: path,
+    );
     final errors = HanimePageParser.formErrors(response.data ?? '');
     if (errors.isNotEmpty) {
       throw ApiException(errors.first);
@@ -818,16 +871,12 @@ final class Hanime1Api {
     final body = await _get('/watch', query: {'v': videoId});
     final token = HanimePageParser.loginToken(body);
     if (token == null) throw const ApiException('无法获取操作令牌。');
-    await _postLibraryForm(
-      '/createPlaylist',
-      {
-        '_token': token,
-        'create-playlist-video-id': videoId,
-        'playlist-title': title,
-        'playlist-description': description,
-      },
-      acceptedErrorStatuses: const {500},
-    );
+    await _postLibraryForm('/createPlaylist', {
+      '_token': token,
+      'create-playlist-video-id': videoId,
+      'playlist-title': title,
+      'playlist-description': description,
+    });
     await AppLogService.instance.info(
       'Hanime 播放列表已创建；标题长度=${title.length}',
       component: 'hanime_library',
@@ -978,7 +1027,10 @@ final class Hanime1Api {
   Future<HanimeAccountEditData> loadAccountEditData() async {
     final userId = _requireHanimeLogin();
     final body = await _get('/user/$userId/edit');
-    final data = HanimePageParser.accountEditData(body);
+    final data = await parseHtmlOffThread(
+      body,
+      () => HanimePageParser.accountEditData(body),
+    );
     if (data == null) throw const ApiException('无法解析账号编辑资料。');
     return data;
   }
@@ -1036,12 +1088,16 @@ final class Hanime1Api {
       }),
       options: Options(
         headers: {'X-CSRF-TOKEN': edit.token},
-        validateStatus: (status) => status != null && status < 500,
+        followRedirects: false,
+        validateStatus: (status) => status != null && status < 600,
       ),
     );
-    if ((response.statusCode ?? 0) >= 400) {
-      throw HttpStatusException(response.statusCode ?? 0);
-    }
+    _checkResponseStatus(
+      response,
+      action: 'Hanime 账号头像上传',
+      component: 'hanime_account',
+      path: '/user/$userId',
+    );
     final errors = HanimePageParser.formErrors(response.data ?? '');
     if (errors.isNotEmpty) throw ApiException(errors.first);
     _profileCache = null;
@@ -1101,7 +1157,7 @@ final class Hanime1Api {
         '/loadComment',
         query: {'type': 'video', 'id': videoId},
       );
-      final comments = HanimePageParser.comments(body);
+      final comments = await _parseComments(body);
       _commentsCache[cacheKey] = _HanimeCommentsCacheEntry(
         comments: comments,
         createdAt: DateTime.now(),
@@ -1125,7 +1181,7 @@ final class Hanime1Api {
   Future<List<HanimeComment>> loadReplies(String commentId) async {
     final stopwatch = Stopwatch()..start();
     final body = await _get('/loadReplies', query: {'id': commentId});
-    final comments = HanimePageParser.comments(body);
+    final comments = await _parseComments(body);
     await AppLogService.instance.info(
       'Hanime 评论回复加载；comment=$commentId；结果=${comments.length}；'
       '耗时=${stopwatch.elapsedMilliseconds}ms',
@@ -1155,17 +1211,16 @@ final class Hanime1Api {
       options: Options(
         contentType: Headers.formUrlEncodedContentType,
         headers: {'X-CSRF-TOKEN': data['_token'] ?? ''},
-        validateStatus: (status) => status != null && status < 500,
+        followRedirects: false,
+        validateStatus: (status) => status != null && status < 600,
       ),
     );
-    final status = response.statusCode ?? 0;
-    if (status >= 400) {
-      await AppLogService.instance.warning(
-        'Hanime 评论操作失败；路径=$path；HTTP=$status',
-        component: 'hanime_comment',
-      );
-      throw HttpStatusException(status);
-    }
+    _checkResponseStatus(
+      response,
+      action: 'Hanime 评论操作',
+      component: 'hanime_comment',
+      path: path,
+    );
   }
 
   /// 发表评论（POST /createComment，需登录）。
@@ -1183,7 +1238,7 @@ final class Hanime1Api {
       '_token': token,
       'comment-user-id': userId,
       'comment-type': 'video',
-      'comment-foreign-id': userId,
+      'comment-foreign-id': videoId,
       'comment-text': trimmed,
       'comment-count': '1',
       'comment-is-political': '0',
@@ -1320,7 +1375,13 @@ final class Hanime1Api {
           );
         }
       }
-      throw ApiException('Hanime 网络请求失败：${error.message ?? '未知错误'}');
+      final statusCode = error.response?.statusCode;
+      if (statusCode != null && statusCode >= 400) {
+        throw HttpStatusException(statusCode);
+      }
+      throw ApiException(
+        'Hanime 网络请求失败：${redactSensitiveText(error.message ?? '未知错误')}',
+      );
     }
   }
 

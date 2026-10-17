@@ -1,17 +1,16 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_test/flutter_test.dart';
-
 import 'package:flule34/app/providers.dart';
 import 'package:flule34/core/api/rule34video_api.dart';
 import 'package:flule34/core/models/video_models.dart';
 import 'package:flule34/core/services/translation_service.dart';
 import 'package:flule34/core/session/session_store.dart';
 import 'package:flule34/features/settings/data/app_settings_store.dart';
-import 'package:flule34/shared/video_card.dart';
 import 'package:flule34/shared/localized_translation_text.dart';
+import 'package:flule34/shared/video_card.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 import '../helpers/test_session_harness.dart';
 

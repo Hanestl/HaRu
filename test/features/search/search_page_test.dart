@@ -1,23 +1,22 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_test/flutter_test.dart';
-import 'package:go_router/go_router.dart';
-
 import 'package:flule34/app/providers.dart';
 import 'package:flule34/app/router/route_names.dart';
 import 'package:flule34/core/api/rule34video_api.dart';
 import 'package:flule34/core/database/app_database.dart';
 import 'package:flule34/core/models/video_models.dart';
-import 'package:flule34/core/session/session_store.dart';
 import 'package:flule34/core/services/predictive_prefetch_service.dart';
 import 'package:flule34/core/services/translation_service.dart';
+import 'package:flule34/core/session/session_store.dart';
 import 'package:flule34/features/search/data/search_history_repository.dart';
 import 'package:flule34/features/search/search_page.dart';
 import 'package:flule34/features/settings/data/app_settings_repository.dart';
 import 'package:flule34/features/settings/data/app_settings_store.dart';
+import 'package:flule34/l10n/generated/app_localizations.dart';
 import 'package:flule34/shared/localized_translation_text.dart';
 import 'package:flule34/shared/settings_controls.dart';
-import 'package:flule34/l10n/generated/app_localizations.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../helpers/test_session_harness.dart';
 

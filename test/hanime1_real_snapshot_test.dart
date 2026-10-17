@@ -1,9 +1,8 @@
 import 'dart:io';
 
-import 'package:flutter_test/flutter_test.dart';
-
 import 'package:flule34/core/api/hanime1_parser.dart';
 import 'package:flule34/core/models/video_models.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 /// 用 Wayback Machine 抓取的 hanime1.me 真实页面快照验证解析器兼容性。
 ///

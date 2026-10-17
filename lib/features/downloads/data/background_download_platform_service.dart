@@ -5,8 +5,8 @@ import 'package:background_downloader/background_downloader.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
-import '../../../core/security/error_redaction.dart';
 import '../../../core/logging/app_log_service.dart';
+import '../../../core/security/error_redaction.dart';
 import '../domain/download_models.dart';
 
 final class BackgroundDownloadPlatformService

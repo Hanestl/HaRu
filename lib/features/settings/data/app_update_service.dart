@@ -1,5 +1,5 @@
-import 'package:dio/dio.dart';
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:dio/dio.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 import '../../../core/config/app_build_config.dart';
@@ -15,6 +15,8 @@ final class AppRelease {
     required this.prerelease,
     this.publishedAt,
     this.apkUri,
+    this.apkSha256,
+    this.apkSizeBytes,
     this.notes,
   });
 
@@ -24,7 +26,12 @@ final class AppRelease {
   final bool prerelease;
   final DateTime? publishedAt;
   final Uri? apkUri;
+  final String? apkSha256;
+  final int? apkSizeBytes;
   final String? notes;
+
+  /// 是否具备「一键更新」所需的安装包信息。
+  bool get supportsOneTapUpdate => apkUri != null;
 }
 
 final class AppUpdateResult {
@@ -96,6 +103,13 @@ final class AppUpdateService {
       );
     }
 
+    List<String> supportedAbis;
+    try {
+      supportedAbis = await _abiLoader();
+    } catch (_) {
+      supportedAbis = const [];
+    }
+
     try {
       final response = await _client.getUri<Object?>(
         source,
@@ -104,12 +118,6 @@ final class AppUpdateService {
           headers: const {'Accept': 'application/vnd.github+json'},
         ),
       );
-      List<String> supportedAbis;
-      try {
-        supportedAbis = await _abiLoader();
-      } catch (_) {
-        supportedAbis = const [];
-      }
       final release = _selectRelease(response.data, channel, supportedAbis);
       if (release == null) {
         return AppUpdateResult(
@@ -118,21 +126,26 @@ final class AppUpdateService {
           message: '更新源没有可用的 Android Release。',
         );
       }
-      final available = compareVersions(release.version, currentVersion) > 0;
+      final resolved = await _attachApkFromSums(release, supportedAbis);
+      final available = compareVersions(resolved.version, currentVersion) > 0;
       return AppUpdateResult(
         status: available
             ? AppUpdateStatus.updateAvailable
             : AppUpdateStatus.upToDate,
         currentVersion: currentVersion,
-        release: release,
-        message: available ? '发现新版本 ${release.version}。' : '当前已是最新版本。',
+        release: resolved,
+        message: available ? '发现新版本 ${resolved.version}。' : '当前已是最新版本。',
       );
     } catch (error) {
       final feed = _releaseFeedUri;
       if (feed != null) {
         try {
-          final release = await _checkReleaseFeed(feed, channel);
-          if (release != null) {
+          final feedRelease = await _checkReleaseFeed(feed, channel);
+          if (feedRelease != null) {
+            final release = await _attachApkFromSums(
+              feedRelease,
+              supportedAbis,
+            );
             final available =
                 compareVersions(release.version, currentVersion) > 0;
             return AppUpdateResult(
@@ -257,18 +270,23 @@ final class AppUpdateService {
     if (rawVersion == null || rawVersion.isEmpty || pageUri == null) {
       return null;
     }
-    final apkAssets = <({String name, Uri uri})>[];
+    final apkAssets = <({String name, Uri uri, String? sha256, int? size})>[];
     final assets = data['assets'];
     if (assets is List) {
       for (final asset in assets.whereType<Map>()) {
         final name = asset['name']?.toString().toLowerCase() ?? '';
         final candidate = _httpsUri(asset['browser_download_url']);
         if (name.endsWith('.apk') && candidate != null) {
-          apkAssets.add((name: name, uri: candidate));
+          apkAssets.add((
+            name: name,
+            uri: candidate,
+            sha256: _assetSha256(asset['digest']),
+            size: _assetSize(asset['size']),
+          ));
         }
       }
     }
-    final apkUri = _selectApk(apkAssets, supportedAbis);
+    final apk = _selectApk(apkAssets, supportedAbis);
     return AppRelease(
       version: rawVersion.replaceFirst(RegExp(r'^[vV]'), ''),
       title: data['name']?.toString().trim().isNotEmpty == true
@@ -277,29 +295,139 @@ final class AppUpdateService {
       pageUri: pageUri,
       prerelease: data['prerelease'] == true,
       publishedAt: DateTime.tryParse(data['published_at']?.toString() ?? ''),
-      apkUri: apkUri,
+      apkUri: apk?.uri,
+      apkSha256: apk?.sha256,
+      apkSizeBytes: apk?.size,
       notes: data['body']?.toString().trim(),
     );
   }
 
-  Uri? _selectApk(
-    List<({String name, Uri uri})> assets,
+  /// GitHub API 被限流时，从 Release 页的 `SHA256SUMS.txt` 补全安装包直链。
+  ///
+  /// 该文件与 APK 放在同一个 `releases/download/<tag>/` 目录下，
+  /// 走 github.com 静态资源域名，不受未认证 API 每小时 60 次的限制。
+  Future<AppRelease> _attachApkFromSums(
+    AppRelease release,
+    List<String> supportedAbis,
+  ) async {
+    if (release.apkUri != null) {
+      return release;
+    }
+    final base = _downloadsBaseUri(release);
+    if (base == null) {
+      return release;
+    }
+    try {
+      final response = await _client.getUri<String>(
+        base.resolve('SHA256SUMS.txt'),
+        options: Options(
+          responseType: ResponseType.plain,
+          headers: const {'Accept': 'text/plain'},
+        ),
+      );
+      final apk = _selectApk(
+        _parseSums(response.data ?? '', base),
+        supportedAbis,
+      );
+      if (apk == null) {
+        return release;
+      }
+      return AppRelease(
+        version: release.version,
+        title: release.title,
+        pageUri: release.pageUri,
+        prerelease: release.prerelease,
+        publishedAt: release.publishedAt,
+        apkUri: apk.uri,
+        apkSha256: apk.sha256,
+        apkSizeBytes: apk.size,
+        notes: release.notes,
+      );
+    } on Object {
+      // 缺少校验文件时保持「打开发布页」的回退行为。
+      return release;
+    }
+  }
+
+  /// 把 `releases/tag/<tag>` 改写成 `releases/download/<tag>/`。
+  static Uri? _downloadsBaseUri(AppRelease release) {
+    final path = release.pageUri.path;
+    const marker = '/tag/';
+    final index = path.lastIndexOf(marker);
+    if (index < 0) {
+      return null;
+    }
+    final tag = path.substring(index + marker.length);
+    final basePath = '${path.substring(0, index)}/download/$tag';
+    return release.pageUri.replace(
+      path: basePath.endsWith('/') ? basePath : '$basePath/',
+    );
+  }
+
+  /// 解析 `sha256sum` 格式的输出：`<64 位十六进制>  ./文件名.apk`。
+  List<({String name, Uri uri, String? sha256, int? size})> _parseSums(
+    String body,
+    Uri base,
+  ) {
+    final assets = <({String name, Uri uri, String? sha256, int? size})>[];
+    final pattern = RegExp(
+      r'^([0-9a-fA-F]{64})\s+\*?(.+\.apk)$',
+      caseSensitive: false,
+    );
+    for (final line in body.split(RegExp(r'\r?\n'))) {
+      final match = pattern.firstMatch(line.trim());
+      if (match == null) {
+        continue;
+      }
+      final name = match.group(2)!.trim().replaceFirst(RegExp(r'^\./'), '');
+      final uri = _httpsUri(base.resolve(name).toString());
+      if (uri == null) {
+        continue;
+      }
+      assets.add((
+        name: name,
+        uri: uri,
+        sha256: match.group(1)!.toLowerCase(),
+        size: null,
+      ));
+    }
+    return assets;
+  }
+
+  ({String name, Uri uri, String? sha256, int? size})? _selectApk(
+    List<({String name, Uri uri, String? sha256, int? size})> assets,
     List<String> supportedAbis,
   ) {
     for (final abi in supportedAbis) {
       final normalized = abi.toLowerCase();
       for (final asset in assets) {
-        if (asset.name.contains(normalized)) {
-          return asset.uri;
+        if (asset.name.toLowerCase().contains(normalized)) {
+          return asset;
         }
       }
     }
     for (final asset in assets) {
-      if (asset.name.contains('universal')) {
-        return asset.uri;
+      if (asset.name.toLowerCase().contains('universal')) {
+        return asset;
       }
     }
-    return assets.firstOrNull?.uri;
+    return assets.firstOrNull;
+  }
+
+  /// 解析 GitHub Release asset 的 `digest` 字段（形如 `sha256:<hex>`）。
+  static String? _assetSha256(Object? value) {
+    final digest = value?.toString().trim().toLowerCase() ?? '';
+    const prefix = 'sha256:';
+    if (!digest.startsWith(prefix)) {
+      return null;
+    }
+    final hash = digest.substring(prefix.length);
+    return RegExp(r'^[0-9a-f]{64}$').hasMatch(hash) ? hash : null;
+  }
+
+  static int? _assetSize(Object? value) {
+    final size = value is num ? value.toInt() : int.tryParse('$value');
+    return size != null && size > 0 ? size : null;
   }
 
   static Future<List<String>> _loadSupportedAbis() async {

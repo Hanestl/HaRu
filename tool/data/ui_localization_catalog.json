@@ -1,12 +1,5 @@
 [
   {
-    "source": "(\\d+)\\s*(秒|分钟|分鐘|小时|小時|天|周|週|个月|個月|月|年)\\s*前",
-    "en": "(\\d+)\\s*(seconds|minutes|minutes|hour|hour|day|week|week|month|month|month|year)\\s* ago",
-    "ja": "(\\d+)\\s*(秒|分|分|時|時|日|週|週|月|月|月|年)\\s* 前",
-    "ko": "(\\d+)\\s*(초|분|분|시간|시간|일|주|주|월|월|월|년)\\s* 전",
-    "key": "ui45be8e30"
-  },
-  {
     "source": "2.5D動畫",
     "en": "2.5D animation",
     "ja": "2.5Dアニメーション",
@@ -56,6 +49,13 @@
     "ko": "60분 이상"
   },
   {
+    "source": "<html片段>",
+    "en": "<html fragment>",
+    "ja": "<htmlフラグメント>",
+    "ko": "<html 조각>",
+    "key": "ui5756c92c"
+  },
+  {
     "key": "ui6e93de1b",
     "source": "===== 最近 7 天日志 =====",
     "en": "===== Logs from the Last 7 Days =====",
@@ -84,11 +84,11 @@
     "ko": "앱 설정"
   },
   {
-    "source": "Cookie 名称={p0}",
-    "en": "Cookie names={p0}",
-    "ja": "Cookie名={p0}",
-    "ko": "쿠키 이름={p0}",
-    "key": "ui1bb6cf0e"
+    "source": "Chat 返回格式无效",
+    "en": "Invalid Chat response format",
+    "ja": "Chat の応答形式が無効です",
+    "ko": "Chat 응답 형식이 올바르지 않습니다",
+    "key": "ui417bf31e"
   },
   {
     "key": "ui14d5d228",
@@ -96,6 +96,13 @@
     "en": "DeepL Plans and Endpoints",
     "ja": "DeepLのプランとエンドポイント",
     "ko": "DeepL 요금제 및 엔드포인트"
+  },
+  {
+    "source": "DeepL 返回格式无效",
+    "en": "Invalid DeepL response format",
+    "ja": "DeepL の応答形式が無効です",
+    "ko": "DeepL 응답 형식이 올바르지 않습니다",
+    "key": "ui72f234b8"
   },
   {
     "key": "ui57e4db6c",
@@ -133,11 +140,25 @@
     "ko": "HaRu 번역 라이브러리"
   },
   {
-    "source": "Hanime landing 选择分类；genre={p0}",
-    "en": "Hanime landing select category; genre={p0}",
-    "ja": "Hanime 上陸選択カテゴリ;ジャンル={p0}",
-    "ko": "하니메 착륙 선택 카테고리; 장르={p0}",
-    "key": "ui2cd06f4c"
+    "source": "Hanime 历史删除",
+    "en": "Hanime history deletion",
+    "ja": "Hanime 履歴の削除",
+    "ko": "Hanime 시청 기록 삭제",
+    "key": "ui2a29886f"
+  },
+  {
+    "source": "Hanime 媒体库操作",
+    "en": "Hanime library action",
+    "ja": "Hanime ライブラリの操作",
+    "ko": "Hanime 보관함 작업",
+    "key": "ui48a1e8a9"
+  },
+  {
+    "source": "Hanime 官网登录",
+    "en": "Hanime Official Website Login",
+    "ja": "Hanime 公式サイトログイン",
+    "ko": "Hanime 공식 웹사이트 로그인",
+    "key": "ui6a657fe9"
   },
   {
     "source": "Hanime 播放列表",
@@ -147,6 +168,13 @@
     "key": "ui3fd23b15"
   },
   {
+    "source": "Hanime 暂不支持在应用内管理收藏。",
+    "en": "Managing favorites within the app is currently not supported for Hanime.",
+    "ja": "Hanime のお気に入り管理はアプリ内ではまだサポートされていません。",
+    "ko": "Hanime 즐겨찾기 관리는 현재 앱 내에서 지원되지 않습니다.",
+    "key": "ui1e79d09d"
+  },
+  {
     "source": "Hanime 点赞",
     "en": "Liked by Hanime",
     "ja": "「いいね!」したユーザー: ハニメ",
@@ -154,11 +182,18 @@
     "key": "ui33a113c4"
   },
   {
-    "source": "Hanime 筛选 sheet 应用；摘要={p0}",
-    "en": "Hanime filter sheet application; summary={p0}",
-    "ja": "Hanimeフィルターシートの適用;概要={p0}",
-    "ko": "하니메 필터시트 적용; 요약={p0}",
-    "key": "ui12696fd4"
+    "source": "Hanime 点赞操作",
+    "en": "Hanime like action",
+    "ja": "Hanime 高評価操作",
+    "ko": "Hanime 좋아요 작업",
+    "key": "ui2dff86e7"
+  },
+  {
+    "source": "Hanime 登录请求失败：{p0}",
+    "en": "Hanime login request failed: {p0}",
+    "ja": "Hanime のログインリクエストに失敗しました：{p0}",
+    "ko": "Hanime 로그인 요청에 실패했습니다: {p0}",
+    "key": "ui15642644"
   },
   {
     "source": "Hanime 筛选与排序",
@@ -168,32 +203,25 @@
     "key": "ui0136f228"
   },
   {
-    "source": "Hanime 筛选已应用；摘要={p0}",
-    "en": "Hanime filter applied; summary={p0}",
-    "ja": "Hanime フィルターが適用されました。概要={p0}",
-    "ko": "하니메 필터가 적용되었습니다. 요약={p0}",
-    "key": "ui553f848b"
+    "source": "Hanime 网络请求失败：{p0}",
+    "en": "Hanime network request failed: {p0}",
+    "ja": "Hanime のネットワークリクエストに失敗しました：{p0}",
+    "ko": "Hanime 네트워크 요청에 실패했습니다: {p0}",
+    "key": "ui7dc6eb1b"
   },
   {
-    "source": "Hanime 订阅作者作品筛选；artist={p0}；page={p1}；",
-    "en": "Hanime subscribes to author works filtering; artist={p0}; page={p1};",
-    "ja": "Hanime は作家作品のフィルタリングを購読しています。アーティスト={p0};ページ={p1};",
-    "ko": "Hanime은 작가 작품 필터링을 구독합니다. 아티스트={p0}; 페이지={p1};",
-    "key": "ui3b3b256b"
+    "source": "Hanime 评论操作",
+    "en": "Hanime comment action",
+    "ja": "Hanime コメント操作",
+    "ko": "Hanime 댓글 작업",
+    "key": "ui341110e9"
   },
   {
-    "source": "Hanime 评论提交成功；video={p0}；reply={p1}",
-    "en": "Hanime comment submitted successfully; video={p0}; reply={p1}",
-    "ja": "Hanime コメントが正常に送信されました。ビデオ={p0};返信={p1}",
-    "ko": "Hanime 댓글이 성공적으로 제출되었습니다. 비디오={p0}; 답장={p1}",
-    "key": "ui3deb27cd"
-  },
-  {
-    "source": "Hanime 详情页元数据点击；kind={p0}；",
-    "en": "Hanime details page metadata click; kind={p0};",
-    "ja": "Hanime 詳細ページのメタデータをクリック;種類={p0};",
-    "ko": "Hanime 세부정보 페이지 메타데이터 클릭; 종류={p0};",
-    "key": "ui73e7844e"
+    "source": "Hanime 详情页没有返回可播放的视频源。",
+    "en": "No playable video source was returned on the Hanime detail page.",
+    "ja": "Hanime 詳細ページに再生可能な動画ソースがありませんでした。",
+    "ko": "Hanime 상세 페이지에서 재생 가능한 비디오 소스를 반환하지 않았습니다.",
+    "key": "ui0fd18fa1"
   },
   {
     "source": "Hanime 账号",
@@ -203,11 +231,18 @@
     "key": "ui27638fa8"
   },
   {
-    "source": "Hanime 首页切换频道；频道={p0}；索引={p1}；种子={p2}",
-    "en": "Hanime home channel changed; channel={p0}; index={p1}; seed={p2}",
-    "ja": "Hanimeホームのチャンネルを切り替えました；チャンネル={p0}；インデックス={p1}；シード={p2}",
-    "ko": "Hanime 홈 채널 전환; 채널={p0}; 인덱스={p1}; 시드={p2}",
-    "key": "ui081c5de6"
+    "source": "Hanime 账号头像上传",
+    "en": "Hanime account avatar upload",
+    "ja": "Hanime アカウントアバターのアップロード",
+    "ko": "Hanime 계정 프로필 이미지 업로드",
+    "key": "ui4ac3cece"
+  },
+  {
+    "source": "Hanime 页面受到 Cloudflare 限制，浏览器辅助访问未完成。",
+    "en": "The Hanime page is restricted by Cloudflare; browser-assisted access did not complete.",
+    "ja": "Hanime ページは Cloudflare により制限されており、ブラウザ補助アクセスは完了しませんでした。",
+    "ko": "Hanime 페이지가 Cloudflare 제한을 받고 있어 브라우저 보조 접근이 완료되지 않았습니다.",
+    "key": "ui4b73143a"
   },
   {
     "source": "Hanime 验证",
@@ -217,18 +252,11 @@
     "key": "ui77cbd28c"
   },
   {
-    "source": "Hanime={p0}；当前范围={p1}",
-    "en": "Hanime={p0}; current scope={p1}",
-    "ja": "ハニメ={p0};現在のスコープ={p1}",
-    "ko": "하니메={p0}; 현재 범위={p1}",
-    "key": "ui4a1461a3"
-  },
-  {
-    "source": "Hanime登录={p0}",
-    "en": "Hanime login={p0}",
-    "ja": "Hanime ログイン={p0}",
-    "ko": "하니메 로그인={p0}",
-    "key": "ui042e6d42"
+    "source": "Messages 返回格式无效",
+    "en": "Invalid Messages response format",
+    "ja": "Messages の応答形式が無効です",
+    "ko": "Messages 응답 형식이 올바르지 않습니다",
+    "key": "ui2e244a94"
   },
   {
     "key": "ui103930a8",
@@ -238,11 +266,25 @@
     "ko": "이메일 주소를 입력하면 MyMemory의 무료 할당량을 늘릴 수 있습니다."
   },
   {
-    "source": "R34V登录={p0}；",
-    "en": "R34V login={p0};",
-    "ja": "R34V ログイン={p0};",
-    "ko": "R34V 로그인={p0};",
-    "key": "ui35377097"
+    "source": "MyMemory 返回格式无效",
+    "en": "Invalid MyMemory response format",
+    "ja": "MyMemory の応答形式が無効です",
+    "ko": "MyMemory 응답 형식이 올바르지 않습니다",
+    "key": "ui345ef1cb"
+  },
+  {
+    "source": "MyMemory 返回状态 {p0}",
+    "en": "MyMemory returned status {p0}",
+    "ja": "MyMemory がステータス {p0} を返しました",
+    "ko": "MyMemory 상태 {p0} 반환됨",
+    "key": "ui76229bcf"
+  },
+  {
+    "source": "Responses 返回格式无效",
+    "en": "Invalid Responses response format",
+    "ja": "Responses の応答形式が無効です",
+    "ko": "Responses 응답 형식이 올바르지 않습니다",
+    "key": "ui74b8531a"
   },
   {
     "key": "ui2c98e3c6",
@@ -266,11 +308,11 @@
     "ko": "Wi-Fi에서는 최대 720p, 모바일 데이터에서는 최대 360p"
   },
   {
-    "source": "attempt={p0}；耗时={p1}ms",
-    "en": "attempt={p0}; time consumption={p1}ms",
-    "ja": "試行={p0};消費時間={p1}ms",
-    "ko": "시도={p0}; 시간 소비={p1}ms",
-    "key": "ui0fed973b"
+    "source": "{p0} - {p1} 秒",
+    "en": "{p0} - {p1}s",
+    "ja": "{p0} - {p1} 秒",
+    "ko": "{p0} - {p1}초",
+    "key": "ui78defc63"
   },
   {
     "key": "ui3bebb943",
@@ -341,6 +383,13 @@
     "ja": "{p0}か月",
     "ko": "{p0}개월",
     "key": "ui196d3c87"
+  },
+  {
+    "source": "{p0} 未配置模型名",
+    "en": "Model name is not configured for {p0}",
+    "ja": "{p0} にモデル名が設定されていません",
+    "ko": "{p0}의 모델명이 설정되지 않았습니다",
+    "key": "ui3f6d7631"
   },
   {
     "key": "ui67c16b0b",
@@ -434,6 +483,20 @@
     "ko": "1열"
   },
   {
+    "source": "一键更新",
+    "en": "One-click update",
+    "ja": "ワンクリック更新",
+    "ko": "원클릭 업데이트",
+    "key": "ui0a9e6b7f"
+  },
+  {
+    "source": "万",
+    "en": "0k",
+    "ja": "万",
+    "ko": "만",
+    "key": "ui12469822"
+  },
+  {
     "key": "ui0b8ef7e3",
     "source": "上一个",
     "en": "Previous",
@@ -525,6 +588,27 @@
     "ko": "다운로드 파일을 더 이상 사용할 수 없거나 이 MP4를 재생할 앱이 없습니다."
   },
   {
+    "source": "下载更新包失败（HTTP {p0}），请稍后重试。",
+    "en": "Failed to download update package (HTTP {p0}), please try again later.",
+    "ja": "更新パッケージ (HTTP {p0}) のダウンロードに失敗しました。後でもう一度試してください。",
+    "ko": "업데이트 패키지(HTTP {p0})를 다운로드하지 못했습니다. 나중에 다시 시도해 주세요.",
+    "key": "ui495af0fd"
+  },
+  {
+    "source": "下载更新包失败，请稍后重试。",
+    "en": "Failed to download update package, please try again later.",
+    "ja": "更新パッケージのダウンロードに失敗しました。後でもう一度お試しください。",
+    "ko": "업데이트 패키지를 다운로드하지 못했습니다. 나중에 다시 시도해 주세요.",
+    "key": "ui714ebd00"
+  },
+  {
+    "source": "下载更新包超时，请检查网络后重试。",
+    "en": "Downloading the update package timed out, please check the network and try again.",
+    "ja": "更新パッケージのダウンロードがタイムアウトしました。ネットワークを確認して再試行してください。",
+    "ko": "업데이트 패키지 다운로드 시간이 초과되었습니다. 네트워크를 확인한 후 다시 시도해 주세요.",
+    "key": "ui225e3259"
+  },
+  {
     "source": "下载服务暂不可用。",
     "en": "Download service is temporarily unavailable.",
     "ja": "ダウンロードサービスは一時的にご利用いただけません。",
@@ -565,6 +649,27 @@
     "en": "Does not exist",
     "ja": "存在しません",
     "ko": "존재하지 않음"
+  },
+  {
+    "source": "不支持的翻译库版本：{p0}",
+    "en": "Unsupported translation library version: {p0}",
+    "ja": "サポートされていない翻訳ライブラリのバージョンです：{p0}",
+    "ko": "지원되지 않는 번역 라이브러리 버전입니다: {p0}",
+    "key": "ui2d12eadf"
+  },
+  {
+    "source": "不是 AI 翻译协议",
+    "en": "Not an AI translation protocol",
+    "ja": "AI 翻訳プロトコルではありません",
+    "ko": "AI 번역 프로토콜이 아닙니다",
+    "key": "ui22dbd975"
+  },
+  {
+    "source": "不是 HaRu 翻译库文件",
+    "en": "Not a valid HaRu translation library file",
+    "ja": "HaRu 翻訳ライブラリファイルではありません",
+    "ko": "HaRu 번역 라이브러리 파일이 아닙니다",
+    "key": "ui2970e3de"
   },
   {
     "key": "ui34e49ede",
@@ -651,6 +756,13 @@
     "key": "ui72607f99"
   },
   {
+    "source": "亿",
+    "en": "00M",
+    "ja": "億",
+    "ko": "억",
+    "key": "ui2a3fe43c"
+  },
+  {
     "key": "ui11b84182",
     "source": "仅 Wi-Fi 下载",
     "en": "Download over Wi-Fi only",
@@ -712,20 +824,6 @@
     "en": "Play continuously from the start",
     "ja": "先頭から連続再生",
     "ko": "처음부터 연속 재생"
-  },
-  {
-    "source": "从媒体库请求登录；范围=hanime1；section={p0}",
-    "en": "Request login from media library; scope=hanime1; section={p0}",
-    "ja": "メディア ライブラリからログインを要求します。スコープ=アニメ1;セクション={p0}",
-    "ko": "미디어 라이브러리에서 로그인을 요청합니다. 범위=hanime1; 섹션={p0}",
-    "key": "ui6d8b62f1"
-  },
-  {
-    "source": "从媒体库请求登录；范围={p0}；section={p1}",
-    "en": "Request login from media library; scope={p0}; section={p1}",
-    "ja": "メディア ライブラリからログインを要求します。スコープ={p0};セクション={p1}",
-    "ko": "미디어 라이브러리에서 로그인을 요청합니다. 범위={p0}; 섹션={p1}",
-    "key": "ui4aca9b31"
   },
   {
     "source": "从播放列表移除",
@@ -868,6 +966,13 @@
     "key": "ui1d0485f9"
   },
   {
+    "source": "億",
+    "en": "00M",
+    "ja": "億",
+    "ko": "억",
+    "key": "ui5545b6b8"
+  },
+  {
     "key": "ui4fcf2a14",
     "source": "全屏",
     "en": "Full screen",
@@ -910,11 +1015,25 @@
     "key": "ui3b4a622d"
   },
   {
+    "source": "共{p0}集",
+    "en": "{p0} episodes in total",
+    "ja": "全{p0}話",
+    "ko": "총 {p0}화",
+    "key": "ui7aeb2e98"
+  },
+  {
     "key": "ui64efd37a",
     "source": "关于 HaRu",
     "en": "About HaRu",
     "ja": "HaRuについて",
     "ko": "HaRu 소개"
+  },
+  {
+    "source": "关闭",
+    "en": "close",
+    "ja": "閉じる",
+    "ko": "닫기",
+    "key": "ui361cc8b7"
   },
   {
     "key": "ui29c40c72",
@@ -973,11 +1092,18 @@
     "ko": "내장"
   },
   {
-    "source": "准备下载；站点={p0}；视频={p1}；",
-    "en": "Preparing download; site={p0}; video={p1};",
-    "ja": "ダウンロードを準備；サイト={p0}；動画={p1}；",
-    "ko": "다운로드 준비; 사이트={p0}; 동영상={p1};",
-    "key": "ui4d75ae49"
+    "source": "写入更新包失败，请检查设备存储空间后重试。",
+    "en": "Failed to write the update package, please check the device storage space and try again.",
+    "ja": "更新パッケージの書き込みに失敗しました。デバイスのストレージ容量を確認して、もう一度お試しください。",
+    "ko": "업데이트 패키지를 작성하지 못했습니다. 기기 저장 공간을 확인한 후 다시 시도해 주세요.",
+    "key": "ui3245a83c"
+  },
+  {
+    "key": "ui0ff3423a",
+    "source": "出错了，请稍后重试",
+    "en": "Something went wrong. Please try again later.",
+    "ja": "エラーが発生しました。しばらくしてから再試行してください。",
+    "ko": "오류가 발생했습니다. 잠시 후 다시 시도하세요."
   },
   {
     "key": "ui2f5fd7d1",
@@ -1197,6 +1323,13 @@
     "ko": "동영상 URL을 새로고침하지 못했습니다: {p0}"
   },
   {
+    "source": "前台内容开始加载",
+    "en": "Foreground content started loading",
+    "ja": "フォアグラウンドコンテンツの読み込みを開始しました",
+    "ko": "포그라운드 콘텐츠 로딩 시작됨",
+    "key": "ui50138d2b"
+  },
+  {
     "key": "ui7050fd74",
     "source": "加载下一视频失败：{p0}",
     "en": "Failed to load next video: {p0}",
@@ -1232,6 +1365,13 @@
     "ko": "일치하는 번역: {p0}"
   },
   {
+    "source": "匿名用户",
+    "en": "Anonymous User",
+    "ja": "匿名ユーザー",
+    "ko": "익명 사용자",
+    "key": "ui000f0cb3"
+  },
+  {
     "key": "ui71c021b7",
     "source": "单集循环",
     "en": "Repeat one video",
@@ -1260,6 +1400,13 @@
     "ko": "원문"
   },
   {
+    "source": "去设置",
+    "en": "Go to settings",
+    "ja": "設定に移動",
+    "ko": "설정으로 이동",
+    "key": "ui62f1bb01"
+  },
+  {
     "key": "ui54ec6c15",
     "source": "双语",
     "en": "Original + translation",
@@ -1286,6 +1433,13 @@
     "en": "Published",
     "ja": "公開日時",
     "ko": "게시 시간"
+  },
+  {
+    "source": "发现新版本",
+    "en": "new version found",
+    "ja": "新しいバージョンが見つかりました",
+    "ko": "새 버전이 발견되었습니다",
+    "key": "ui676a6b3b"
   },
   {
     "key": "ui0e705d18",
@@ -1386,6 +1540,13 @@
     "ko": "이 기기에 있는 현재 계정의 검색 기록만 삭제됩니다."
   },
   {
+    "source": "只允许打开 HTTPS 链接。",
+    "en": "Only HTTPS links are allowed to be opened.",
+    "ja": "HTTPS リンクのみを開くことができます。",
+    "ko": "HTTPS 링크만 열 수 있습니다.",
+    "key": "ui51f9b5e4"
+  },
+  {
     "key": "ui73b35752",
     "source": "只删除 App 中的全部下载记录，已经保存到 Download/Flule34 的视频会保留。进行中的任务会先取消。",
     "en": "Delete all download records from the app while keeping videos saved in Download/Flule34. Active tasks are canceled first.",
@@ -1484,6 +1645,20 @@
     "ko": "백그라운드 재생"
   },
   {
+    "source": "后台订阅整理已让位于当前操作。",
+    "en": "Background subscription indexing has yielded to the current action.",
+    "ja": "バックグラウンドの購読整理は現在の操作に優先権を譲りました。",
+    "ko": "백그라운드 구독 정리가 현재 작업에 양보되었습니다.",
+    "key": "ui02a3d205"
+  },
+  {
+    "source": "后台预加载已让位于当前操作。",
+    "en": "Background preloading has yielded to the current action.",
+    "ja": "バックグラウンドのプリロードは現在の操作に優先権を譲りました。",
+    "ko": "백그라운드 사전 로드가 현재 작업에 양보되었습니다.",
+    "key": "ui30c46183"
+  },
+  {
     "key": "ui4763b5c2",
     "source": "否",
     "en": "No",
@@ -1538,6 +1713,13 @@
     "ja": "返信...",
     "ko": "답장하다...",
     "key": "ui1b8fd367"
+  },
+  {
+    "source": "回复内容不能为空。",
+    "en": "Reply content cannot be empty.",
+    "ja": "返信内容は空にできません。",
+    "ko": "답글 내용은 비워둘 수 없습니다.",
+    "key": "ui0efec179"
   },
   {
     "source": "回复加载失败：{p0}",
@@ -1701,62 +1883,6 @@
     "ko": "라이브러리"
   },
   {
-    "source": "媒体库二级页切换；范围=hanime1；section={p0}",
-    "en": "Media library secondary page switching; range=hanime1; section={p0}",
-    "ja": "メディア ライブラリのセカンダリ ページ切り替え。範囲=アニメ1;セクション={p0}",
-    "ko": "미디어 라이브러리 보조 페이지 전환; 범위=hanime1; 섹션={p0}",
-    "key": "ui38869fe7"
-  },
-  {
-    "source": "媒体库二级页切换；范围=local；section={p0}",
-    "en": "Media library secondary page switching; scope=local; section={p0}",
-    "ja": "メディア ライブラリのセカンダリ ページ切り替え。スコープ=ローカル;セクション={p0}",
-    "ko": "미디어 라이브러리 보조 페이지 전환; 범위=로컬; 섹션={p0}",
-    "key": "ui7a3a4547"
-  },
-  {
-    "source": "媒体库二级页切换；范围=rule34video；section={p0}",
-    "en": "Media library secondary page switching; range=rule34video; section={p0}",
-    "ja": "メディア ライブラリのセカンダリ ページ切り替え。範囲=ルール34ビデオ;セクション={p0}",
-    "ko": "미디어 라이브러리 보조 페이지 전환; 범위=rule34video; 섹션={p0}",
-    "key": "ui1c3a6602"
-  },
-  {
-    "source": "媒体库列表请求完成；范围=rule34video；section={p0}；",
-    "en": "Media library list request completed; scope=rule34video; section={p0};",
-    "ja": "メディア ライブラリ リストのリクエストが完了しました。スコープ=ルール34ビデオ;セクション={p0};",
-    "ko": "미디어 라이브러리 목록 요청이 완료되었습니다. 범위=rule34video; 섹션={p0};",
-    "key": "ui0ee3985f"
-  },
-  {
-    "source": "媒体库列表请求开始；范围=rule34video；section={p0}；",
-    "en": "Media library list request starts; scope=rule34video; section={p0};",
-    "ja": "メディア ライブラリ リストのリクエストが開始されます。スコープ=ルール34ビデオ;セクション={p0};",
-    "ko": "미디어 라이브러리 목록 요청이 시작됩니다. 범위=rule34video; 섹션={p0};",
-    "key": "ui1e113600"
-  },
-  {
-    "source": "媒体库打开；范围={p0}；",
-    "en": "Media library open;scope={p0};",
-    "ja": "メディア ライブラリが開いています;スコープ={p0};",
-    "ko": "미디어 라이브러리 열기;범위={p0};",
-    "key": "ui14cdfa21"
-  },
-  {
-    "source": "媒体库登录状态变化；R34V={p0}；",
-    "en": "Media library login status change; R34V={p0};",
-    "ja": "メディア ライブラリのログイン ステータスの変更。 R34V={p0};",
-    "ko": "미디어 라이브러리 로그인 상태 변경; R34V={p0};",
-    "key": "ui5e9a8d3f"
-  },
-  {
-    "source": "媒体库范围切换；from={p0}；to={p1}",
-    "en": "Media library range switching; from={p0}; to={p1}",
-    "ja": "メディアライブラリ範囲の切り替え。から={p0};へ={p1}",
-    "ko": "미디어 라이브러리 범위 전환; ={p0}에서; ={p1}에",
-    "key": "ui21db214e"
-  },
-  {
     "source": "媒体库范围顺序",
     "en": "Media library range order",
     "ja": "メディア ライブラリの範囲順序",
@@ -1776,6 +1902,34 @@
     "en": "Merge safely",
     "ja": "安全にマージ",
     "ko": "안전하게 병합"
+  },
+  {
+    "key": "ui0a4deada",
+    "source": "安全证书验证失败",
+    "en": "Security certificate verification failed.",
+    "ja": "セキュリティ証明書の検証に失敗しました。",
+    "ko": "보안 인증서 확인에 실패했습니다."
+  },
+  {
+    "source": "安装包签名与已安装版本不一致，无法覆盖安装，请前往 GitHub 手动下载安装。",
+    "en": "The installation package signature is inconsistent with the installed version, and the installation cannot be overwritten. Please go to GitHub to download and install manually.",
+    "ja": "インストール パッケージの署名がインストールされているバージョンと一致しないため、インストールを上書きできません。 GitHub にアクセスして手動でダウンロードしてインストールしてください。",
+    "ko": "설치 패키지 서명이 설치된 버전과 일치하지 않으므로 설치를 덮어쓸 수 없습니다. 수동으로 다운로드하고 설치하려면 GitHub로 이동하세요.",
+    "key": "ui67804bce"
+  },
+  {
+    "source": "安装更新包失败，请稍后重试。",
+    "en": "Failed to install update package, please try again later.",
+    "ja": "更新パッケージのインストールに失敗しました。後でもう一度試してください。",
+    "ko": "업데이트 패키지를 설치하지 못했습니다. 나중에 다시 시도해 주세요.",
+    "key": "ui4573775f"
+  },
+  {
+    "source": "安装超时，请稍后重试。",
+    "en": "Installation timed out, please try again later.",
+    "ja": "インストールがタイムアウトしました。後でもう一度試してください。",
+    "ko": "설치 시간이 초과되었습니다. 나중에 다시 시도해 주세요.",
+    "key": "ui4768e1cf"
   },
   {
     "source": "宽泛搜索",
@@ -1918,6 +2072,13 @@
     "key": "ui17aba12e"
   },
   {
+    "source": "尚未开启安装权限，请稍后重试。",
+    "en": "The installation permission has not been enabled, please try again later.",
+    "ja": "インストール権限が有効になっていません。後でもう一度試してください。",
+    "ko": "설치 권한이 활성화되지 않았습니다. 나중에 다시 시도해 주세요.",
+    "key": "ui422fcf83"
+  },
+  {
     "key": "ui2d851aa0",
     "source": "尚未登录",
     "en": "Not signed in",
@@ -1946,11 +2107,32 @@
     "key": "ui59bc6fa1"
   },
   {
+    "source": "展开({p0})",
+    "en": "Expand ({p0})",
+    "ja": "展開 ({p0})",
+    "ko": "더보기 ({p0})",
+    "key": "ui605cc69a"
+  },
+  {
     "key": "ui0543d520",
     "source": "已下载",
     "en": "Downloaded",
     "ja": "ダウンロード済み",
     "ko": "다운로드됨"
+  },
+  {
+    "source": "已下载 {p0}",
+    "en": "Downloaded {p0}",
+    "ja": "{p0}をダウンロードしました",
+    "ko": "{p0} 다운로드됨",
+    "key": "ui21b8fcdc"
+  },
+  {
+    "source": "已下载 {p0} / {p1}",
+    "en": "Downloaded {p0} / {p1}",
+    "ja": "{p0} / {p1} をダウンロードしました",
+    "ko": "{p0} / {p1} 다운로드됨",
+    "key": "ui419fd1e2"
   },
   {
     "key": "ui4c1b3a95",
@@ -2035,6 +2217,20 @@
     "en": "Canceled",
     "ja": "キャンセルされました",
     "ko": "취소됨"
+  },
+  {
+    "source": "已取消下载更新包。",
+    "en": "Download of update package canceled.",
+    "ja": "更新パッケージのダウンロードがキャンセルされました。",
+    "ko": "업데이트 패키지 다운로드가 취소되었습니다.",
+    "key": "ui2374725a"
+  },
+  {
+    "source": "已取消安装。",
+    "en": "Installation canceled.",
+    "ja": "インストールがキャンセルされました。",
+    "ko": "설치가 취소되었습니다.",
+    "key": "ui0c5e75d4"
   },
   {
     "key": "ui7bbd0e24",
@@ -2268,13 +2464,6 @@
     "ko": "조건 {p0}개 적용"
   },
   {
-    "key": "ui103ff6bd",
-    "source": "应用初始化完成。",
-    "en": "App initialization complete.",
-    "ja": "アプリの初期化が完了しました。",
-    "ko": "앱 초기화가 완료되었습니다."
-  },
-  {
     "key": "ui75af3770",
     "source": "应用日志",
     "en": "App logs",
@@ -2294,6 +2483,13 @@
     "en": "Apply (no limit)",
     "ja": "適用（制限なし）",
     "ko": "적용(제한 없음)"
+  },
+  {
+    "source": "底座网络适配器已释放，无法发起请求。",
+    "en": "Underlying network adapter has been disposed; cannot initiate requests.",
+    "ja": "基盤のネットワークアダプタが破棄されたため、リクエストを開始できません。",
+    "ko": "기반 네트워크 어댑터가 해제되어 요청을 시작할 수 없습니다.",
+    "key": "ui256813a5"
   },
   {
     "source": "底部导航顺序",
@@ -2317,11 +2513,11 @@
     "ko": "켜면 앱을 전환하거나 화면을 꺼도 오디오가 계속 재생됩니다."
   },
   {
-    "source": "开始视频预览；site={p0}；video={p1}；",
-    "en": "Start video preview; site={p0}; video={p1};",
-    "ja": "ビデオのプレビューを開始します。サイト={p0};ビデオ={p1};",
-    "ko": "비디오 미리보기를 시작합니다. 사이트={p0}; 비디오={p1};",
-    "key": "ui08cdac2b"
+    "source": "开始日期",
+    "en": "Start Date",
+    "ja": "開始日",
+    "ko": "시작일",
+    "key": "ui12e4a250"
   },
   {
     "key": "ui13034753",
@@ -2401,6 +2597,20 @@
     "ko": "현재 버전: {p0}"
   },
   {
+    "source": "当前环境没有可写入的翻译数据库",
+    "en": "No writable translation database in the current environment",
+    "ja": "現在の環境には書き込み可能な翻訳データベースがありません",
+    "ko": "현재 환경에 쓸 수 있는 번역 데이터베이스가 없습니다",
+    "key": "ui09b4d081"
+  },
+  {
+    "source": "当前设备不支持自动安装，请前往 GitHub 手动下载安装包。",
+    "en": "The current device does not support automatic installation. Please go to GitHub to download the installation package manually.",
+    "ja": "現在のデバイスは自動インストールをサポートしていません。 GitHub にアクセスして、インストール パッケージを手動でダウンロードしてください。",
+    "ko": "현재 장치는 자동 설치를 지원하지 않습니다. 설치 패키지를 수동으로 다운로드하려면 GitHub로 이동하세요.",
+    "key": "ui111ba46f"
+  },
+  {
     "key": "ui1ef7e413",
     "source": "当前账号 ID",
     "en": "Current account ID",
@@ -2448,13 +2658,6 @@
     "en": "Restore learned translations",
     "ja": "学習した翻訳を復元する",
     "ko": "학습된 번역 복원"
-  },
-  {
-    "source": "恢复播放，开始自动展开播放器；video={p0}；",
-    "en": "Playback resumed; expanding player automatically; video={p0};",
-    "ja": "再生を再開し、プレーヤーの自動展開を開始；video={p0}；",
-    "ko": "재생 재개, 플레이어 자동 펼치기 시작; video={p0};",
-    "key": "ui351ef4b1"
   },
   {
     "key": "ui67d3b06d",
@@ -2569,13 +2772,6 @@
     "ko": "모델 목록 불러오기"
   },
   {
-    "source": "拖动调整；冷启动时默认进入第一项。",
-    "en": "Drag to adjust; default to the first item during cold start.",
-    "ja": "ドラッグして調整します。コールド スタート時のデフォルトは最初の項目です。",
-    "ko": "드래그하여 조정하세요. 콜드 스타트 ​​중에는 첫 번째 항목이 기본값입니다.",
-    "key": "ui1a86336b"
-  },
-  {
     "source": "指定月份…",
     "en": "Specify month…",
     "ja": "月を指定してください…",
@@ -2609,13 +2805,6 @@
     "en": "Sort by source",
     "ja": "提供元順",
     "ko": "출처순"
-  },
-  {
-    "key": "ui70c4de19",
-    "source": "按标签和内容主题探索",
-    "en": "Explore by tags and topics",
-    "ja": "タグやテーマから探す",
-    "ko": "태그와 주제로 탐색"
   },
   {
     "key": "ui0db93df0",
@@ -2672,13 +2861,6 @@
     "en": "Exclude:",
     "ja": "除外：",
     "ko": "제외:"
-  },
-  {
-    "key": "ui3cca6594",
-    "source": "探索内容",
-    "en": "Explore content",
-    "ja": "コンテンツを探索する",
-    "ko": "콘텐츠 탐색"
   },
   {
     "key": "ui6ec4c172",
@@ -2912,6 +3094,13 @@
     "ko": "재생목록이 웹사이트 계정에서 삭제됩니다."
   },
   {
+    "source": "播放列表分页未取得进展，请刷新重试。",
+    "en": "Playlist pagination made no progress, please refresh and retry.",
+    "ja": "プレイリストのページネーションが進みませんでした。更新して再試行してください。",
+    "ko": "재생목록 페이지 이동에 진전이 없습니다. 새로고침 후 다시 시도해 주세요.",
+    "key": "ui25177a33"
+  },
+  {
     "source": "播放列表加载失败：{p0}",
     "en": "Playlist loading failed: {p0}",
     "ja": "プレイリストの読み込みに失敗しました: {p0}",
@@ -2968,88 +3157,25 @@
     "key": "ui201d2aa4"
   },
   {
+    "source": "播放列表操作失败。",
+    "en": "Playlist action failed.",
+    "ja": "プレイリストの操作に失敗しました。",
+    "ko": "재생목록 작업에 실패했습니다.",
+    "key": "ui59fbd342"
+  },
+  {
+    "source": "播放列表编辑页面缺少标题字段。",
+    "en": "Playlist edit page is missing the title field.",
+    "ja": "プレイリスト編集ページにタイトルフィールドがありません。",
+    "ko": "재생목록 편집 페이지에 제목 필드가 없습니다.",
+    "key": "ui6ef9f29e"
+  },
+  {
     "key": "ui7e8be483",
     "source": "播放器初始化后未提供视频时长。",
     "en": "The player did not report the video duration after initialization.",
     "ja": "プレーヤーの初期化後も動画の長さを取得できませんでした。",
     "ko": "플레이어 초기화 후 동영상 길이 정보가 제공되지 않았습니다."
-  },
-  {
-    "source": "播放器开始自动恢复；attempt={p0}；",
-    "en": "The player starts to resume automatically; attempt={p0};",
-    "ja": "プレーヤーは自動的に再開を開始します。試行={p0};",
-    "ko": "플레이어가 자동으로 재개되기 시작합니다. 시도={p0};",
-    "key": "ui536e06b3"
-  },
-  {
-    "source": "播放器折叠权限更新；video={p0}；",
-    "en": "Player collapse permission updated; video={p0};",
-    "ja": "プレーヤーの折りたたみ権限を更新；video={p0}；",
-    "ko": "플레이어 접기 권한 업데이트; video={p0};",
-    "key": "ui7479d54b"
-  },
-  {
-    "source": "播放器报告异常：{p0}；",
-    "en": "Player reported an error: {p0};",
-    "ja": "プレーヤーがエラーを報告：{p0}；",
-    "ko": "플레이어 오류 보고: {p0};",
-    "key": "ui5b401ab2"
-  },
-  {
-    "source": "播放器自动展开完成；video={p0}；",
-    "en": "Player finished expanding automatically; video={p0};",
-    "ja": "プレーヤーの自動展開が完了；video={p0}；",
-    "ko": "플레이어 자동 펼치기 완료; video={p0};",
-    "key": "ui5a50b4ab"
-  },
-  {
-    "source": "播放器自动恢复失败；reason=no-alternate-source；",
-    "en": "Player automatic recovery failed; reason=no-alternate-source;",
-    "ja": "プレーヤーの自動回復に失敗しました。理由=代替ソースがない;",
-    "ko": "플레이어 자동 복구에 실패했습니다. 이유=대체 소스 없음;",
-    "key": "ui78522c85"
-  },
-  {
-    "source": "播放器自动恢复异常；{p0}；",
-    "en": "Player automatic recovery exception; {p0};",
-    "ja": "プレーヤーの自動回復例外。 {p0};",
-    "ko": "플레이어 자동 복구 예외; {p0};",
-    "key": "ui0dd3d83f"
-  },
-  {
-    "source": "播放器自动恢复成功；{p0}；耗时={p1}ms",
-    "en": "The player automatically resumed successfully; {p0}; time consumption = {p1}ms",
-    "ja": "プレーヤーは自動的に正常に再開されました。 {p0};消費時間 = {p1}ms",
-    "ko": "플레이어가 자동으로 성공적으로 재개되었습니다. {p0}; 시간 소비 = {p1}ms",
-    "key": "ui19faffc9"
-  },
-  {
-    "source": "播放器自动恢复装载失败；{p0}；",
-    "en": "Player automatic recovery failed to load; {p0};",
-    "ja": "プレーヤーの自動回復のロードに失敗しました。 {p0};",
-    "ko": "플레이어 자동 복구를 로드하지 못했습니다. {p0};",
-    "key": "ui0146f5aa"
-  },
-  {
-    "source": "播放器自动恢复选择备用源；from={p0}；",
-    "en": "The player automatically resumes selecting the alternate source; from={p0};",
-    "ja": "プレーヤーは自動的に代替ソースの選択を再開します。から={p0};",
-    "ko": "플레이어는 자동으로 대체 소스 선택을 재개합니다. ={p0}에서;",
-    "key": "ui4e45686b"
-  },
-  {
-    "source": "播放器装载失败：{p0}；",
-    "en": "Player failed to load: {p0};",
-    "ja": "プレーヤーの読み込みに失敗：{p0}；",
-    "ko": "플레이어 로드 실패: {p0};",
-    "key": "ui4cee68a6"
-  },
-  {
-    "source": "播放态详情滚动触发边界反馈，已禁用视觉拉伸；video={p0}；",
-    "en": "Detail scrolling reached the boundary during playback; visual overscroll disabled; video={p0};",
-    "ja": "再生中の詳細スクロールが境界に到達したため、視覚的な伸縮を無効化；video={p0}；",
-    "ko": "재생 중 상세 스크롤이 경계에 도달하여 시각적 오버스크롤 비활성화; video={p0};",
-    "key": "ui09679598"
   },
   {
     "key": "ui206c2436",
@@ -3115,6 +3241,20 @@
     "ko": "작업을 완료하지 못했습니다. 잠시 후 다시 시도하세요."
   },
   {
+    "key": "ui28c15475",
+    "source": "操作超时，请稍后重试",
+    "en": "Operation timed out. Try again later.",
+    "ja": "操作がタイムアウトしました。しばらくしてから再試行してください。",
+    "ko": "작업 시간이 초과되었습니다. 잠시 후 다시 시도하세요."
+  },
+  {
+    "source": "支持 Google 一键登入或官网邮箱密码登录，登录完成后会自动返回。",
+    "en": "Supports Google one-tap sign-in or official email/password login. Automatically returns after login.",
+    "ja": "Google ワンタップログインまたは公式サイトのメール／パスワードログインに対応。完了後に自動で戻ります。",
+    "ko": "Google 원터치 로그인 또는 공식 웹사이트 이메일/비밀번호 로그인을 지원하며, 완료 후 자동으로 돌아옵니다.",
+    "key": "ui5e1b9757"
+  },
+  {
     "key": "ui0d933ab7",
     "source": "收藏",
     "en": "Favorites",
@@ -3162,6 +3302,13 @@
     "en": "Database structure",
     "ja": "データベース構造",
     "ko": "데이터베이스 구조"
+  },
+  {
+    "key": "ui146d33d9",
+    "source": "数据解析失败，站点结构可能已更新",
+    "en": "Data parsing failed. The site structure may have changed.",
+    "ja": "データの解析に失敗しました。サイト構造が更新された可能性があります。",
+    "ko": "데이터 분석에 실패했습니다. 사이트 구조가 업데이트되었을 수 있습니다."
   },
   {
     "key": "ui1ce03cf7",
@@ -3227,6 +3374,34 @@
     "ko": "번역 서비스 만들기"
   },
   {
+    "source": "新版本 {p0} 已发布，是否立即下载并安装？",
+    "en": "The new version {p0} has been released. Do you want to download and install it now?",
+    "ja": "新しいバージョン {p0} がリリースされました。今すぐダウンロードしてインストールしますか?",
+    "ko": "새 버전 {p0}이 출시되었습니다. 지금 다운로드하여 설치하시겠습니까?",
+    "key": "ui0d7ee0fa"
+  },
+  {
+    "source": "无",
+    "en": "None",
+    "ja": "なし",
+    "ko": "없음",
+    "key": "ui7bd4dd1e"
+  },
+  {
+    "source": "无法启动系统安装器，请稍后重试。",
+    "en": "Unable to start system installer, please try again later.",
+    "ja": "システム インストーラーを起動できません。後でもう一度お試しください。",
+    "ko": "시스템 설치 프로그램을 시작할 수 없습니다. 나중에 다시 시도해 주세요.",
+    "key": "ui196ad4c7"
+  },
+  {
+    "source": "无法启动系统安装器：{p0}",
+    "en": "Unable to start system installer: {p0}",
+    "ja": "システム インストーラーを起動できません: {p0}",
+    "ko": "시스템 설치 프로그램을 시작할 수 없습니다: {p0}",
+    "key": "ui6f78c40a"
+  },
+  {
     "key": "ui3180d36c",
     "source": "无法将视频保存到 Download/Flule34。",
     "en": "Unable to save the video to Download/Flule34.",
@@ -3239,6 +3414,13 @@
     "en": "Unable to open share panel: {p0}",
     "ja": "共有パネルを開けません：{p0}",
     "ko": "공유 패널을 열 수 없습니다: {p0}"
+  },
+  {
+    "source": "无法打开链接：{p0}",
+    "en": "Cannot open link: {p0}",
+    "ja": "リンクを開けません：{p0}",
+    "ko": "링크를 열 수 없습니다: {p0}",
+    "key": "ui07590f5f"
   },
   {
     "key": "ui3a33698e",
@@ -3255,6 +3437,69 @@
     "ko": "진단 정보를 생성할 수 없습니다: {p0}"
   },
   {
+    "source": "无法确定思考参数兼容方式",
+    "en": "Unable to determine thinking parameter compatibility mode",
+    "ja": "思考パラメータの互換モードを特定できません",
+    "ko": "사고 파라미터 호환 방식을 확인할 수 없습니다",
+    "key": "ui44f277c1"
+  },
+  {
+    "source": "无法获取操作令牌。",
+    "en": "Failed to obtain operation token.",
+    "ja": "操作トークンを取得できませんでした。",
+    "ko": "작업 토큰을 가져올 수 없습니다.",
+    "key": "ui50aa2314"
+  },
+  {
+    "source": "无法获取登录表单的校验令牌。",
+    "en": "Failed to obtain verification token for the login form.",
+    "ja": "ログインフォームの検証トークンを取得できませんでした。",
+    "ko": "로그인 양식의 검증 토큰을 가져올 수 없습니다.",
+    "key": "ui79cdaeac"
+  },
+  {
+    "source": "无法解析上传者资料，请稍后重试。",
+    "en": "Failed to parse uploader profile, please retry later.",
+    "ja": "アップロード者のプロフィールを解析できませんでした。後で再試行してください。",
+    "ko": "업로더 프로필을 분석하지 못했습니다. 잠시 후 다시 시도해 주세요.",
+    "key": "ui06546e23"
+  },
+  {
+    "source": "无法解析当前账号资料，请稍后重试。",
+    "en": "Failed to parse current account profile, please retry later.",
+    "ja": "現在のアカウント情報を解析できませんでした。後で再試行してください。",
+    "ko": "현재 계정 프로필을 분석하지 못했습니다. 잠시 후 다시 시도해 주세요.",
+    "key": "ui57f26ed1"
+  },
+  {
+    "source": "无法解析账号编辑资料。",
+    "en": "Failed to parse account edit profile.",
+    "ja": "アカウント編集用データを解析できませんでした。",
+    "ko": "계정 편집 정보를 분석할 수 없습니다.",
+    "key": "ui33dbf598"
+  },
+  {
+    "source": "无法识别视频作者。",
+    "en": "Unable to identify video author.",
+    "ja": "動画の作者を特定できません。",
+    "ko": "비디오 작성자를 식별할 수 없습니다.",
+    "key": "ui15bf560f"
+  },
+  {
+    "source": "无法识别这个上传者的订阅信息。",
+    "en": "Unable to identify subscription details for this uploader.",
+    "ja": "このアップロード者の購読情報を特定できません。",
+    "ko": "이 업로더의 구독 정보를 식별할 수 없습니다.",
+    "key": "ui5825923c"
+  },
+  {
+    "source": "无法识别这个订阅，请从相关视频详情页{p0}。",
+    "en": "Unable to identify this subscription. Please {p0} again from the related video's details page.",
+    "ja": "この購読を特定できませんでした。関連動画の詳細ページから{p0}してください。",
+    "ko": "이 구독을 식별할 수 없습니다. 관련 동영상 상세 페이지에서 {p0}하세요.",
+    "key": "ui6f7f557a"
+  },
+  {
     "source": "无法读取网页内容，可以点重试。",
     "en": "Unable to read the web page content, please click to try again.",
     "ja": "Web ページのコンテンツを読み取ることができません。クリックしてもう一度お試しください。",
@@ -3267,6 +3512,27 @@
     "en": "Unable to connect to GitHub. Check your network and try again.",
     "ja": "GitHubに接続できません。ネットワークを確認して再試行してください。",
     "ko": "GitHub에 연결할 수 없습니다. 네트워크를 확인한 후 다시 시도하세요."
+  },
+  {
+    "source": "无法连接到网站",
+    "en": "Unable to connect to website",
+    "ja": "ウェブサイトに接続できません",
+    "ko": "웹사이트에 연결할 수 없습니다",
+    "key": "ui5262de17"
+  },
+  {
+    "source": "无法连接到网站，请检查网络。",
+    "en": "Unable to connect to the website, please check your network.",
+    "ja": "ウェブサイトに接続できません。ネットワークを確認してください。",
+    "ko": "웹사이트에 연결할 수 없습니다. 네트워크를 확인해 주세요.",
+    "key": "ui67fe026b"
+  },
+  {
+    "source": "日期：{p0}",
+    "en": "Date: {p0}",
+    "ja": "日付：{p0}",
+    "ko": "날짜: {p0}",
+    "key": "ui6991b83f"
   },
   {
     "source": "日本 IP 可能无法通过验证",
@@ -3353,6 +3619,13 @@
     "ko": "일시 중지"
   },
   {
+    "source": "暂无诊断信息。",
+    "en": "No diagnostic information available.",
+    "ja": "診断情報はありません。",
+    "ko": "진단 정보가 없습니다.",
+    "key": "ui7167f83b"
+  },
+  {
     "key": "ui585c23ff",
     "source": "暂时无法检查更新，请稍后重试。",
     "en": "Unable to check for updates right now. Try again later.",
@@ -3409,6 +3682,55 @@
     "key": "ui2d102f6b"
   },
   {
+    "source": "更新包下载失败，请稍后重试。",
+    "en": "The update package download failed, please try again later.",
+    "ja": "更新パッケージのダウンロードに失敗しました。後でもう一度試してください。",
+    "ko": "업데이트 패키지 다운로드에 실패했습니다. 나중에 다시 시도해 주세요.",
+    "key": "ui0b0c36f2"
+  },
+  {
+    "source": "更新包与当前系统不兼容。",
+    "en": "The update package is incompatible with the current system.",
+    "ja": "更新パッケージは現在のシステムと互換性がありません。",
+    "ko": "업데이트 패키지가 현재 시스템과 호환되지 않습니다.",
+    "key": "ui1a5d4948"
+  },
+  {
+    "source": "更新包保存不完整，请重试。",
+    "en": "The update package is not saved completely, please try again.",
+    "ja": "更新パッケージが完全に保存されていません。もう一度試してください。",
+    "ko": "업데이트 패키지가 완전히 저장되지 않았습니다. 다시 시도해 주세요.",
+    "key": "ui59cb7d12"
+  },
+  {
+    "source": "更新包大小校验失败，请重试。",
+    "en": "Update package size verification failed, please try again.",
+    "ja": "更新パッケージのサイズの検証に失敗しました。もう一度お試しください。",
+    "ko": "업데이트 패키지 크기 확인에 실패했습니다. 다시 시도해 주세요.",
+    "key": "ui4ebfc1da"
+  },
+  {
+    "source": "更新包已安装完成。",
+    "en": "The update package has been installed.",
+    "ja": "アップデートパッケージがインストールされました。",
+    "ko": "업데이트 패키지가 설치되었습니다.",
+    "key": "ui75071796"
+  },
+  {
+    "source": "更新包无效或已损坏，请重新下载。",
+    "en": "The update package is invalid or damaged, please download again.",
+    "ja": "更新パッケージが無効であるか破損しています。再度ダウンロードしてください。",
+    "ko": "업데이트 패키지가 잘못되었거나 손상되었습니다. 다시 다운로드하세요.",
+    "key": "ui7999a1cf"
+  },
+  {
+    "source": "更新包校验失败，请重试。",
+    "en": "Update package verification failed, please try again.",
+    "ja": "更新パッケージの検証に失敗しました。もう一度お試しください。",
+    "ko": "업데이트 패키지 확인에 실패했습니다. 다시 시도해 주세요.",
+    "key": "ui154411ba"
+  },
+  {
     "source": "更新失败：{p0}",
     "en": "Update failed: {p0}",
     "ja": "更新に失敗しました: {p0}",
@@ -3444,11 +3766,25 @@
     "ko": "업데이트 소스: {p0}"
   },
   {
+    "source": "更新说明",
+    "en": "Update instructions",
+    "ja": "アップデート手順",
+    "ko": "업데이트 지침",
+    "key": "ui19f3097b"
+  },
+  {
     "key": "ui1d030a86",
     "source": "更新通道",
     "en": "Update channel",
     "ja": "更新チャンネル",
     "ko": "업데이트 채널"
+  },
+  {
+    "source": "更早的关注内容仍在整理，请重试加载。",
+    "en": "Older subscription updates are still being organized, please retry loading.",
+    "ja": "過去の購読コンテンツはまだ整理中です。再読み込みしてください。",
+    "ko": "이전 구독 항목이 아직 정리 중입니다. 다시 불러와 주세요.",
+    "key": "ui7e47c566"
   },
   {
     "key": "ui69112ae8",
@@ -3535,6 +3871,13 @@
     "key": "ui4124f57e"
   },
   {
+    "source": "最短时长（秒）",
+    "en": "Min duration (seconds)",
+    "ja": "最短時間（秒）",
+    "ko": "최소 길이 (초)",
+    "key": "ui7437a4c3"
+  },
+  {
     "key": "ui23dfffd1",
     "source": "最近修改",
     "en": "Recently modified",
@@ -3570,6 +3913,20 @@
     "ko": "긴 순"
   },
   {
+    "source": "最长时长不能小于最短时长",
+    "en": "Max duration cannot be less than min duration",
+    "ja": "最長時間を最短時間より短くすることはできません",
+    "ko": "최대 길이는 최소 길이보다 작을 수 없습니다",
+    "key": "ui31829b08"
+  },
+  {
+    "source": "最长时长（秒）",
+    "en": "Max duration (seconds)",
+    "ja": "最長時間（秒）",
+    "ko": "최대 길이 (초)",
+    "key": "ui1965e2dd"
+  },
+  {
     "key": "ui72d8c6d5",
     "source": "最高可用",
     "en": "Best available",
@@ -3598,11 +3955,74 @@
     "key": "ui625d464f"
   },
   {
+    "source": "有 {p0} 个订阅暂时无法继续读取。",
+    "en": "{p0} subscriptions cannot be loaded further for now.",
+    "ja": "{p0} 件の購読は現在これ以上読み込めません。",
+    "ko": "{p0}개의 구독을 현재 더 이상 불러올 수 없습니다.",
+    "key": "ui06e923cf"
+  },
+  {
+    "source": "有 {p0} 个订阅暂时无法读取。",
+    "en": "{p0} subscriptions cannot be read for now.",
+    "ja": "{p0} 件の購読は現在読み込めません。",
+    "ko": "{p0}개의 구독을 현재 읽어올 수 없습니다.",
+    "key": "ui24ed3263"
+  },
+  {
     "key": "ui7ee4b38a",
     "source": "服务名称",
     "en": "Service name",
     "ja": "サービス名",
     "ko": "서비스 이름"
+  },
+  {
+    "source": "服务器响应异常 ({p0})",
+    "en": "Abnormal server response ({p0})",
+    "ja": "サーバーの応答が異常です ({p0})",
+    "ko": "서버 응답 이상 ({p0})",
+    "key": "ui46b673b1"
+  },
+  {
+    "source": "服务器返回了 HTTP {p0}。",
+    "en": "Server returned HTTP {p0}.",
+    "ja": "サーバーが HTTP {p0} を返しました。",
+    "ko": "서버에서 HTTP {p0}을(를) 반환했습니다.",
+    "key": "ui21fa42fa"
+  },
+  {
+    "source": "服务器返回了缺少目标地址的重定向。",
+    "en": "Server returned a redirect without a target URL.",
+    "ja": "サーバーがリダイレクト先URLのないリダイレクトを返しました。",
+    "ko": "서버가 대상 주소가 없는 리디렉션을 반환했습니다.",
+    "key": "ui34f469a4"
+  },
+  {
+    "source": "服务器重定向次数过多。",
+    "en": "Too many server redirects.",
+    "ja": "サーバーのリダイレクトが多すぎます。",
+    "ko": "서버 리디렉션 횟수가 너무 많습니다.",
+    "key": "ui496de832"
+  },
+  {
+    "source": "未命名播放列表",
+    "en": "Untitled Playlist",
+    "ja": "無題のプレイリスト",
+    "ko": "이름 없는 재생목록",
+    "key": "ui7f356142"
+  },
+  {
+    "source": "未命名系列",
+    "en": "Untitled Series",
+    "ja": "無題のシリーズ",
+    "ko": "이름 없는 시리즈",
+    "key": "ui441a34c3"
+  },
+  {
+    "source": "未命名视频",
+    "en": "Untitled Video",
+    "ja": "無題の動画",
+    "ko": "제목 없는 비디오",
+    "key": "ui10bbdc2d"
   },
   {
     "source": "未挂载",
@@ -3612,18 +4032,18 @@
     "key": "ui0b0f8079"
   },
   {
-    "key": "ui5801f5b9",
-    "source": "未捕获异步异常：{p0}\n{p1}",
-    "en": "Unhandled asynchronous error: {p0}\n{p1}",
-    "ja": "未処理の非同期例外：{p0}\n{p1}",
-    "ko": "처리되지 않은 비동기 예외: {p0}\n{p1}"
-  },
-  {
     "key": "ui1d2649c7",
     "source": "未排除任何{p0}",
     "en": "No {p0} excluded",
     "ja": "{p0}は除外されていません",
     "ko": "제외된 {p0} 없음"
+  },
+  {
+    "source": "未注入",
+    "en": "Not set",
+    "ja": "未設定",
+    "ko": "미설정",
+    "key": "ui5134b0d1"
   },
   {
     "source": "未登录 Hanime",
@@ -3633,11 +4053,39 @@
     "key": "ui6c16defb"
   },
   {
+    "source": "未知翻译类型",
+    "en": "Unknown translation type",
+    "ja": "不明な翻訳タイプ",
+    "ko": "알 수 없는 번역 유형",
+    "key": "ui2219a9fe"
+  },
+  {
+    "source": "未知错误",
+    "en": "Unknown error",
+    "ja": "不明なエラー",
+    "ko": "알 수 없는 오류",
+    "key": "ui3b6c4912"
+  },
+  {
+    "source": "未获取到更新信息。",
+    "en": "No update information obtained.",
+    "ja": "更新情報は取得できませんでした。",
+    "ko": "업데이트 정보를 가져오지 못했습니다.",
+    "key": "ui32a1bf89"
+  },
+  {
     "key": "ui73b71caa",
     "source": "未配置",
     "en": "Not configured",
     "ja": "未設定",
     "ko": "구성되지 않음"
+  },
+  {
+    "source": "未配置 API Key",
+    "en": "API Key is not configured",
+    "ja": "API キーが設定されていません",
+    "ko": "API 키가 구성되지 않았습니다",
+    "key": "ui440ed665"
   },
   {
     "key": "ui593a76ae",
@@ -3654,11 +4102,25 @@
     "ko": "로컬 라이브러리"
   },
   {
+    "key": "ui12e85520",
+    "source": "本地数据库读写异常，请重试",
+    "en": "Local database read/write error. Please try again.",
+    "ja": "ローカルデータベースの読み書きエラーが発生しました。再試行してください。",
+    "ko": "로컬 데이터베이스 읽기/쓰기 오류입니다. 다시 시도하세요."
+  },
+  {
     "key": "ui5af2b9c7",
     "source": "本地诊断日志",
     "en": "Local diagnostic log",
     "ja": "ローカル診断ログ",
     "ko": "로컬 진단 로그"
+  },
+  {
+    "source": "本地语言识别",
+    "en": "Local language identification",
+    "ja": "ローカル言語識別",
+    "ko": "로컬 언어 식별",
+    "key": "ui78d79e7d"
   },
   {
     "source": "本机",
@@ -3703,13 +4165,6 @@
     "ko": "빌드 모드"
   },
   {
-    "key": "ui3a3a5f44",
-    "source": "查找艺术家页面",
-    "en": "Find artist page",
-    "ja": "アーティストページを検索",
-    "ko": "아티스트 페이지 찾기"
-  },
-  {
     "key": "ui29d7c1b1",
     "source": "查看 HaRu 与第三方 Flutter 依赖许可",
     "en": "View licenses for HaRu and third-party Flutter dependencies",
@@ -3743,6 +4198,13 @@
     "en": "View and copy a runtime summary with credentials excluded",
     "ja": "認証情報を除いた実行環境の概要を表示・コピー",
     "ko": "자격 증명을 제외한 실행 환경 요약 보기 및 복사"
+  },
+  {
+    "source": "查看更多",
+    "en": "View more",
+    "ja": "もっと見る",
+    "ko": "더 보기",
+    "key": "ui7c04d205"
   },
   {
     "key": "ui37042e79",
@@ -3808,6 +4270,13 @@
     "ko": "모델 목록 가져오기 실패: {p0}"
   },
   {
+    "source": "模型列表返回格式无效",
+    "en": "Invalid model list response format",
+    "ja": "モデル一覧の応答形式が無効です",
+    "ko": "모델 목록 응답 형식이 올바르지 않습니다",
+    "key": "ui0acd808e"
+  },
+  {
     "key": "ui703ce28e",
     "source": "模型名",
     "en": "Model name",
@@ -3820,6 +4289,13 @@
     "en": "Blur video thumbnails",
     "ja": "動画のサムネイルをぼかす",
     "ko": "동영상 썸네일 흐리게"
+  },
+  {
+    "source": "欢迎回来，{p0}！已成功登录 Hanime。",
+    "en": "Welcome back, {p0}! Logged into Hanime successfully.",
+    "ja": "おかえりなさい、{p0}！Hanime に正常にログインしました。",
+    "ko": "돌아오신 것을 환영합니다, {p0}님! Hanime에 성공적으로 로그인했습니다.",
+    "key": "ui61cd3d84"
   },
   {
     "key": "ui43f69efd",
@@ -3836,6 +4312,13 @@
     "ko": "다운로드 중 · {p0}"
   },
   {
+    "source": "正在下载更新包",
+    "en": "Downloading update package",
+    "ja": "アップデートパッケージをダウンロードしています",
+    "ko": "업데이트 패키지 다운로드 중",
+    "key": "ui68d41e66"
+  },
+  {
     "key": "ui34d9a170",
     "source": "正在刷新视频地址…",
     "en": "Refreshing video URL…",
@@ -3850,18 +4333,18 @@
     "ko": "처리 중"
   },
   {
+    "source": "正在播放",
+    "en": "Now Playing",
+    "ja": "再生中",
+    "ko": "재생 중",
+    "key": "ui0d9565c5"
+  },
+  {
     "key": "ui1e85b6dc",
     "source": "正在播放媒体",
     "en": "Playing media",
     "ja": "メディアを再生中",
     "ko": "미디어 재생 중"
-  },
-  {
-    "source": "正在整理订阅内容 {p0}/{p1}",
-    "en": "Organizing subscription content {p0}/{p1}",
-    "ja": "サブスクリプション コンテンツの整理 {p0}/{p1}",
-    "ko": "구독 콘텐츠 정리 {p0}/{p1}",
-    "key": "ui0e786c06"
   },
   {
     "source": "正在等待验证结果…如果长时间无反应，请点重试。",
@@ -3955,6 +4438,20 @@
     "ko": "이 빌드에는 GitHub 릴리스 업데이트 소스가 구성되어 있지 않습니다."
   },
   {
+    "source": "此类型不支持订阅。",
+    "en": "Subscriptions are not supported for this type.",
+    "ja": "このタイプは購読をサポートしていません。",
+    "ko": "이 유형은 구독을 지원하지 않습니다.",
+    "key": "ui4ddaf211"
+  },
+  {
+    "source": "此类型暂不支持在 App 内取消订阅。",
+    "en": "Unsubscribing within the app is currently not supported for this type.",
+    "ja": "このタイプのアカウント解除はアプリ内ではまだサポートされていません。",
+    "ko": "이 유형은 현재 앱 내에서 구독 취소를 지원하지 않습니다.",
+    "key": "ui4e1b0f19"
+  },
+  {
     "key": "ui3a0a0c97",
     "source": "此视频未提供可直接播放的 MP4 源。",
     "en": "This video has no directly playable MP4 source.",
@@ -3974,13 +4471,6 @@
     "en": "This video source is still unavailable. Try refreshing the video URL again.",
     "ja": "この動画ソースはまだ利用できません。動画URLをもう一度更新してください。",
     "ko": "이 동영상 소스를 아직 사용할 수 없습니다. 동영상 URL을 다시 새로고침하세요."
-  },
-  {
-    "key": "ui62dcc4bc",
-    "source": "每次加载一批随机视频",
-    "en": "Load a new batch of random videos each time",
-    "ja": "毎回新しいランダム動画を読み込む",
-    "ko": "매번 새로운 무작위 동영상 묶음 불러오기"
   },
   {
     "key": "ui51c846f1",
@@ -4030,6 +4520,13 @@
     "ja": "使用可能なバックアップ定義がありません。後でもう一度試してください。",
     "ko": "사용 가능한 백업 정의가 없습니다. 나중에 다시 시도해 주세요.",
     "key": "ui29c894b2"
+  },
+  {
+    "source": "没有启用翻译服务。",
+    "en": "Translation service is not enabled.",
+    "ja": "翻訳サービスが有効になっていません。",
+    "ko": "번역 서비스가 활성화되지 않았습니다.",
+    "key": "ui59f601fd"
   },
   {
     "key": "ui61fe8d4a",
@@ -4123,6 +4620,13 @@
     "ko": "일치하는 번역이 없습니다."
   },
   {
+    "source": "没有返回可用模型",
+    "en": "No available models returned",
+    "ja": "利用可能なモデルが返されませんでした",
+    "ko": "사용 가능한 모델이 반환되지 않았습니다",
+    "key": "ui3ca6cd4f"
+  },
+  {
     "source": "泡面番",
     "en": "instant noodles",
     "ja": "インスタントラーメン",
@@ -4165,55 +4669,6 @@
     "ko": "연결 테스트"
   },
   {
-    "source": "浏览器主页面加载失败；错误码={p0}；",
-    "en": "The browser's main page failed to load; error code = {p0};",
-    "ja": "ブラウザのメイン ページの読み込みに失敗しました。エラーコード = {p0};",
-    "ko": "브라우저의 기본 페이지를 로드하지 못했습니다. 오류 코드 = {p0};",
-    "key": "ui1d96670f"
-  },
-  {
-    "source": "浏览器挑战界面已消失，正在等待 cf_clearance；",
-    "en": "Browser challenge screen cleared; waiting for cf_clearance;",
-    "ja": "ブラウザーのチャレンジ画面が消失；cf_clearanceを待機中；",
-    "ko": "브라우저 챌린지 화면 종료; cf_clearance 대기 중;",
-    "key": "ui33fbe6ce"
-  },
-  {
-    "source": "浏览器检测到 Cloudflare 挑战；路径={p0}；",
-    "en": "Browser detected a Cloudflare challenge; path={p0};",
-    "ja": "ブラウザーがCloudflareチャレンジを検出；パス={p0}；",
-    "ko": "브라우저에서 Cloudflare 챌린지 감지; 경로={p0};",
-    "key": "ui129ae59c"
-  },
-  {
-    "source": "浏览器辅助验证完成；触发={p0}；路径={p1}；",
-    "en": "Browser-assisted verification completed; trigger={p0}; path={p1};",
-    "ja": "ブラウザによる検証が完了しました。トリガー={p0};パス={p1};",
-    "ko": "브라우저 지원 확인이 완료되었습니다. 트리거={p0}; 경로={p1};",
-    "key": "ui67cd734f"
-  },
-  {
-    "source": "浏览器辅助验证弹窗已显示；路径={p0}",
-    "en": "The browser-assisted verification pop-up window has been displayed; path={p0}",
-    "ja": "ブラウザ支援検証ポップアップ ウィンドウが表示されます。パス={p0}",
-    "ko": "브라우저 지원 확인 팝업 창이 표시되었습니다. 경로={p0}",
-    "key": "ui2c065af1"
-  },
-  {
-    "source": "浏览器页面开始加载；路径={p0}",
-    "en": "Browser page started loading; path={p0}",
-    "ja": "ブラウザーページの読み込みを開始；パス={p0}",
-    "ko": "브라우저 페이지 로드 시작; 경로={p0}",
-    "key": "ui521398c6"
-  },
-  {
-    "key": "ui2bce8045",
-    "source": "浏览站点内容分类",
-    "en": "Browse site content categories",
-    "ja": "サイトのコンテンツカテゴリを参照する",
-    "ko": "사이트 콘텐츠 카테고리 찾아보기"
-  },
-  {
     "key": "ui1bdcacb9",
     "source": "浏览站点评分最高的视频",
     "en": "Browse the site's highest-rated videos",
@@ -4240,13 +4695,6 @@
     "en": "Quality",
     "ja": "画質",
     "ko": "화질"
-  },
-  {
-    "source": "清晰度={p0}",
-    "en": "Quality={p0}",
-    "ja": "画質={p0}",
-    "ko": "화질={p0}",
-    "key": "ui57e9c7ab"
   },
   {
     "key": "ui1226aec8",
@@ -4389,6 +4837,13 @@
     "ko": "적은 투표로 비율이 지나치게 높아지는 것을 피하려면 좋아요 비율과 투표 수를 함께 확인하세요."
   },
   {
+    "source": "点踩",
+    "en": "Dislike",
+    "ja": "低評価",
+    "ko": "싫어요",
+    "key": "ui4992052a"
+  },
+  {
     "key": "ui71e94df2",
     "source": "热门",
     "en": "Popular",
@@ -4415,13 +4870,6 @@
     "en": "Popular videos",
     "ja": "人気の動画",
     "ko": "인기 동영상"
-  },
-  {
-    "key": "ui5137980d",
-    "source": "热门视频、高评分视频和艺术家排行",
-    "en": "Popular videos, top-rated videos, and artist rankings",
-    "ja": "人気動画、高評価動画、アーティストランキング",
-    "ko": "인기 동영상, 최고 평점 동영상 및 아티스트 순위"
   },
   {
     "source": "煽动仇恨或恶意内容",
@@ -4466,6 +4914,13 @@
     "ko": "사용자"
   },
   {
+    "source": "用户 ID 格式无效",
+    "en": "Invalid user ID format",
+    "ja": "ユーザー ID の形式が無効です",
+    "ko": "사용자 ID 형식이 잘못되었습니다",
+    "key": "ui6bab46da"
+  },
+  {
     "key": "ui2ff2035d",
     "source": "用户 ID：{p0}",
     "en": "User ID: {p0}",
@@ -4473,11 +4928,11 @@
     "ko": "사용자 ID: {p0}"
   },
   {
-    "source": "用户手动重试刷新验证页面；路径={p0}；",
-    "en": "The user manually retries to refresh the verification page; path={p0};",
-    "ja": "ユーザーは手動で検証ページの更新を再試行します。パス={p0};",
-    "ko": "사용자가 확인 페이지 새로고침을 수동으로 다시 시도합니다. 경로={p0};",
-    "key": "ui19930fad"
+    "source": "用户开始了更高优先级的操作",
+    "en": "User initiated a higher priority action",
+    "ja": "ユーザーがより優先度の高い操作を開始しました",
+    "ko": "사용자가 더 높은 우선순위의 작업을 시작했습니다",
+    "key": "ui04f9f7a4"
   },
   {
     "key": "ui07df625b",
@@ -4597,6 +5052,27 @@
     "en": "After signing in, search history is stored securely for each account.",
     "ja": "ログイン後、検索履歴はアカウントごとに安全に保存されます。",
     "ko": "로그인하면 검색 기록이 계정별로 안전하게 저장됩니다."
+  },
+  {
+    "source": "登录失败，请检查账号、密码或验证码要求。",
+    "en": "Login failed, please check account, password, or captcha requirements.",
+    "ja": "ログインに失敗しました。アカウント、パスワード、または認証要件を確認してください。",
+    "ko": "로그인에 실패했습니다. 계정, 비밀번호 또는 인증 요구사항을 확인해 주세요.",
+    "key": "ui1179dcd5"
+  },
+  {
+    "source": "登录失败，请检查账号和密码。",
+    "en": "Login failed, please check your username and password.",
+    "ja": "ログインに失敗しました。アカウントとパスワードを確認してください。",
+    "ko": "로그인에 실패했습니다. 계정과 비밀번호를 확인해 주세요.",
+    "key": "ui5a4df1a7"
+  },
+  {
+    "source": "登录状态已过期，请重新登录。",
+    "en": "Session expired, please log in again.",
+    "ja": "ログイン状態の期限が切れました。再ログインしてください。",
+    "ko": "로그인 상태가 만료되었습니다. 다시 로그인해 주세요.",
+    "key": "ui7d58135d"
   },
   {
     "source": "目标语言",
@@ -4746,6 +5222,13 @@
     "ko": "사이트 메시지"
   },
   {
+    "key": "ui1becc780",
+    "source": "站点服务暂时不可用，请稍后重试",
+    "en": "Site service is temporarily unavailable. Try again later.",
+    "ja": "サイトのサービスは一時的に利用できません。しばらくしてから再試行してください。",
+    "ko": "사이트 서비스를 일시적으로 사용할 수 없습니다. 잠시 후 다시 시도하세요."
+  },
+  {
     "source": "等不到 cookie → 重刷 → 再挑战",
     "en": "Can't wait for cookies → Refresh → Challenge again",
     "ja": "クッキーが待ちきれない → 更新 → 再チャレンジ",
@@ -4765,13 +5248,6 @@
     "en": "Waiting for retry",
     "ja": "再試行を待っています",
     "ko": "재시도를 기다리는 중"
-  },
-  {
-    "source": "等待验证结果已超 10 秒，提示用户可手动重试；",
-    "en": "After waiting for the verification result for more than 10 seconds, the user is prompted to try again manually;",
-    "ja": "検証結果を 10 秒以上待った後、ユーザーは手動で再試行するよう求められます。",
-    "ko": "10초 이상 확인 결과를 기다린 후 사용자에게 수동으로 다시 시도하라는 메시지가 표시됩니다.",
-    "key": "ui50c5f340"
   },
   {
     "key": "ui373ece32",
@@ -4851,13 +5327,6 @@
     "ko": "유형"
   },
   {
-    "source": "类型={p0}；耗时={p1}ms",
-    "en": "Type={p0}; time consumption={p1}ms",
-    "ja": "タイプ={p0};消費時間={p1}ms",
-    "ko": "유형={p0}; 시간 소비={p1}ms",
-    "key": "ui6107c243"
-  },
-  {
     "key": "ui0dbe3ac7",
     "source": "精选库 {p0} 包含重复视频。",
     "en": "Curated library {p0} contains duplicate videos.",
@@ -4914,11 +5383,11 @@
     "ko": "추천 동영상 항목에 필수 필드가 없습니다."
   },
   {
-    "key": "ui058d6015",
-    "source": "系统中断|网络连接中断|connection reset|socketexception|timed?\\s*out|broken pipe",
-    "en": "系统中断|网络连接中断|connection reset|socketexception|timed?\\s*out|broken pipe",
-    "ja": "系统中断|网络连接中断|connection reset|socketexception|timed？\\s*out|broken pipe",
-    "ko": "系统中断|网络连接中断|connection reset|socketexception|timed?\\s*out|broken pipe"
+    "source": "系列视频",
+    "en": "Series Videos",
+    "ja": "シリーズ動画",
+    "ko": "시리즈 동영상",
+    "key": "ui54ac0aa3"
   },
   {
     "key": "ui05a078da",
@@ -4940,6 +5409,27 @@
     "en": "The system could not add the download back to the queue.",
     "ja": "ダウンロードタスクをキューに再追加できませんでした。",
     "ko": "시스템에서 다운로드 작업을 대기열에 다시 추가하지 못했습니다."
+  },
+  {
+    "source": "系统阻止了本次安装，请检查「安装未知应用」权限。",
+    "en": "The system has blocked this installation. Please check the \"Install Unknown Applications\" permission.",
+    "ja": "システムがこのインストールをブロックしました。 「不明なアプリケーションのインストール」権限を確認してください。",
+    "ko": "시스템이 이 설치를 차단했습니다. \"알 수 없는 애플리케이션 설치\" 권한을 확인해주세요.",
+    "key": "ui3dbce44e"
+  },
+  {
+    "source": "结束日期",
+    "en": "End Date",
+    "ja": "終了日",
+    "ko": "종료일",
+    "key": "ui7344fe1b"
+  },
+  {
+    "source": "结束日期不能早于开始日期",
+    "en": "End date cannot be earlier than start date",
+    "ja": "終了日を開始日より前に設定することはできません",
+    "ko": "종료일은 시작일보다 빠를 수 없습니다",
+    "key": "ui7df2c519"
   },
   {
     "key": "ui5cb65115",
@@ -5075,11 +5565,74 @@
     "ko": "네트워크 재생 정책"
   },
   {
+    "source": "网络请求超时",
+    "en": "Network request timed out",
+    "ja": "ネットワークリクエストがタイムアウトしました",
+    "ko": "네트워크 요청 시간이 초과되었습니다",
+    "key": "ui2d500e9d"
+  },
+  {
+    "source": "网络请求超时，请稍后重试。",
+    "en": "Network request timed out, please retry later.",
+    "ja": "ネットワークリクエストがタイムアウトしました。後で再試行してください。",
+    "ko": "네트워크 요청 시간이 초과되었습니다. 잠시 후 다시 시도해 주세요.",
+    "key": "ui23b94735"
+  },
+  {
+    "key": "ui3778b430",
+    "source": "网络请求遇到问题，请重试",
+    "en": "Network request encountered a problem. Please try again.",
+    "ja": "ネットワークリクエストで問題が発生しました。再試行してください。",
+    "ko": "네트워크 요청에 문제가 발생했습니다. 다시 시도하세요."
+  },
+  {
     "key": "ui5d909650",
     "source": "网络连接中断，请检查网络后重试。",
     "en": "The network connection was interrupted. Check your network and try again.",
     "ja": "ネットワーク接続が中断されました。接続を確認して再試行してください。",
     "ko": "네트워크 연결이 중단되었습니다. 네트워크를 확인한 후 다시 시도하세요."
+  },
+  {
+    "key": "ui24c5d5a2",
+    "source": "网络连接失败，请检查网络是否畅通",
+    "en": "Network connection failed. Check your network connection.",
+    "ja": "ネットワーク接続に失敗しました。接続状態を確認してください。",
+    "ko": "네트워크 연결에 실패했습니다. 네트워크 상태를 확인하세요."
+  },
+  {
+    "key": "ui5717be7d",
+    "source": "网络连接异常，请检查网络",
+    "en": "Network connection error. Please check your network.",
+    "ja": "ネットワーク接続エラー。ネットワークを確認してください。",
+    "ko": "네트워크 연결 오류입니다. 네트워크를 확인하세요."
+  },
+  {
+    "key": "ui21d8799f",
+    "source": "网络连接异常，请检查网络后重试",
+    "en": "Network connection error. Check your network and try again.",
+    "ja": "ネットワーク接続エラー。ネットワークを確認して再試行してください。",
+    "ko": "네트워크 연결 오류입니다. 네트워크를 확인한 후 다시 시도하세요."
+  },
+  {
+    "source": "网络错误",
+    "en": "Network error",
+    "ja": "ネットワークエラー",
+    "ko": "네트워크 오류",
+    "key": "ui121f0e14"
+  },
+  {
+    "source": "网页 / Google 账号登入",
+    "en": "Web / Google Account Sign-in",
+    "ja": "ウェブ／Google アカウントログイン",
+    "ko": "웹 / Google 계정 로그인",
+    "key": "ui3ce8e370"
+  },
+  {
+    "source": "翻译不能为空",
+    "en": "Translation cannot be empty",
+    "ja": "翻訳は空にできません",
+    "ko": "번역은 비워둘 수 없습니다",
+    "key": "ui7fe12441"
   },
   {
     "key": "ui4c8d7732",
@@ -5096,11 +5649,60 @@
     "key": "ui20251330"
   },
   {
+    "source": "翻译库包含不支持的目标语言：{p0}",
+    "en": "The translation library contains an unsupported target language: {p0}",
+    "ja": "翻訳ライブラリにサポートされていない対象言語が含まれています：{p0}",
+    "ko": "번역 라이브러리에 지원되지 않는 대상 언어가 포함되어 있습니다: {p0}",
+    "key": "ui6053d6fa"
+  },
+  {
+    "source": "翻译库包含长度异常的字段",
+    "en": "Translation library contains fields with invalid length",
+    "ja": "翻訳ライブラリに異常な長さのフィールドが含まれています",
+    "ko": "번역 라이브러리에 비정상적인 길이의 필드가 포함되어 있습니다",
+    "key": "ui3a3c90e9"
+  },
+  {
+    "source": "翻译库文件不能超过 10 MB",
+    "en": "Translation library file cannot exceed 10 MB",
+    "ja": "翻訳ライブラリファイルは 10 MB を超えることはできません",
+    "ko": "번역 라이브러리 파일은 10 MB를 초과할 수 없습니다",
+    "key": "ui2cec6aea"
+  },
+  {
+    "source": "翻译库缺少 entries",
+    "en": "Translation library is missing entries",
+    "ja": "翻訳ライブラリに entries が不足しています",
+    "ko": "번역 라이브러리에 entries가 없습니다",
+    "key": "ui06ac6475"
+  },
+  {
+    "source": "翻译库词条数量超过 100000 条",
+    "en": "Translation library entry count exceeds 100,000",
+    "ja": "翻訳ライブラリの項目数が 100,000 件を超えています",
+    "ko": "번역 라이브러리 항목 수가 100,000개를 초과합니다",
+    "key": "ui04eb7dc2"
+  },
+  {
+    "source": "翻译库键字段包含非法字符",
+    "en": "Translation library key field contains invalid characters",
+    "ja": "翻訳ライブラリのキーフィールドに不正な文字が含まれています",
+    "ko": "번역 라이브러리 키 필드에 잘못된 문자가 포함되어 있습니다",
+    "key": "ui0250a335"
+  },
+  {
     "key": "ui0e144c39",
     "source": "翻译服务",
     "en": "Translation services",
     "ja": "翻訳サービス",
     "ko": "번역 서비스"
+  },
+  {
+    "source": "翻译服务尚未配置",
+    "en": "Translation service is not configured yet",
+    "ja": "翻訳サービスがまだ設定されていません",
+    "ko": "번역 서비스가 아직 구성되지 않았습니다",
+    "key": "ui071ebcfb"
   },
   {
     "source": "翻译目标语言",
@@ -5117,18 +5719,11 @@
     "ko": "번역 설정"
   },
   {
-    "source": "耗时={p0}ms",
-    "en": "Elapsed={p0}ms",
-    "ja": "所要時間={p0}ms",
-    "ko": "소요 시간={p0}ms",
-    "key": "ui56a4f7ec"
-  },
-  {
-    "source": "耗时={p0}ms；",
-    "en": "Time consumption={p0}ms;",
-    "ja": "消費時間={p0}ms;",
-    "ko": "시간 소모={p0}ms;",
-    "key": "ui0cfe710c"
+    "source": "翻译资产不是 JSON 对象：{p0}",
+    "en": "Translation asset is not a JSON object: {p0}",
+    "ja": "翻訳アセットが JSON オブジェクトではありません：{p0}",
+    "ko": "번역 에셋이 JSON 객체가 아닙니다: {p0}",
+    "key": "ui6f7c8396"
   },
   {
     "key": "ui42682f0b",
@@ -5136,6 +5731,13 @@
     "en": "Automatic",
     "ja": "自動",
     "ko": "자동"
+  },
+  {
+    "source": "自动安装更新包需要「安装未知应用」权限。请在系统设置中允许 HaRu 安装应用后返回。",
+    "en": "Automatically installing update packages requires the \"Install Unknown Applications\" permission. Please allow HaRu to install applications in the system settings and return.",
+    "ja": "更新パッケージを自動的にインストールするには、「不明なアプリケーションのインストール」権限が必要です。システム設定で HaRu にアプリケーションのインストールを許可してから戻ってください。",
+    "ko": "업데이트 패키지를 자동으로 설치하려면 \"알 수 없는 응용 프로그램 설치\" 권한이 필요합니다. 하루가 시스템 설정에서 애플리케이션을 설치하도록 허용하고 돌아오세요.",
+    "key": "ui653fb447"
   },
   {
     "key": "ui3a3ee33c",
@@ -5152,6 +5754,34 @@
     "ko": "자동 번역"
   },
   {
+    "source": "自定义…",
+    "en": "Custom...",
+    "ja": "カスタム…",
+    "ko": "사용자 지정...",
+    "key": "ui1a28517b"
+  },
+  {
+    "source": "自定义日期",
+    "en": "Custom Date",
+    "ja": "カスタム日付",
+    "ko": "사용자 지정 날짜",
+    "key": "ui401af108"
+  },
+  {
+    "source": "自定义时长",
+    "en": "Custom Duration",
+    "ja": "カスタム時間",
+    "ko": "사용자 지정 길이",
+    "key": "ui1b64dd4b"
+  },
+  {
+    "source": "自定义筛选范围无效。",
+    "en": "Custom filter range is invalid.",
+    "ja": "カスタムフィルター範囲が無効です。",
+    "ko": "사용자 지정 필터 범위가 잘못되었습니다.",
+    "key": "ui50983ec8"
+  },
+  {
     "key": "ui1d2c54c2",
     "source": "艺术家",
     "en": "Artist",
@@ -5166,11 +5796,32 @@
     "ko": "아티스트 순위"
   },
   {
+    "source": "艺术家订阅",
+    "en": "Artist subscriptions",
+    "ja": "絵師の購読",
+    "ko": "아티스트 구독",
+    "key": "ui2947cbbe"
+  },
+  {
     "key": "ui296bcd5e",
     "source": "节省流量",
     "en": "Save data",
     "ja": "データ通信量を節約",
     "ko": "데이터 절약"
+  },
+  {
+    "source": "获取播放列表安全令牌失败，请刷新后重试。",
+    "en": "Failed to obtain playlist security token, please refresh and retry.",
+    "ja": "プレイリストのセキュリティトークンを取得できませんでした。更新して再試行してください。",
+    "ko": "재생목록 보안 토큰을 가져오지 못했습니다. 새로고침 후 다시 시도해 주세요.",
+    "key": "ui0559c77a"
+  },
+  {
+    "source": "萬",
+    "en": "0k",
+    "ja": "万",
+    "ko": "만",
+    "key": "ui3451174b"
   },
   {
     "source": "裏番",
@@ -5180,11 +5831,32 @@
     "key": "ui5c249ba5"
   },
   {
+    "source": "觀看次數",
+    "en": "Views",
+    "ja": "再生回数",
+    "ko": "조회수",
+    "key": "ui38959118"
+  },
+  {
+    "source": "观看次数",
+    "en": "Views",
+    "ja": "再生回数",
+    "ko": "조회수",
+    "key": "ui67fc978a"
+  },
+  {
     "key": "ui7f179fc8",
     "source": "视频",
     "en": "Video",
     "ja": "動画",
     "ko": "동영상"
+  },
+  {
+    "source": "视频 {p0}",
+    "en": "Video {p0}",
+    "ja": "動画 {p0}",
+    "ko": "동영상 {p0}",
+    "key": "ui248185b4"
   },
   {
     "key": "ui4fbae4c2",
@@ -5236,11 +5908,11 @@
     "ko": "동영상은 선택한 공용 폴더에 직접 저장됩니다. 기본 위치는 Downloads/Flule34입니다. 내 정보 → 다운로드에서 오른쪽 위 버튼을 눌러 변경할 수 있습니다."
   },
   {
-    "key": "ui3c64ae15",
-    "source": "视频详情",
-    "en": "Video details",
-    "ja": "動画の詳細",
-    "ko": "동영상 세부정보"
+    "source": "视频详情响应异常，请稍后重试。",
+    "en": "Abnormal response for video details, please retry later.",
+    "ja": "動画詳細の応答が異常です。後で再試行してください。",
+    "ko": "비디오 상세 응답이 비정상입니다. 잠시 후 다시 시도해 주세요.",
+    "key": "ui0ee94f25"
   },
   {
     "key": "ui6fbc2348",
@@ -5248,13 +5920,6 @@
     "en": "Video preview",
     "ja": "動画プレビュー",
     "ko": "동영상 미리보기"
-  },
-  {
-    "source": "视频预览失败；site={p0}；video={p1}",
-    "en": "Video preview failed; site={p0}; video={p1}",
-    "ja": "ビデオのプレビューに失敗しました。サイト={p0};ビデオ={p1}",
-    "ko": "비디오 미리보기에 실패했습니다. 사이트={p0}; 비디오={p1}",
-    "key": "ui2d82e410"
   },
   {
     "key": "ui7b8f2379",
@@ -5320,6 +5985,20 @@
     "ko": "기기"
   },
   {
+    "source": "设备存储空间不足，无法安装更新包。",
+    "en": "The device has insufficient storage space to install the update package.",
+    "ja": "デバイスに更新パッケージをインストールするための十分なストレージ容量がありません。",
+    "ko": "장치에 업데이트 패키지를 설치할 저장 공간이 부족합니다.",
+    "key": "ui2e92dd76"
+  },
+  {
+    "key": "ui17add25c",
+    "source": "访问受限，可能需要安全验证",
+    "en": "Access restricted. Security verification may be required.",
+    "ja": "アクセスが制限されています。セキュリティ認証が必要な場合があります。",
+    "ko": "접근이 제한되었습니다. 보안 인증이 필요할 수 있습니다."
+  },
+  {
     "key": "ui11313487",
     "source": "评分最高",
     "en": "Top rated",
@@ -5332,6 +6011,13 @@
     "ja": "コメント",
     "ko": "코멘트",
     "key": "ui491e642c"
+  },
+  {
+    "source": "评论内容不能为空。",
+    "en": "Comment content cannot be empty.",
+    "ja": "コメント内容は空にできません。",
+    "ko": "댓글 내용은 비워둘 수 없습니다.",
+    "key": "ui22cd66c8"
   },
   {
     "source": "评论加载失败，点击重试",
@@ -5383,6 +6069,34 @@
     "key": "ui5e9e6941"
   },
   {
+    "source": "该客户端已被关闭，无法发起请求。",
+    "en": "The client has been closed; cannot initiate requests.",
+    "ja": "クライアントはすでに閉じられているため、リクエストを開始できません。",
+    "ko": "클라이언트가 종료되어 요청을 시작할 수 없습니다.",
+    "key": "ui139f12da"
+  },
+  {
+    "source": "该版本没有可下载的安装包。",
+    "en": "There is no downloadable installation package for this version.",
+    "ja": "このバージョンにはダウンロード可能なインストール パッケージはありません。",
+    "ko": "이 버전에는 다운로드 가능한 설치 패키지가 없습니다.",
+    "key": "ui6ebae107"
+  },
+  {
+    "source": "该版本没有可下载的安装包，已打开 GitHub 发布页。",
+    "en": "There is no downloadable installation package for this version, and the GitHub release page has been opened.",
+    "ja": "このバージョンにはダウンロード可能なインストール パッケージはなく、GitHub リリース ページが公開されています。",
+    "ko": "이 버전에는 다운로드 가능한 설치 패키지가 없으며 GitHub 릴리스 페이지가 열렸습니다.",
+    "key": "ui5accb58a"
+  },
+  {
+    "source": "该类型不允许翻译",
+    "en": "This type is not allowed to be translated",
+    "ja": "このタイプは翻訳が許可されていません",
+    "ko": "이 유형은 번역이 허용되지 않습니다",
+    "key": "ui244129bf"
+  },
+  {
     "key": "ui52575ad3",
     "source": "语言显示模式",
     "en": "Language display mode",
@@ -5395,6 +6109,13 @@
     "ja": "説明",
     "ko": "설명",
     "key": "ui16d86fec"
+  },
+  {
+    "source": "请先填写 API Key",
+    "en": "Please fill in the API Key first",
+    "ja": "先に API キーを入力してください",
+    "ko": "먼저 API 키를 입력해 주세요",
+    "key": "ui4e258c29"
   },
   {
     "key": "ui7894fed1",
@@ -5411,6 +6132,20 @@
     "key": "ui19e258a9"
   },
   {
+    "source": "请先登录 Hanime 账号。",
+    "en": "Please log in to your Hanime account first.",
+    "ja": "先に Hanime アカウントにログインしてください。",
+    "ko": "먼저 Hanime 계정에 로그인해 주세요.",
+    "key": "ui3ee081eb"
+  },
+  {
+    "source": "请先登录后再使用此功能。",
+    "en": "Please log in before using this feature.",
+    "ja": "この機能を使用する前にログインしてください。",
+    "ko": "이 기능을 사용하려면 먼저 로그인해 주세요.",
+    "key": "ui57f971fd"
+  },
+  {
     "source": "请在网页中完成验证，成功后会自动返回。",
     "en": "Complete the verification in the page. The app will return automatically when it succeeds.",
     "ja": "ページ内で認証を完了してください。成功すると自動的にアプリへ戻ります。",
@@ -5425,11 +6160,60 @@
     "ko": "이름, 기본 URL, 모델 및 API 키를 모두 입력하세요."
   },
   {
+    "source": "请求失败",
+    "en": "Request failed",
+    "ja": "リクエストに失敗しました",
+    "ko": "요청 실패",
+    "key": "ui2033b3c1"
+  },
+  {
+    "source": "请求失败，请稍后重试。",
+    "en": "Request failed, please retry later.",
+    "ja": "リクエストに失敗しました。後で再試行してください。",
+    "ko": "요청이 실패했습니다. 잠시 후 다시 시도해 주세요.",
+    "key": "ui673534a9"
+  },
+  {
+    "source": "请求失败：{p0}",
+    "en": "Request failed: {p0}",
+    "ja": "リクエストに失敗しました：{p0}",
+    "ko": "요청 실패: {p0}",
+    "key": "ui64ba2be4"
+  },
+  {
+    "key": "ui0d97efea",
+    "source": "请求已取消",
+    "en": "Request cancelled.",
+    "ja": "リクエストがキャンセルされました。",
+    "ko": "요청이 취소되었습니다."
+  },
+  {
+    "key": "ui4bc1c631",
+    "source": "请求的内容不存在或已被删除",
+    "en": "The requested content does not exist or has been deleted.",
+    "ja": "要求されたコンテンツは存在しないか、削除されています。",
+    "ko": "요청한 콘텐츠가 존재하지 않거나 삭제되었습니다."
+  },
+  {
+    "key": "ui3a579d8a",
+    "source": "请求超时，请重试",
+    "en": "Request timed out. Please try again.",
+    "ja": "リクエストがタイムアウトしました。再試行してください。",
+    "ko": "요청 시간이 초과되었습니다. 다시 시도하세요."
+  },
+  {
     "key": "ui61ca1aa4",
     "source": "请至少输入 2 个字符。",
     "en": "Please enter at least 2 characters.",
     "ja": "少なくとも 2 文字を入力してください。",
     "ko": "2자 이상 입력해주세요."
+  },
+  {
+    "source": "请输入 0 至 36000 的整数",
+    "en": "Please enter an integer between 0 and 36000",
+    "ja": "0 から 36000 までの整数を入力してください",
+    "ko": "0부터 36000 사이의 정수를 입력하세요",
+    "key": "ui7d47ba9d"
   },
   {
     "key": "ui61cb4e40",
@@ -5460,13 +6244,6 @@
     "ko": "내 정보로 돌아가 로그인한 뒤 계정 정보를 확인하세요."
   },
   {
-    "source": "调整本机、R34V 与 Hanime 的显示顺序。",
-    "en": "Adjust the display order of this unit, R34V and Hanime.",
-    "ja": "本機、R34V、Hanimeの表示順序を調整します。",
-    "ko": "본 기기, R34V 및 Hanime의 표시 순서를 조정합니다.",
-    "key": "ui4af5a957"
-  },
-  {
     "key": "ui6447b2e3",
     "source": "账号与媒体库",
     "en": "Account and library",
@@ -5479,6 +6256,20 @@
     "en": "There are no playlists in the account yet.",
     "ja": "アカウントにはまだプレイリストがありません。",
     "ko": "계정에 아직 재생목록이 없습니다."
+  },
+  {
+    "source": "账号和密码不能为空。",
+    "en": "Account and password cannot be empty.",
+    "ja": "アカウントとパスワードは空にできません。",
+    "ko": "계정과 비밀번호는 비워둘 수 없습니다.",
+    "key": "ui65413ec5"
+  },
+  {
+    "source": "账号状态发生变化",
+    "en": "Account status has changed",
+    "ja": "アカウント状態が変更されました",
+    "ko": "계정 상태가 변경되었습니다",
+    "key": "ui2d477648"
   },
   {
     "source": "账号资料已更新。",
@@ -5514,13 +6305,6 @@
     "en": "Use system setting",
     "ja": "システムに合わせる",
     "ko": "시스템 설정 따르기"
-  },
-  {
-    "source": "路径={p0}；进度={p1}；",
-    "en": "Path={p0}; progress={p1};",
-    "ja": "パス={p0}；進捗={p1}；",
-    "ko": "경로={p0}; 진행률={p1};",
-    "key": "ui58ccc0dc"
   },
   {
     "key": "ui76da0fc0",
@@ -5598,6 +6382,13 @@
     "en": "Back",
     "ja": "戻る",
     "ko": "뒤로"
+  },
+  {
+    "source": "返回了空译文",
+    "en": "Returned an empty translation",
+    "ja": "空の訳文が返されました",
+    "ko": "빈 번역문이 반환되었습니다",
+    "key": "ui3caf8ced"
   },
   {
     "key": "ui10524b4c",
@@ -5719,6 +6510,13 @@
     "ko": "연결 실패: {p0}"
   },
   {
+    "key": "ui2c70d970",
+    "source": "连接超时，请检查网络设置后重试",
+    "en": "Connection timed out. Check your network settings and try again.",
+    "ja": "接続がタイムアウトしました。ネットワーク設定を確認して再試行してください。",
+    "ko": "연결 시간이 초과되었습니다. 네트워크 설정을 확인하고 다시 시도하세요."
+  },
+  {
     "key": "ui15cf6bb2",
     "source": "退出",
     "en": "Exit",
@@ -5761,13 +6559,6 @@
     "ko": "로그아웃하시겠습니까?"
   },
   {
-    "source": "适用于 R34V、Hanime 首页和普通视频列表，以及搜索结果和本地分类库。",
-    "en": "Applies to R34V, Hanime homepage and normal video lists, as well as search results and local category libraries.",
-    "ja": "R34V、Hanime ホームページ、通常のビデオ リスト、検索結果、ローカル カテゴリ ライブラリに適用されます。",
-    "ko": "R34V, Hanime 홈페이지, 일반 동영상 목록, 검색결과, 지역 카테고리 라이브러리에 적용됩니다.",
-    "key": "ui2b4f5fd9"
-  },
-  {
     "source": "选择一个分类开始浏览，也可以直接在上方输入关键词搜索。",
     "en": "Select a category to start browsing, or you can enter keyword search directly above.",
     "ja": "カテゴリを選択して閲覧を開始するか、直接上にキーワード検索を入力することもできます。",
@@ -5803,13 +6594,6 @@
     "ko": "모델 선택"
   },
   {
-    "source": "选择跟随系统或固定使用一种界面语言",
-    "en": "Follow the system language or choose a fixed interface language",
-    "ja": "システム言語に合わせるか、表示言語を固定します",
-    "ko": "시스템 언어를 따르거나 인터페이스 언어를 고정합니다",
-    "key": "ui53e6ce38"
-  },
-  {
     "key": "ui5b975d06",
     "source": "通过配置的 GitHub Releases 源检查",
     "en": "Check using the configured GitHub Releases source",
@@ -5843,6 +6627,13 @@
     "en": "Some autocomplete suggestions are temporarily unavailable.",
     "ja": "一部の入力候補は一時的に利用できません。",
     "ko": "일부 자동 완성 제안을 일시적으로 사용할 수 없습니다."
+  },
+  {
+    "source": "部分订阅暂时无法读取，请稍后重试。",
+    "en": "Some subscriptions cannot be read for now, please retry later.",
+    "ja": "一部の購読は現在読み込めません。後で再試行してください。",
+    "ko": "일부 구독을 현재 읽어올 수 없습니다. 잠시 후 다시 시도해 주세요.",
+    "key": "ui5e31cf42"
   },
   {
     "source": "里番",
@@ -5929,13 +6720,6 @@
     "ko": "무작위"
   },
   {
-    "key": "ui74a56f94",
-    "source": "随机探索",
-    "en": "Explore randomly",
-    "ja": "ランダムに探す",
-    "ko": "무작위 탐색"
-  },
-  {
     "key": "ui5d3798d3",
     "source": "隐私与数据",
     "en": "Privacy and data",
@@ -5962,6 +6746,13 @@
     "en": "Hide password",
     "ja": "パスワードを隠す",
     "ko": "비밀번호 숨기기"
+  },
+  {
+    "source": "需要安装权限",
+    "en": "Requires installation permission",
+    "ja": "インストール許可が必要です",
+    "ko": "설치 권한이 필요합니다",
+    "key": "ui36eeedcb"
   },
   {
     "key": "ui25621c61",
@@ -6004,6 +6795,13 @@
     "en": "Play in order",
     "ja": "順番に再生",
     "ko": "순서대로 재생"
+  },
+  {
+    "source": "预加载服务已销毁",
+    "en": "Preload service has been destroyed",
+    "ja": "プリロードサービスは破棄されました",
+    "ko": "사전 로드 서비스가 해제되었습니다",
+    "key": "ui1ebb446b"
   },
   {
     "key": "ui73db46a3",

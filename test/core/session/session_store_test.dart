@@ -1,7 +1,6 @@
 import 'package:cookie_jar/cookie_jar.dart';
-import 'package:flutter_test/flutter_test.dart';
-
 import 'package:flule34/core/session/session_store.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 import '../../helpers/test_session_harness.dart';
 

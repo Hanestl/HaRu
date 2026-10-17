@@ -1,7 +1,6 @@
-import 'package:flutter_test/flutter_test.dart';
-
 import 'package:flule34/core/models/video_models.dart';
 import 'package:flule34/shared/video_list_filters.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test('本地视频筛选支持最新排序及多条件取交集', () {

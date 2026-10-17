@@ -1,20 +1,21 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_test/flutter_test.dart';
-import 'package:video_player_platform_interface/video_player_platform_interface.dart';
-
 import 'package:flule34/app/providers.dart';
 import 'package:flule34/core/api/rule34video_api.dart';
 import 'package:flule34/core/models/video_models.dart';
-import 'package:flule34/core/session/session_store.dart';
 import 'package:flule34/core/services/network_status_service.dart';
 import 'package:flule34/core/services/screen_wake_lock_service.dart';
+import 'package:flule34/core/session/session_store.dart';
 import 'package:flule34/features/downloads/domain/download_models.dart';
 import 'package:flule34/features/settings/data/app_settings_store.dart';
 import 'package:flule34/features/video/video_detail_page.dart';
 import 'package:flule34/features/video/video_player_page.dart';
+import 'package:flule34/shared/video_card.dart';
+import 'package:flule34/shared/video_collection_layout.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:video_player_platform_interface/video_player_platform_interface.dart';
 
 import '../../helpers/test_session_harness.dart';
 
@@ -104,8 +105,11 @@ void main() {
       ),
       findsOneWidget,
     );
+    final detailScrollView = find.byKey(
+      const ValueKey('video-detail-scroll-view'),
+    );
     final innerScrollable = find.descendant(
-      of: find.byType(ListView),
+      of: detailScrollView,
       matching: find.byType(Scrollable),
     );
     final innerPosition = tester
@@ -113,7 +117,7 @@ void main() {
         .position;
 
     final playingGesture = await tester.startGesture(
-      tester.getCenter(find.byType(ListView)),
+      tester.getCenter(detailScrollView),
     );
     for (var index = 0; index < 6; index += 1) {
       await playingGesture.moveBy(const Offset(0, -100));
@@ -127,7 +131,7 @@ void main() {
     expect(tester.getTopLeft(playerFinder).dy, closeTo(playerTop, 0.1));
 
     final reverseGesture = await tester.startGesture(
-      tester.getCenter(find.byType(ListView)),
+      tester.getCenter(detailScrollView),
     );
     for (var index = 0; index < 3; index += 1) {
       await reverseGesture.moveBy(const Offset(0, 60));
@@ -148,7 +152,7 @@ void main() {
     expect(nestedState.outerController.offset, closeTo(0, 0.01));
     expect(innerPosition.pixels, closeTo(innerBeforePause, 0.01));
 
-    await tester.fling(find.byType(ListView), const Offset(0, -1200), 3000);
+    await tester.fling(detailScrollView, const Offset(0, -1200), 3000);
     await tester.pumpAndSettle();
     expect(nestedState.outerController.offset, greaterThan(0));
     final innerBeforeResume = innerPosition.pixels;
@@ -284,16 +288,720 @@ void main() {
     );
     await tester.pump(const Duration(milliseconds: 600));
     await gesture.up();
-    await tester.pump(const Duration(milliseconds: 300));
-
     expect(find.text('编辑译文'), findsOneWidget);
     expect(find.byType(TextField), findsOneWidget);
   });
+
+  testWidgets('详情页相关视频采用 VideoCollectionSliver 懒加载承载', (tester) async {
+    final harness = TestSessionHarness.create();
+    addTearDown(harness.dispose);
+    await harness.sessionStore.load();
+    final relatedVideos = List<VideoItem>.generate(
+      40,
+      (index) => VideoItem(
+        id: '${500 + index}',
+        title: '相关推荐视频 $index',
+        slug: 'related-video-$index',
+      ),
+    );
+    final api = _RelatedFakeVideoApi(harness.sessionStore, relatedVideos);
+    final playerHandle = VideoPlayerHandle();
+    addTearDown(playerHandle.dispose);
+    final container = ProviderContainer(
+      overrides: [
+        rule34VideoApiProvider.overrideWithValue(api),
+        appDatabaseProvider.overrideWithValue(harness.database),
+        appSettingsStoreProvider.overrideWithValue(_MemorySettingsStore()),
+        downloadPlatformServiceProvider.overrideWithValue(
+          _FakeDownloadPlatformService(),
+        ),
+        networkStatusServiceProvider.overrideWithValue(
+          _FakeNetworkStatusService(),
+        ),
+        screenWakeLockServiceProvider.overrideWithValue(
+          _FakeScreenWakeLockService(),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          home: VideoDetailPage(
+            api: api,
+            video: _video,
+            playerHandle: playerHandle,
+          ),
+        ),
+      ),
+    );
+    addTearDown(() async {
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
+    });
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(
+      find.byType(VideoCollectionSliver, skipOffstage: false),
+      findsOneWidget,
+    );
+    expect(find.text('相关视频'), findsOneWidget);
+    // 40 条相关视频不会一次性全部构建：首屏只应构建可见的少量卡片。
+    final builtCards = find
+        .byType(VideoCard, skipOffstage: false)
+        .evaluate()
+        .length;
+    expect(builtCards, greaterThan(0));
+    expect(
+      builtCards,
+      lessThan(relatedVideos.length),
+      reason: '懒加载应只构建首屏可见卡片，实际构建 $builtCards / ${relatedVideos.length}',
+    );
+    expect(find.text('相关推荐视频 39'), findsNothing);
+  });
+
+  testWidgets('网络从离线恢复到连网时，可恢复错误会自动触发重试自愈', (tester) async {
+    final harness = TestSessionHarness.create();
+    addTearDown(harness.dispose);
+    await harness.sessionStore.load();
+    final api = _NetworkAutoRetryApi(harness.sessionStore);
+    final statusController = StreamController<NetworkClass>.broadcast();
+    addTearDown(statusController.close);
+    final networkStatus = _FakeNetworkStatusService(
+      initial: NetworkClass.offline,
+      statusStream: statusController.stream,
+    );
+    final container = ProviderContainer(
+      overrides: [
+        rule34VideoApiProvider.overrideWithValue(api),
+        appDatabaseProvider.overrideWithValue(harness.database),
+        appSettingsStoreProvider.overrideWithValue(_MemorySettingsStore()),
+        downloadPlatformServiceProvider.overrideWithValue(
+          _FakeDownloadPlatformService(),
+        ),
+        networkStatusServiceProvider.overrideWithValue(networkStatus),
+        screenWakeLockServiceProvider.overrideWithValue(
+          _FakeScreenWakeLockService(),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          home: VideoDetailPage(api: api, video: _video),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('无法连接到网站，请检查网络。'), findsOneWidget);
+    expect(api.detailLoads, 1);
+
+    // 模拟网络恢复
+    statusController.add(NetworkClass.wifi);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.pumpAndSettle();
+
+    expect(api.detailLoads, 2);
+    expect(find.text('3D'), findsOneWidget);
+    expect(find.text('测试视频'), findsOneWidget);
+    expect(find.text('无法连接到网站，请检查网络。'), findsNothing);
+  });
+
+  testWidgets('不可恢复错误（如 HTTP 403 / Cloudflare）即使网络恢复也不会盲目自愈', (tester) async {
+    final harness = TestSessionHarness.create();
+    addTearDown(harness.dispose);
+    await harness.sessionStore.load();
+    final api = _NetworkAutoRetryApi(
+      harness.sessionStore,
+      failureError: const HttpStatusException(403),
+    );
+    final statusController = StreamController<NetworkClass>.broadcast();
+    addTearDown(statusController.close);
+    final networkStatus = _FakeNetworkStatusService(
+      initial: NetworkClass.offline,
+      statusStream: statusController.stream,
+    );
+    final container = ProviderContainer(
+      overrides: [
+        rule34VideoApiProvider.overrideWithValue(api),
+        appDatabaseProvider.overrideWithValue(harness.database),
+        appSettingsStoreProvider.overrideWithValue(_MemorySettingsStore()),
+        downloadPlatformServiceProvider.overrideWithValue(
+          _FakeDownloadPlatformService(),
+        ),
+        networkStatusServiceProvider.overrideWithValue(networkStatus),
+        screenWakeLockServiceProvider.overrideWithValue(
+          _FakeScreenWakeLockService(),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          home: VideoDetailPage(api: api, video: _video),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('服务器返回了 HTTP 403。'), findsOneWidget);
+    expect(api.detailLoads, 1);
+
+    // 模拟网络恢复，不应盲目重试 403 业务错误
+    statusController.add(NetworkClass.wifi);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(api.detailLoads, 1);
+    expect(find.text('服务器返回了 HTTP 403。'), findsOneWidget);
+  });
+
+  for (final status in const [502, 503, 504]) {
+    testWidgets('HTTP $status 视为可恢复错误，连网恢复后自动重试自愈', (tester) async {
+      final harness = TestSessionHarness.create();
+      addTearDown(harness.dispose);
+      await harness.sessionStore.load();
+      final api = _NetworkAutoRetryApi(
+        harness.sessionStore,
+        failureError: HttpStatusException(status),
+      );
+      final statusController = StreamController<NetworkClass>.broadcast();
+      addTearDown(statusController.close);
+      final networkStatus = _FakeNetworkStatusService(
+        initial: NetworkClass.offline,
+        statusStream: statusController.stream,
+      );
+      final container = ProviderContainer(
+        overrides: [
+          rule34VideoApiProvider.overrideWithValue(api),
+          appDatabaseProvider.overrideWithValue(harness.database),
+          appSettingsStoreProvider.overrideWithValue(_MemorySettingsStore()),
+          downloadPlatformServiceProvider.overrideWithValue(
+            _FakeDownloadPlatformService(),
+          ),
+          networkStatusServiceProvider.overrideWithValue(networkStatus),
+          screenWakeLockServiceProvider.overrideWithValue(
+            _FakeScreenWakeLockService(),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            home: VideoDetailPage(api: api, video: _video),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('站点服务暂时不可用，请稍后重试'), findsOneWidget);
+      expect(api.detailLoads, 1);
+
+      // 5xx 属于可恢复错误：网络恢复后应自动重试自愈，而不是像 403 那样干等。
+      statusController.add(NetworkClass.wifi);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.pumpAndSettle();
+
+      expect(api.detailLoads, 2);
+      expect(find.text('站点服务暂时不可用，请稍后重试'), findsNothing);
+      expect(find.text('测试视频'), findsOneWidget);
+    });
+  }
+
+  testWidgets('自动重试严格遵守最多 2 次上限，手动点击重试可重置计数', (tester) async {
+    final harness = TestSessionHarness.create();
+    addTearDown(harness.dispose);
+    await harness.sessionStore.load();
+    final api = _NetworkAutoRetryApi(
+      harness.sessionStore,
+      failureCount: 3, // 前3次（初始+2次自愈）失败，第4次手动重试成功
+    );
+    final statusController = StreamController<NetworkClass>.broadcast();
+    addTearDown(statusController.close);
+    final networkStatus = _FakeNetworkStatusService(
+      initial: NetworkClass.offline,
+      statusStream: statusController.stream,
+    );
+    final container = ProviderContainer(
+      overrides: [
+        rule34VideoApiProvider.overrideWithValue(api),
+        appDatabaseProvider.overrideWithValue(harness.database),
+        appSettingsStoreProvider.overrideWithValue(_MemorySettingsStore()),
+        downloadPlatformServiceProvider.overrideWithValue(
+          _FakeDownloadPlatformService(),
+        ),
+        networkStatusServiceProvider.overrideWithValue(networkStatus),
+        screenWakeLockServiceProvider.overrideWithValue(
+          _FakeScreenWakeLockService(),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          home: VideoDetailPage(api: api, video: _video),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(api.detailLoads, 1);
+
+    // 第 1 次网络恢复自愈
+    statusController.add(NetworkClass.wifi);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.pumpAndSettle();
+    expect(api.detailLoads, 2);
+
+    // 再次掉线再恢复：第 2 次自愈
+    statusController.add(NetworkClass.offline);
+    await tester.pump();
+    statusController.add(NetworkClass.wifi);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.pumpAndSettle();
+    expect(api.detailLoads, 3);
+
+    // 再次掉线再恢复：已达 2 次自动上限，不应再自愈
+    statusController.add(NetworkClass.offline);
+    await tester.pump();
+    statusController.add(NetworkClass.wifi);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.pumpAndSettle();
+    expect(api.detailLoads, 3);
+
+    // 用户手动点击重试：重置计数并成功请求第 4 次
+    await tester.tap(find.text('重试'));
+    await tester.pumpAndSettle();
+    expect(api.detailLoads, 4);
+    expect(find.text('测试视频'), findsOneWidget);
+    expect(find.text('无法连接到网站，请检查网络。'), findsNothing);
+  });
+
+  testWidgets('详情加载骨架屏在窄屏(320dp/360dp)下自适应换行且无RenderFlex溢出', (tester) async {
+    final harness = TestSessionHarness.create();
+    addTearDown(harness.dispose);
+    await harness.sessionStore.load();
+    final completer = Completer<VideoDetails>();
+    final api = _BlockingDetailApi(harness.sessionStore, completer.future);
+
+    final container = ProviderContainer(
+      overrides: [
+        rule34VideoApiProvider.overrideWithValue(api),
+        appDatabaseProvider.overrideWithValue(harness.database),
+        appSettingsStoreProvider.overrideWithValue(_MemorySettingsStore()),
+        downloadPlatformServiceProvider.overrideWithValue(
+          _FakeDownloadPlatformService(),
+        ),
+        screenWakeLockServiceProvider.overrideWithValue(
+          _FakeScreenWakeLockService(),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    for (final width in [320.0, 360.0, 390.0]) {
+      tester.view.physicalSize = Size(width * 2, 800 * 2);
+      tester.view.devicePixelRatio = 2.0;
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            home: VideoDetailPage(api: api, video: _video),
+          ),
+        ),
+      );
+      await tester.pump();
+      expect(find.text('简介'), findsOneWidget);
+      expect(find.text('评论'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    }
+  });
+
+  testWidgets('延迟 current 时首个事件直接为 Wi-Fi，仍能触发自愈且 current 迟到返回 offline 不会重复请求', (
+    tester,
+  ) async {
+    final harness = TestSessionHarness.create();
+    addTearDown(harness.dispose);
+    await harness.sessionStore.load();
+
+    final currentCompleter = Completer<NetworkClass>();
+    final statusController = StreamController<NetworkClass>.broadcast();
+    addTearDown(statusController.close);
+
+    final networkService = _ControlledNetworkStatusService(
+      currentFuture: currentCompleter.future,
+      statusStream: statusController.stream,
+    );
+
+    final api = _NetworkAutoRetryApi(harness.sessionStore, failureCount: 1);
+
+    final container = ProviderContainer(
+      overrides: [
+        rule34VideoApiProvider.overrideWithValue(api),
+        appDatabaseProvider.overrideWithValue(harness.database),
+        appSettingsStoreProvider.overrideWithValue(_MemorySettingsStore()),
+        downloadPlatformServiceProvider.overrideWithValue(
+          _FakeDownloadPlatformService(),
+        ),
+        networkStatusServiceProvider.overrideWithValue(networkService),
+        screenWakeLockServiceProvider.overrideWithValue(
+          _FakeScreenWakeLockService(),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          home: VideoDetailPage(api: api, video: _video),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(api.detailLoads, 1);
+    expect(find.text('无法连接到网站，请检查网络。'), findsOneWidget);
+
+    // 首个 stream 事件直接为 Wi-Fi（未先发送 offline）
+    statusController.add(NetworkClass.wifi);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.pumpAndSettle();
+    expect(api.detailLoads, 2);
+
+    // 迟到的 current() 返回 offline，被拦截丢弃
+    currentCompleter.complete(NetworkClass.offline);
+    await tester.pump();
+    await tester.pumpAndSettle();
+
+    // 断言恢复请求只执行了一次，且页面成功展现
+    expect(api.detailLoads, 2);
+    expect(find.text('测试视频'), findsOneWidget);
+    expect(find.text('无法连接到网站，请检查网络。'), findsNothing);
+  });
+
+  testWidgets('请求在途时发生网络恢复，失败后能自动触发自愈重试', (tester) async {
+    final harness = TestSessionHarness.create();
+    addTearDown(harness.dispose);
+    await harness.sessionStore.load();
+
+    final statusController = StreamController<NetworkClass>.broadcast();
+    addTearDown(statusController.close);
+
+    final networkService = _FakeNetworkStatusService(
+      initial: NetworkClass.offline,
+      statusStream: statusController.stream,
+    );
+
+    final requestCompleter = Completer<VideoDetails>();
+    final api = _DeferredFailureDetailApi(
+      harness.sessionStore,
+      firstDeferredFuture: requestCompleter.future,
+    );
+
+    final container = ProviderContainer(
+      overrides: [
+        rule34VideoApiProvider.overrideWithValue(api),
+        appDatabaseProvider.overrideWithValue(harness.database),
+        appSettingsStoreProvider.overrideWithValue(_MemorySettingsStore()),
+        downloadPlatformServiceProvider.overrideWithValue(
+          _FakeDownloadPlatformService(),
+        ),
+        networkStatusServiceProvider.overrideWithValue(networkService),
+        screenWakeLockServiceProvider.overrideWithValue(
+          _FakeScreenWakeLockService(),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          home: VideoDetailPage(api: api, video: _video),
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(api.detailLoads, 1);
+
+    statusController.add(NetworkClass.wifi);
+    await tester.pump();
+
+    requestCompleter.completeError(const ApiException('无法连接到网站，请检查网络。'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.pumpAndSettle();
+
+    expect(api.detailLoads, 2);
+    expect(find.text('测试视频'), findsOneWidget);
+  });
+
+  testWidgets('切换视频时旧请求失败不会覆盖新请求状态', (tester) async {
+    final harness = TestSessionHarness.create();
+    addTearDown(harness.dispose);
+    await harness.sessionStore.load();
+
+    final completerA = Completer<VideoDetails>();
+    final completerB = Completer<VideoDetails>();
+    final api = _MultiVideoDeferredApi(
+      harness.sessionStore,
+      futures: {'123': completerA.future, '456': completerB.future},
+    );
+
+    final container = ProviderContainer(
+      overrides: [
+        rule34VideoApiProvider.overrideWithValue(api),
+        appDatabaseProvider.overrideWithValue(harness.database),
+        appSettingsStoreProvider.overrideWithValue(_MemorySettingsStore()),
+        downloadPlatformServiceProvider.overrideWithValue(
+          _FakeDownloadPlatformService(),
+        ),
+        screenWakeLockServiceProvider.overrideWithValue(
+          _FakeScreenWakeLockService(),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    const videoA = VideoItem(id: '123', title: '视频A', slug: 'video-a');
+    const videoB = VideoItem(id: '456', title: '视频B', slug: 'video-b');
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          home: VideoDetailPage(api: api, video: videoA),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          home: VideoDetailPage(api: api, video: videoB),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    completerA.completeError(const ApiException('无法连接到网站，请检查网络。'));
+    await tester.pump();
+
+    expect(find.text('重试'), findsNothing);
+
+    completerB.complete(
+      const VideoDetails(
+        video: videoB,
+        sources: [],
+        categories: [],
+        tags: [],
+        models: [],
+        isFavorite: false,
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('视频B'), findsOneWidget);
+  });
+
+  testWidgets('标签超过5个时默认折叠并显示剩余数量，点击可展开与收起', (tester) async {
+    tester.view.physicalSize = const Size(800, 1400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    final harness = TestSessionHarness.create();
+    addTearDown(harness.dispose);
+    await harness.sessionStore.load();
+
+    const videoWithManyTags = VideoDetails(
+      video: _video,
+      sources: [],
+      categories: ['3D'],
+      tags: ['tag1', 'tag2', 'tag3', 'tag4', 'tag5', 'tag6', 'tag7', 'tag8'],
+      models: [],
+      isFavorite: false,
+    );
+    final api = _BlockingDetailApi(
+      harness.sessionStore,
+      Future.value(videoWithManyTags),
+    );
+
+    final container = ProviderContainer(
+      overrides: [
+        rule34VideoApiProvider.overrideWithValue(api),
+        appDatabaseProvider.overrideWithValue(harness.database),
+        appSettingsStoreProvider.overrideWithValue(_MemorySettingsStore()),
+        downloadPlatformServiceProvider.overrideWithValue(
+          _FakeDownloadPlatformService(),
+        ),
+        screenWakeLockServiceProvider.overrideWithValue(
+          _FakeScreenWakeLockService(),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          home: VideoDetailPage(api: api, video: _video),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // 默认显示前 5 个标签（tag1~tag5），tag6~tag8 被折叠
+    expect(find.text('tag1'), findsOneWidget);
+    expect(find.text('tag5'), findsOneWidget);
+    expect(find.text('tag6'), findsNothing);
+    // 剩余标签为 8 - 5 = 3 个，显示展开(3)
+    expect(find.text('展开(3)'), findsOneWidget);
+
+    // 点击展开
+    await tester.ensureVisible(find.text('展开(3)'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('展开(3)'));
+    await tester.pumpAndSettle();
+
+    // 全部展示，按钮变为收起
+    expect(find.text('tag6'), findsOneWidget);
+    expect(find.text('tag8'), findsOneWidget);
+    expect(find.text('收起'), findsOneWidget);
+
+    // 点击收起
+    await tester.ensureVisible(find.text('收起'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('收起'), warnIfMissed: false);
+    await tester.pumpAndSettle();
+
+    // 恢复只显示前 5 个，按钮变回展开(3)
+    expect(find.text('tag6'), findsNothing);
+    expect(find.text('展开(3)'), findsOneWidget);
+  });
+}
+
+class _NetworkAutoRetryApi extends Rule34VideoApi {
+  _NetworkAutoRetryApi(
+    SessionStore sessionStore, {
+    this.failureError,
+    this.failureCount = 1,
+  }) : super(sessionStore: sessionStore);
+
+  final Object? failureError;
+  final int failureCount;
+  int detailLoads = 0;
+
+  @override
+  Future<VideoDetails> loadVideoDetails(
+    VideoItem video, {
+    bool force = false,
+  }) async {
+    detailLoads += 1;
+    if (detailLoads <= failureCount) {
+      throw failureError ?? const ApiException('无法连接到网站，请检查网络。');
+    }
+    return const VideoDetails(
+      video: _video,
+      sources: [],
+      categories: ['3D'],
+      tags: ['example'],
+      models: [],
+      isFavorite: false,
+    );
+  }
+
+  @override
+  Future<VideoDetails> refreshVideoDetails(VideoItem video) =>
+      loadVideoDetails(video, force: true);
+
+  @override
+  void close() {}
+}
+
+class _RelatedFakeVideoApi extends Rule34VideoApi {
+  _RelatedFakeVideoApi(SessionStore sessionStore, this.relatedVideos)
+    : super(sessionStore: sessionStore);
+
+  final List<VideoItem> relatedVideos;
+
+  @override
+  Future<VideoDetails> loadVideoDetails(
+    VideoItem video, {
+    bool force = false,
+  }) async {
+    return VideoDetails(
+      video: _video,
+      sources: const [],
+      categories: const ['3D'],
+      tags: const ['example'],
+      models: const ['Artist'],
+      isFavorite: false,
+      relatedVideos: relatedVideos,
+    );
+  }
+
+  @override
+  Future<VideoDetails> refreshVideoDetails(VideoItem video) =>
+      loadVideoDetails(video, force: true);
+
+  @override
+  Future<List<SubscriptionItem>> loadSubscriptions({
+    bool force = false,
+  }) async => const [];
+
+  @override
+  void close() {}
 }
 
 final class _FakeNetworkStatusService implements NetworkStatusService {
+  _FakeNetworkStatusService({
+    this.initial = NetworkClass.wifi,
+    this.statusStream,
+  });
+
+  final NetworkClass initial;
+  final Stream<NetworkClass>? statusStream;
+
   @override
-  Future<NetworkClass> current() async => NetworkClass.wifi;
+  Future<NetworkClass> current() async => initial;
+
+  @override
+  Stream<NetworkClass> get onStatusChanged =>
+      statusStream ?? const Stream.empty();
 }
 
 final class _FakeScreenWakeLockService implements ScreenWakeLockService {
@@ -549,4 +1257,103 @@ final class _FakeDownloadPlatformService implements DownloadPlatformService {
 
   @override
   Future<bool> openFile(String fileUri) async => true;
+}
+
+final class _ControlledNetworkStatusService implements NetworkStatusService {
+  _ControlledNetworkStatusService({
+    required this.currentFuture,
+    required this.statusStream,
+  });
+
+  final Future<NetworkClass> currentFuture;
+  final Stream<NetworkClass> statusStream;
+
+  @override
+  Future<NetworkClass> current() => currentFuture;
+
+  @override
+  Stream<NetworkClass> get onStatusChanged => statusStream;
+}
+
+final class _BlockingDetailApi extends Rule34VideoApi {
+  _BlockingDetailApi(SessionStore sessionStore, this.blockingFuture)
+    : super(sessionStore: sessionStore);
+
+  final Future<VideoDetails> blockingFuture;
+
+  @override
+  Future<VideoDetails> loadVideoDetails(
+    VideoItem video, {
+    bool force = false,
+  }) => blockingFuture;
+
+  @override
+  Future<VideoDetails> refreshVideoDetails(VideoItem video) => blockingFuture;
+
+  @override
+  void close() {}
+}
+
+final class _DeferredFailureDetailApi extends Rule34VideoApi {
+  _DeferredFailureDetailApi(
+    SessionStore sessionStore, {
+    required this.firstDeferredFuture,
+  }) : super(sessionStore: sessionStore);
+
+  final Future<VideoDetails> firstDeferredFuture;
+  int detailLoads = 0;
+
+  @override
+  Future<VideoDetails> loadVideoDetails(VideoItem video, {bool force = false}) {
+    detailLoads += 1;
+    if (detailLoads == 1) {
+      return firstDeferredFuture;
+    }
+    return Future.value(
+      VideoDetails(
+        video: video,
+        sources: const [],
+        categories: const ['3D'],
+        tags: const ['example'],
+        models: const [],
+        isFavorite: false,
+      ),
+    );
+  }
+
+  @override
+  Future<VideoDetails> refreshVideoDetails(VideoItem video) =>
+      loadVideoDetails(video, force: true);
+
+  @override
+  void close() {}
+}
+
+final class _MultiVideoDeferredApi extends Rule34VideoApi {
+  _MultiVideoDeferredApi(SessionStore sessionStore, {required this.futures})
+    : super(sessionStore: sessionStore);
+
+  final Map<String, Future<VideoDetails>> futures;
+
+  @override
+  Future<VideoDetails> loadVideoDetails(VideoItem video, {bool force = false}) {
+    return futures[video.id] ??
+        Future.value(
+          VideoDetails(
+            video: video,
+            sources: const [],
+            categories: const [],
+            tags: const [],
+            models: const [],
+            isFavorite: false,
+          ),
+        );
+  }
+
+  @override
+  Future<VideoDetails> refreshVideoDetails(VideoItem video) =>
+      loadVideoDetails(video, force: true);
+
+  @override
+  void close() {}
 }

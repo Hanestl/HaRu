@@ -3,16 +3,26 @@ package com.hanestl.flule34
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
+import android.content.ActivityNotFoundException
+import android.content.Intent
+import android.content.pm.PackageInstaller
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.content.Context
 import android.media.AudioManager
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.util.Log
 import android.provider.OpenableColumns
+import android.provider.Settings
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.plugin.common.MethodChannel
 import java.io.File
+import java.util.concurrent.Executors
 
 class MainActivity : FlutterActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -100,6 +110,127 @@ class MainActivity : FlutterActivity() {
             }
         }
 
+        val updaterChannel = MethodChannel(messenger, UPDATER_CHANNEL)
+        updaterChannel.setMethodCallHandler { call, result ->
+            when (call.method) {
+                "canInstallPackages" -> result.success(canInstallPackages())
+                "openInstallSettings" -> {
+                    openInstallSettings()
+                    result.success(null)
+                }
+
+                "installApk" -> installUpdateApk(call.argument<String>("path"), result)
+                else -> result.notImplemented()
+            }
+        }
+        InstallResultReceiver.listener = { status, message ->
+            updaterChannel.invokeMethod(
+                "installResult",
+                mapOf("status" to status, "message" to message),
+            )
+        }
+    }
+
+    override fun onDestroy() {
+        InstallResultReceiver.listener = null
+        super.onDestroy()
+    }
+
+    private fun canInstallPackages(): Boolean {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            return true
+        }
+        return packageManager.canRequestPackageInstalls()
+    }
+
+    private fun openInstallSettings() {
+        val intents = listOf(
+            Intent(
+                Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
+                Uri.parse("package:$packageName"),
+            ),
+            Intent(Settings.ACTION_MANAGE_APPLICATIONS_SETTINGS),
+        )
+        for (intent in intents) {
+            try {
+                startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                return
+            } catch (_: ActivityNotFoundException) {
+                // 尝试下一个系统设置入口。
+            }
+        }
+    }
+
+    private fun installUpdateApk(rawPath: String?, result: MethodChannel.Result) {
+        if (rawPath.isNullOrBlank()) {
+            result.error("INVALID_PATH", "安装包路径不能为空", null)
+            return
+        }
+        val file = try {
+            File(rawPath).canonicalFile
+        } catch (_: RuntimeException) {
+            result.error("INVALID_PATH", "安装包路径不合法", null)
+            return
+        }
+        val updatesRoot = File(cacheDir, "updates").canonicalFile
+        val allowed = file.path == updatesRoot.path ||
+            file.path.startsWith(updatesRoot.path + File.separator)
+        if (!allowed || !file.isFile) {
+            result.error("INVALID_PATH", "安装包路径不合法或文件不存在", null)
+            return
+        }
+        if (!canInstallPackages()) {
+            result.success("permissionRequired")
+            return
+        }
+        val mainHandler = Handler(Looper.getMainLooper())
+        Log.i(UPDATER_LOG_TAG, "installUpdateApk: begin path=${file.path} size=${file.length()}")
+        INSTALL_EXECUTOR.execute {
+            try {
+                val installer = packageManager.packageInstaller
+                val params = PackageInstaller.SessionParams(
+                    PackageInstaller.SessionParams.MODE_FULL_INSTALL,
+                ).apply {
+                    setAppPackageName(packageName)
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                        setInstallReason(PackageManager.INSTALL_REASON_USER)
+                    }
+                }
+                val sessionId = installer.createSession(params)
+                Log.i(UPDATER_LOG_TAG, "installUpdateApk: session=$sessionId created")
+                installer.openSession(sessionId).use { session ->
+                    file.inputStream().use { input ->
+                        session.openWrite("haru-update.apk", 0, file.length()).use { output ->
+                            input.copyTo(output)
+                            session.fsync(output)
+                        }
+                    }
+                    val statusIntent = Intent(applicationContext, InstallResultReceiver::class.java)
+                        .setAction(ACTION_INSTALL_COMMIT)
+                    val pendingIntent = PendingIntent.getBroadcast(
+                        applicationContext,
+                        sessionId,
+                        statusIntent,
+                        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE,
+                    )
+                    session.commit(pendingIntent.intentSender)
+                }
+                Log.i(UPDATER_LOG_TAG, "installUpdateApk: session=$sessionId committed")
+                mainHandler.post { result.success("started") }
+            } catch (_: SecurityException) {
+                Log.w(UPDATER_LOG_TAG, "installUpdateApk: permission required")
+                mainHandler.post { result.success("permissionRequired") }
+            } catch (error: Exception) {
+                Log.e(UPDATER_LOG_TAG, "installUpdateApk: failed", error)
+                mainHandler.post {
+                    result.error(
+                        "INSTALL_FAILED",
+                        error.message ?: "无法启动系统安装器，请稍后重试。",
+                        null,
+                    )
+                }
+            }
+        }
     }
 
     private fun inspectFile(uri: Uri): Map<String, Any?> {
@@ -256,12 +387,16 @@ class MainActivity : FlutterActivity() {
         }
     }
 
-    private companion object {
+    companion object {
         const val STORAGE_CHANNEL = "com.hanestl.flule34/storage_access"
         const val MEDIA_VOLUME_CHANNEL = "com.hanestl.flule34/media_volume"
         const val WEBVIEW_COOKIE_CHANNEL = "com.hanestl.flule34/webview_cookie"
+        const val UPDATER_CHANNEL = "com.hanestl.flule34/updater"
         const val DOWNLOAD_NOTIFICATION_CHANNEL = "background_downloader"
         const val MEDIA_NOTIFICATION_CHANNEL = "flule34_media_private"
         const val PLAYER_SERVICE_NOTIFICATION_CHANNEL = "better_player_channel"
+        const val ACTION_INSTALL_COMMIT = "com.hanestl.flule34.UPDATE_INSTALL_COMMIT"
+        const val UPDATER_LOG_TAG = "HaRuUpdater"
+        val INSTALL_EXECUTOR = Executors.newSingleThreadExecutor()
     }
 }

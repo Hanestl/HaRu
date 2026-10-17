@@ -2,9 +2,9 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 
+import '../../features/settings/data/app_settings_store.dart';
 import '../models/translation_provider_models.dart';
 import '../session/secret_store.dart';
-import '../../features/settings/data/app_settings_store.dart';
 
 final class TranslationProviderRepository extends ChangeNotifier {
   TranslationProviderRepository({required this.store, required this.secrets});

@@ -5,33 +5,37 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 
-import '../models/account_models.dart';
-import '../models/hanime_search_models.dart';
 import '../logging/app_log_service.dart';
+import '../models/account_models.dart';
+import '../models/content_source.dart';
+import '../models/hanime_search_models.dart';
 import '../models/rule34_comment_models.dart';
 import '../models/video_models.dart';
 import '../security/error_redaction.dart';
-import '../session/session_store.dart';
 import '../services/subscription_activity_index.dart';
-import 'site_parser.dart';
+import '../session/session_store.dart';
 import 'hanime1_api.dart';
 import 'hanime1_parser.dart';
-import '../models/content_source.dart';
+import 'http_adapter_factory.dart';
+import 'parse_isolate.dart';
+import 'site_parser.dart';
 
 class ApiException implements Exception {
-  const ApiException(this.message);
+  const ApiException(this.message, {this.statusCode});
 
   final String message;
+  final int? statusCode;
 
   @override
   String toString() => message;
 }
 
 final class HttpStatusException extends ApiException {
-  const HttpStatusException(this.statusCode)
-    : super('服务器返回了 HTTP $statusCode。');
+  const HttpStatusException(int statusCode)
+    : super('服务器返回了 HTTP $statusCode。', statusCode: statusCode);
 
-  final int statusCode;
+  @override
+  int get statusCode => super.statusCode!;
 }
 
 final class SessionExpiredException extends ApiException {
@@ -50,6 +54,7 @@ class Rule34VideoApi {
   static const _entityAvatarCacheLimit = 500;
   static const _accountPaginationLimit = 50;
   static const _accountPaginationNoProgressLimit = 3;
+  static const appUserAgent = 'HaRu Android/2.0.1';
 
   Rule34VideoApi({
     required this.sessionStore,
@@ -70,6 +75,15 @@ class Rule34VideoApi {
     if (httpClientAdapter != null) {
       _dio.httpClientAdapter = httpClientAdapter;
       _publicDio.httpClientAdapter = httpClientAdapter;
+    } else {
+      _dio.httpClientAdapter = getOrCreateSharedHttpAdapter(
+        userAgent: appUserAgent,
+        component: 'rule34video_api_auth',
+      );
+      _publicDio.httpClientAdapter = getOrCreateSharedHttpAdapter(
+        userAgent: appUserAgent,
+        component: 'rule34video_api_public',
+      );
     }
     _dio.interceptors.add(
       CookieManager(sessionStore.cookieJar, ignoreInvalidCookies: true),
@@ -361,7 +375,10 @@ class Rule34VideoApi {
       final path = page > 1 ? '${spec.path}$page/' : spec.path;
       body = await _get(path);
     }
-    return SiteParser.contentCollections(body, spec.kind);
+    return parseHtmlOffThread(
+      body,
+      () => SiteParser.contentCollections(body, spec.kind),
+    );
   }
 
   Future<List<VideoItem>> loadCollectionVideos(
@@ -391,7 +408,10 @@ class Rule34VideoApi {
       '/${collection.kind.pathSegment}/',
       query: <String, String>{'q': collection.title},
     );
-    final candidates = SiteParser.contentCollections(body, collection.kind);
+    final candidates = await parseHtmlOffThread(
+      body,
+      () => SiteParser.contentCollections(body, collection.kind),
+    );
     final normalizedTitle = collection.title.trim().toLowerCase();
     ContentCollectionItem? match;
     for (final candidate in candidates) {
@@ -503,7 +523,10 @@ class Rule34VideoApi {
     };
     final body = await _get(path, query: parameters);
     try {
-      return SiteParser.searchSuggestions(body, kind);
+      return await parseHtmlOffThread(
+        body,
+        () => SiteParser.searchSuggestions(body, kind),
+      );
     } on FormatException {
       return const [];
     }
@@ -608,16 +631,13 @@ class Rule34VideoApi {
       body = await _getPublic(video.detailPath, cancelToken: cancelToken);
       usedPublicRequest = true;
     }
-    var details = SiteParser.videoDetails(source: body, fallback: video);
+    var details = await _parseVideoDetails(body, video);
     if (details.sources.isEmpty && !usedPublicRequest) {
       final publicBody = await _getPublic(
         video.detailPath,
         cancelToken: cancelToken,
       );
-      final publicDetails = SiteParser.videoDetails(
-        source: publicBody,
-        fallback: video,
-      );
+      final publicDetails = await _parseVideoDetails(publicBody, video);
       if (publicDetails.sources.isNotEmpty) {
         details = publicDetails.copyWith(
           video: publicDetails.video.copyWith(isFavorite: details.isFavorite),
@@ -963,9 +983,10 @@ class Rule34VideoApi {
   }
 
   Future<MemberProfile> _fetchCurrentUserProfile(String userId) async {
-    final profile = SiteParser.memberProfile(
-      await _get('/members/$userId/'),
-      userId,
+    final body = await _get('/members/$userId/');
+    final profile = await parseHtmlOffThread(
+      body,
+      () => SiteParser.memberProfile(body, userId),
     );
     if (profile == null) {
       throw const ApiException('无法解析当前账号资料，请稍后重试。');
@@ -979,9 +1000,10 @@ class Rule34VideoApi {
   }
 
   Future<MemberProfile> loadMemberProfile(String userId) async {
-    final profile = SiteParser.memberProfile(
-      await _get('/members/$userId/'),
-      userId,
+    final body = await _get('/members/$userId/');
+    final profile = await parseHtmlOffThread(
+      body,
+      () => SiteParser.memberProfile(body, userId),
     );
     if (profile == null) {
       throw const ApiException('无法解析上传者资料，请稍后重试。');
@@ -1315,9 +1337,8 @@ class Rule34VideoApi {
           component: 'r34v_playlists',
         ),
       );
-      return SiteParser.playlists(
-        await _get(path, query: query, cancelToken: cancelToken),
-      );
+      final body = await _get(path, query: query, cancelToken: cancelToken);
+      return await parseHtmlOffThread(body, () => SiteParser.playlists(body));
     } on HttpStatusException catch (error) {
       if (page > 1 && error.statusCode == 404) {
         unawaited(
@@ -1371,9 +1392,13 @@ class Rule34VideoApi {
   Future<PlaylistFormData> loadPlaylistForm(String playlistId) async {
     _requireLogin();
     try {
-      return SiteParser.playlistForm(await _get('/edit-playlist/$playlistId/'));
+      final body = await _get('/edit-playlist/$playlistId/');
+      return await parseHtmlOffThread(
+        body,
+        () => SiteParser.playlistForm(body),
+      );
     } on FormatException catch (error) {
-      throw ApiException(error.message);
+      throw ApiException(redactSensitiveText(error.message));
     }
   }
 
@@ -1558,8 +1583,10 @@ class Rule34VideoApi {
       ),
     );
     try {
-      final result = SiteParser.subscriptions(
-        await _get(path, query: query, cancelToken: cancelToken),
+      final body = await _get(path, query: query, cancelToken: cancelToken);
+      final result = await parseHtmlOffThread(
+        body,
+        () => SiteParser.subscriptions(body),
       );
       unawaited(
         AppLogService.instance.info(
@@ -1746,7 +1773,7 @@ class Rule34VideoApi {
   }) async {
     try {
       final body = await _get(video.detailPath, cancelToken: cancelToken);
-      final comments = SiteParser.videoComments(body);
+      final comments = await _parseComments(body);
       unawaited(
         AppLogService.instance.info(
           'Rule34Video 评论已加载；video=${video.id}；条数=${comments.length}',
@@ -1909,7 +1936,7 @@ class Rule34VideoApi {
         );
         final error = _playlistActionError(body);
         if (error != null) {
-          throw ApiException(error);
+          throw ApiException(redactSensitiveText(error));
         }
         return body;
       } on HttpStatusException catch (error) {
@@ -2066,7 +2093,25 @@ class Rule34VideoApi {
     CancelToken? cancelToken,
   }) async {
     final body = await _get(path, query: query, cancelToken: cancelToken);
-    return SiteParser.videoList(body);
+    return _parseVideoList(body);
+  }
+
+  static Future<List<Rule34VideoComment>> _parseComments(String body) {
+    return parseHtmlOffThread(body, () => SiteParser.videoComments(body));
+  }
+
+  static Future<List<VideoItem>> _parseVideoList(String body) {
+    return parseHtmlOffThread(body, () => SiteParser.videoList(body));
+  }
+
+  static Future<VideoDetails> _parseVideoDetails(
+    String body,
+    VideoItem fallback,
+  ) {
+    return parseHtmlOffThread(
+      body,
+      () => SiteParser.videoDetails(source: body, fallback: fallback),
+    );
   }
 
   Future<List<VideoItem>> _paginatedVideoList(
@@ -2421,7 +2466,7 @@ class Rule34VideoApi {
       );
       final actionError = SiteParser.asyncActionError(body);
       if (ajax && actionError != null) {
-        throw ApiException(actionError);
+        throw ApiException(redactSensitiveText(actionError));
       }
       return body;
     } on SessionExpiredException {
@@ -2631,11 +2676,11 @@ class Rule34VideoApi {
       responseType: ResponseType.plain,
       followRedirects: false,
       headers: const {
-        'User-Agent': 'HaRu Android/2.0.1',
+        'User-Agent': appUserAgent,
         'Accept':
             'text/html,application/xhtml+xml,application/json;q=0.9,*/*;q=0.8',
       },
-      validateStatus: (status) => status != null && status < 500,
+      validateStatus: (status) => status != null && status < 600,
     );
   }
 }

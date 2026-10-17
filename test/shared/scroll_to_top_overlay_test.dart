@@ -1,7 +1,6 @@
+import 'package:flule34/shared/scroll_to_top_overlay.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:flule34/shared/scroll_to_top_overlay.dart';
 
 void main() {
   testWidgets('滚动超过一屏后显示按钮并可平滑回到顶部', (tester) async {

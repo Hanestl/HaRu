@@ -1,7 +1,7 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
 import 'package:flule34/l10n/ui_localization.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -11,15 +11,16 @@ import '../../../app/providers.dart';
 import '../../../app/router/route_names.dart';
 import '../../../core/api/rule34video_api.dart';
 import '../../../core/logging/app_log_service.dart';
+import '../../../core/models/translation_models.dart';
 import '../../../core/models/video_models.dart';
+import '../../../shared/error_view.dart';
+import '../../../shared/settings_controls.dart';
 import '../../playback/data/playback_repository.dart';
 import '../../search/data/search_history_repository.dart';
-import '../data/app_settings_repository.dart';
 import '../data/app_diagnostics_service.dart';
+import '../data/app_settings_repository.dart';
 import '../domain/app_settings.dart';
-import '../../../core/models/translation_models.dart';
 import 'translation_provider_section.dart';
-import '../../../shared/settings_controls.dart';
 
 class AppearanceSettingsPage extends ConsumerWidget {
   const AppearanceSettingsPage({super.key});
@@ -776,9 +777,9 @@ class _PrivacySettingsPageState extends ConsumerState<PrivacySettingsPage> {
       }
     } catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: AppText('清除图片缓存失败：$error')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: AppText('清除图片缓存失败：${friendlyErrorMessage(error)}')),
+        );
       }
     } finally {
       if (mounted) {
@@ -820,9 +821,9 @@ class _PrivacySettingsPageState extends ConsumerState<PrivacySettingsPage> {
       }
     } catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: AppText('清除搜索历史失败：$error')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: AppText('清除搜索历史失败：${friendlyErrorMessage(error)}')),
+        );
       }
     } finally {
       if (mounted) {
@@ -971,9 +972,9 @@ Future<void> _save(BuildContext context, Future<void> operation) async {
     await operation;
   } catch (error) {
     if (context.mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: AppText('保存设置失败：$error')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: AppText('保存设置失败：${friendlyErrorMessage(error)}')),
+      );
     }
   }
 }
@@ -1018,9 +1019,9 @@ Future<void> _changePlaybackProgressSetting(
       await settingsRepository.setRememberPlaybackProgress(true);
     }
     if (context.mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: AppText('清除播放进度失败：$error')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: AppText('清除播放进度失败：${friendlyErrorMessage(error)}')),
+      );
     }
   }
 }

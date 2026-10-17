@@ -1,11 +1,15 @@
+import 'dart:async';
+
 import 'package:file_selector/file_selector.dart';
-import 'package:flutter/material.dart';
 import 'package:flule34/l10n/ui_localization.dart';
+import 'package:flutter/material.dart';
 
 import '../../core/api/rule34video_api.dart';
+import '../../core/logging/app_log_service.dart';
 import '../../core/models/account_models.dart';
 import '../../core/models/content_source.dart';
 import '../../core/services/external_link_service.dart';
+import '../../shared/error_view.dart';
 import '../../shared/site_avatar.dart';
 
 /// Hanime 账号详情页：资料卡片、站点入口与退出登录。
@@ -111,7 +115,13 @@ class _HanimeAccountPageState extends State<HanimeAccountPage> {
         emailController.dispose();
       }
     } catch (error) {
-      if (mounted) _message('更新失败：$error');
+      unawaited(
+        AppLogService.instance.warning(
+          '更新 Hanime 账号资料失败：$error',
+          component: 'hanime_account',
+        ),
+      );
+      if (mounted) _message('更新失败：${friendlyErrorMessage(error)}');
     }
   }
 
@@ -171,7 +181,13 @@ class _HanimeAccountPageState extends State<HanimeAccountPage> {
       );
       if (mounted) _message('密码已更新。');
     } catch (error) {
-      if (mounted) _message('修改失败：$error');
+      unawaited(
+        AppLogService.instance.warning(
+          '修改 Hanime 账号密码失败：$error',
+          component: 'hanime_account',
+        ),
+      );
+      if (mounted) _message('修改失败：${friendlyErrorMessage(error)}');
     } finally {
       oldController.dispose();
       newController.dispose();
@@ -194,7 +210,13 @@ class _HanimeAccountPageState extends State<HanimeAccountPage> {
         _message('头像已更新。');
       }
     } catch (error) {
-      if (mounted) _message('头像更新失败：$error');
+      unawaited(
+        AppLogService.instance.warning(
+          '更新 Hanime 账号头像失败：$error',
+          component: 'hanime_account',
+        ),
+      );
+      if (mounted) _message('头像更新失败：${friendlyErrorMessage(error)}');
     }
   }
 
@@ -418,10 +440,16 @@ Future<void> _openExternal(BuildContext context, Uri uri) async {
   try {
     await ExternalLinkService.open(uri);
   } catch (error) {
+    unawaited(
+      AppLogService.instance.warning(
+        '打开外部链接失败；uri=$uri；错误=$error',
+        component: 'hanime_account',
+      ),
+    );
     if (context.mounted) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: AppText(error.toString())));
+      ).showSnackBar(SnackBar(content: AppText(friendlyErrorMessage(error))));
     }
   }
 }

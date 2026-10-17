@@ -51,6 +51,9 @@ jobs:
         run: |
           dart run build_runner build
           git diff --exit-code -- lib/core/database/app_database.g.dart
+          dart run tool/generate_ui_localizations.dart --check
+          flutter gen-l10n
+          git diff --exit-code -- lib/l10n tool/data/ui_localization_catalog.json
 
       - name: 静态分析
         run: flutter analyze --no-pub

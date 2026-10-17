@@ -12,6 +12,8 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <uses-permission android:name="android.permission.RUN_USER_INITIATED_JOBS" />
+    <!-- 应用内一键更新：下载 Release APK 后调起系统安装器。 -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
     <application
         android:label="HaRu"
         android:icon="@mipmap/ic_launcher"
@@ -48,6 +50,14 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+        <!-- 接收 PackageInstaller 会话的安装结果（取消、签名冲突等失败场景）。 -->
+        <receiver
+            android:name=".InstallResultReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.hanestl.flule34.UPDATE_INSTALL_COMMIT" />
+            </intent-filter>
+        </receiver>
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and

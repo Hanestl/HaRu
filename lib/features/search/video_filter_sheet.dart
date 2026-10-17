@@ -1,12 +1,13 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
 import 'package:flule34/l10n/ui_localization.dart';
+import 'package:flutter/material.dart';
 
 import '../../core/api/rule34video_api.dart';
 import '../../core/models/video_models.dart';
 import '../../core/services/translation_service.dart';
 import '../../shared/editable_translation.dart';
+import '../../shared/error_view.dart';
 import '../../shared/localized_translation_text.dart';
 import '../../shared/settings_controls.dart';
 import '../../shared/transient_focus.dart';
@@ -522,7 +523,12 @@ class _DebouncedSuggestionResultsState
           return const Center(child: CircularProgressIndicator());
         }
         if (snapshot.hasError) {
-          return Center(child: AppText(snapshot.error.toString()));
+          return AppErrorView(
+            error: snapshot.error,
+            onRetry: () => setState(() {
+              _future = widget.api.searchSuggestions(widget.query, widget.kind);
+            }),
+          );
         }
         final items = snapshot.data ?? const <SearchSuggestion>[];
         if (items.isEmpty) {

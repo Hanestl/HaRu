@@ -1,5 +1,5 @@
-import '../../../core/models/video_models.dart';
 import '../../../core/media/video_source_quality.dart';
+import '../../../core/models/video_models.dart';
 import 'app_settings.dart';
 
 VideoSource selectVideoSource(

@@ -1,8 +1,4 @@
 import 'package:drift/native.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_test/flutter_test.dart';
-
 import 'package:flule34/app/providers.dart';
 import 'package:flule34/core/database/app_database.dart';
 import 'package:flule34/features/playback/data/playback_repository.dart';
@@ -10,6 +6,9 @@ import 'package:flule34/features/settings/data/app_settings_repository.dart';
 import 'package:flule34/features/settings/data/app_settings_store.dart';
 import 'package:flule34/features/settings/presentation/settings_pages.dart';
 import 'package:flule34/shared/settings_controls.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   testWidgets('关闭记忆播放进度需确认并清空全部本地记录', (tester) async {

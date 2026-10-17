@@ -3,11 +3,10 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
-import 'package:flutter_test/flutter_test.dart';
-
 import 'package:flule34/core/api/hanime1_api.dart';
 import 'package:flule34/core/api/rule34video_api.dart';
 import 'package:flule34/core/models/video_models.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 import '../../helpers/test_session_harness.dart';
 
@@ -2258,6 +2257,36 @@ void main() {
     expect(req.uri.queryParameters['video_id'], '3051501');
     expect(req.uri.queryParameters['event'], 'VideoPlay,');
     expect(req.headers['Referer'], '/video/3051501/tifa-video/');
+  });
+
+  test('大页面解析下放到 Isolate 后仍返回完整结果', () async {
+    final harness = TestSessionHarness.create();
+    addTearDown(harness.dispose);
+    await harness.sessionStore.load();
+    final api = _postingApi(harness, (options) {
+      if (options.uri.path != '/models/') {
+        return _htmlResponse('<html></html>');
+      }
+      return _htmlResponse('''
+        <!-- ${'x' * 12000} -->
+        <div class="item">
+          <a href="/models/isolate-artist/" title="Isolate Artist">
+            Isolate Artist
+          </a>
+        </div>
+      ''');
+    });
+    addTearDown(api.close);
+    const spec = DiscoveryDirectorySpec(
+      title: '艺术家',
+      path: '/models/',
+      kind: DiscoveryKind.model,
+    );
+
+    final items = await api.loadDiscoveryDirectory(spec);
+
+    expect(items.single.title, 'Isolate Artist');
+    expect(items.single.path, '/models/isolate-artist/');
   });
 }
 

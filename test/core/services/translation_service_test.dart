@@ -1,6 +1,4 @@
-import 'package:flutter_test/flutter_test.dart';
 import 'package:drift/native.dart';
-
 import 'package:flule34/core/database/app_database.dart';
 import 'package:flule34/core/models/content_source.dart';
 import 'package:flule34/core/models/translation_models.dart';
@@ -8,6 +6,7 @@ import 'package:flule34/core/models/video_models.dart';
 import 'package:flule34/core/services/translation_service.dart';
 import 'package:flule34/features/settings/data/app_settings_repository.dart';
 import 'package:flule34/features/settings/data/app_settings_store.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -501,6 +500,40 @@ void main() {
     expect(value.hasTranslation, isFalse);
     expect(value.hasResult, isTrue);
     expect(value.plainText, '3D | 3D');
+  });
+
+  test('searchTagAliases 支持预归一化前缀与包含匹配且按匹配度排序', () async {
+    final settings = AppSettingsRepository(_MemorySettingsStore());
+    await settings.load();
+    await settings.setTranslationTarget(
+      TranslationTargetPreference.simplifiedChinese,
+    );
+    final service = TranslationService.fromDictionary(
+      settingsRepository: settings,
+      dictionary: const {
+        'blowjob': ' 口交 ',
+        'deepthroat': '深喉口交',
+        'paizuri': '乳交',
+      },
+    );
+    addTearDown(service.dispose);
+    await service.initialize();
+
+    // 空输入或纯空白输入返回空
+    expect(service.searchTagAliases(''), isEmpty);
+    expect(service.searchTagAliases('   '), isEmpty);
+
+    // 完全匹配优先于包含匹配
+    final suggestions = service.searchTagAliases('口交');
+    expect(suggestions, hasLength(2));
+    expect(suggestions.first.english, 'blowjob');
+    expect(suggestions.first.matchKind, TranslationMatchKind.exact);
+    expect(suggestions.last.english, 'deepthroat');
+    expect(suggestions.last.matchKind, TranslationMatchKind.contains);
+
+    // 多余空白字符自动归一化
+    final normalizedSearch = service.searchTagAliases('  口交  ');
+    expect(normalizedSearch.first.english, 'blowjob');
   });
 }
 

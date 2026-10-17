@@ -6,8 +6,8 @@ import 'package:drift/drift.dart';
 import '../../../core/api/rule34video_api.dart';
 import '../../../core/database/app_database.dart';
 import '../../../core/logging/app_log_service.dart';
-import '../../../core/models/video_models.dart';
 import '../../../core/models/content_source.dart';
+import '../../../core/models/video_models.dart';
 import '../../../core/security/error_redaction.dart';
 import '../../settings/data/app_settings_repository.dart';
 import '../domain/download_models.dart';
@@ -19,6 +19,45 @@ final class DownloadException implements Exception {
 
   @override
   String toString() => message;
+}
+
+final class _DownloadProgressSnapshot {
+  _DownloadProgressSnapshot({
+    required this.lastPersistedAt,
+    required this.lastPersistedBytes,
+    required this.latestBytes,
+    required this.latestTotalBytes,
+  });
+
+  DateTime lastPersistedAt;
+  int lastPersistedBytes;
+  int latestBytes;
+  int? latestTotalBytes;
+}
+
+bool shouldPersistDownloadProgress({
+  required DateTime lastPersistedAt,
+  required int lastPersistedBytes,
+  required int currentBytes,
+  required int? totalBytes,
+  required DateTime now,
+  Duration throttleDuration = const Duration(milliseconds: 500),
+  int byteThreshold = 1024 * 1024,
+}) {
+  if (now.difference(lastPersistedAt) >= throttleDuration) {
+    return true;
+  }
+  if (currentBytes - lastPersistedBytes >= byteThreshold) {
+    return true;
+  }
+  if (totalBytes != null && totalBytes > 0) {
+    final lastRatio = lastPersistedBytes / totalBytes;
+    final currentRatio = currentBytes / totalBytes;
+    if (currentRatio - lastRatio >= 0.01) {
+      return true;
+    }
+  }
+  return false;
 }
 
 final class DownloadRepository {
@@ -40,6 +79,7 @@ final class DownloadRepository {
   final Set<String> _automaticRefreshAttempts = {};
   final Set<String> _enqueueing = {};
   final Set<String> _retrying = {};
+  final Map<String, _DownloadProgressSnapshot> _progressSnapshots = {};
   Future<void>? _initializeRequest;
   Future<void> _eventChain = Future<void>.value();
   bool _initialized = false;
@@ -270,12 +310,14 @@ final class DownloadRepository {
       return false;
     } finally {
       _retrying.remove(record.id);
+      _progressSnapshots.remove(record.id);
     }
   }
 
   Future<bool> cancel(String id) async {
     final success = await _knownAction(id, _platformService.cancel);
     if (success) {
+      _progressSnapshots.remove(id);
       await _database.updateDownloadStatus(
         id: id,
         state: DownloadTaskState.canceled.storageValue,
@@ -383,6 +425,7 @@ final class DownloadRepository {
     if (!deleted) {
       return false;
     }
+    _progressSnapshots.remove(record.id);
     await _database.deleteDownloadRecord(record.id);
     return true;
   }
@@ -496,14 +539,26 @@ final class DownloadRepository {
     final recordId = record.id;
     switch (event) {
       case DownloadStatusEvent():
-        if (event.state == DownloadTaskState.complete &&
-            event.actualBytes != null) {
-          await _database.updateDownloadProgress(
-            id: recordId,
-            bytesDownloaded: event.actualBytes!,
-            totalBytes: event.actualBytes,
-          );
+        final snapshot = _progressSnapshots.remove(recordId);
+        int? finalBytesDownloaded;
+        int? finalTotalBytes;
+
+        if (event.state == DownloadTaskState.complete) {
+          finalBytesDownloaded =
+              event.actualBytes ??
+              snapshot?.latestBytes ??
+              record.totalBytes ??
+              record.bytesDownloaded;
+          finalTotalBytes =
+              event.actualBytes ??
+              snapshot?.latestTotalBytes ??
+              record.totalBytes;
+        } else if (snapshot != null &&
+            snapshot.latestBytes > snapshot.lastPersistedBytes) {
+          finalBytesDownloaded = snapshot.latestBytes;
+          finalTotalBytes = snapshot.latestTotalBytes;
         }
+
         await _database.updateDownloadStatus(
           id: recordId,
           state: event.state.storageValue,
@@ -512,6 +567,8 @@ final class DownloadRepository {
           completedAt: event.state == DownloadTaskState.complete
               ? DateTime.now().toUtc()
               : null,
+          bytesDownloaded: finalBytesDownloaded,
+          totalBytes: finalTotalBytes,
         );
         if (event.state == DownloadTaskState.complete) {
           _automaticRefreshAttempts.remove(recordId);
@@ -524,11 +581,49 @@ final class DownloadRepository {
         if (event.totalBytes == null) {
           return;
         }
-        await _database.updateDownloadProgress(
-          id: recordId,
-          bytesDownloaded: event.bytesDownloaded,
+        if (record.state == DownloadTaskState.complete.storageValue ||
+            record.state == DownloadTaskState.canceled.storageValue ||
+            record.state == DownloadTaskState.failed.storageValue ||
+            record.state == DownloadTaskState.notFound.storageValue) {
+          return;
+        }
+        final now = DateTime.now();
+        var snapshot = _progressSnapshots[recordId];
+        if (snapshot == null) {
+          final newSnapshot = _DownloadProgressSnapshot(
+            lastPersistedAt: now,
+            lastPersistedBytes: 0,
+            latestBytes: event.bytesDownloaded,
+            latestTotalBytes: event.totalBytes,
+          );
+          _progressSnapshots[recordId] = newSnapshot;
+          await _database.updateDownloadProgress(
+            id: recordId,
+            bytesDownloaded: event.bytesDownloaded,
+            totalBytes: event.totalBytes,
+          );
+          newSnapshot.lastPersistedBytes = event.bytesDownloaded;
+          newSnapshot.lastPersistedAt = now;
+          return;
+        }
+
+        snapshot.latestBytes = event.bytesDownloaded;
+        snapshot.latestTotalBytes = event.totalBytes;
+        if (shouldPersistDownloadProgress(
+          lastPersistedAt: snapshot.lastPersistedAt,
+          lastPersistedBytes: snapshot.lastPersistedBytes,
+          currentBytes: event.bytesDownloaded,
           totalBytes: event.totalBytes,
-        );
+          now: now,
+        )) {
+          await _database.updateDownloadProgress(
+            id: recordId,
+            bytesDownloaded: event.bytesDownloaded,
+            totalBytes: event.totalBytes,
+          );
+          snapshot.lastPersistedAt = now;
+          snapshot.lastPersistedBytes = event.bytesDownloaded;
+        }
     }
   }
 

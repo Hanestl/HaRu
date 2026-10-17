@@ -1,6 +1,5 @@
-import 'package:flutter_test/flutter_test.dart';
-
 import 'package:flule34/core/models/hanime_search_models.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('HanimeSearchFilters', () {

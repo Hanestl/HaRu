@@ -1,8 +1,7 @@
 import 'dart:io';
 
-import 'package:flutter_test/flutter_test.dart';
-
 import 'package:flule34/core/maintenance/legacy_debug_data_cleanup.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test('启动只清理旧调试设置，不删除当前日志目录', () async {

@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:file_selector/file_selector.dart';
-import 'package:flutter/material.dart';
 import 'package:flule34/l10n/ui_localization.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:share_plus/share_plus.dart';
@@ -10,10 +10,10 @@ import 'package:share_plus/share_plus.dart';
 import '../../../app/providers.dart';
 import '../../../core/models/translation_models.dart';
 import '../../../core/models/video_models.dart';
-import '../../../core/security/error_redaction.dart';
-import '../../../core/services/translation_service.dart';
 import '../../../core/services/translation_catalog_archive.dart';
+import '../../../core/services/translation_service.dart';
 import '../../../shared/editable_translation.dart';
+import '../../../shared/error_view.dart';
 import '../../../shared/transient_focus.dart';
 
 int compareTranslationCatalogItems(
@@ -289,7 +289,7 @@ class _TranslationCatalogPageState
       );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: AppText('导入失败：${redactSensitiveText(error)}')),
+          SnackBar(content: AppText('导入失败：${friendlyErrorMessage(error)}')),
         );
       }
     } finally {

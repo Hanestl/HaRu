@@ -1,44 +1,50 @@
 import 'dart:async';
+import 'dart:io' show HttpException, SocketException;
 import 'dart:math' as math;
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:dio/dio.dart' show DioException, DioExceptionType;
+import 'package:flule34/l10n/ui_localization.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
-import 'package:flule34/l10n/ui_localization.dart';
-import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/providers.dart';
 import '../../app/router/app_router.dart';
 import '../../app/router/route_names.dart';
+import '../../core/api/hanime1_parser.dart';
 import '../../core/api/rule34video_api.dart';
 import '../../core/logging/app_log_service.dart';
 import '../../core/models/content_source.dart';
-import '../../core/models/hanime_search_models.dart';
 import '../../core/models/hanime_playlist_models.dart';
+import '../../core/models/hanime_search_models.dart';
 import '../../core/models/video_models.dart';
+import '../../core/services/network_status_service.dart';
+import '../../core/services/predictive_prefetch_service.dart';
 import '../../core/services/share_service.dart';
 import '../../core/services/translation_service.dart';
-import '../../core/services/predictive_prefetch_service.dart';
-import '../../shared/video_card.dart';
-import '../../shared/video_collection_layout.dart';
-import '../../shared/scroll_to_top_overlay.dart';
 import '../../shared/editable_translation.dart';
+import '../../shared/error_view.dart';
 import '../../shared/localized_translation_text.dart';
+import '../../shared/scroll_to_top_overlay.dart';
 import '../../shared/site_avatar.dart';
 import '../../shared/transient_focus.dart';
+import '../../shared/video_card.dart';
+import '../../shared/video_collection_layout.dart';
 import '../auth/login_sheet.dart';
 import '../downloads/data/download_repository.dart';
-import 'hanime_comments_section.dart';
-import 'rule34_comments_section.dart';
 import '../library/data/local_library_repository.dart';
 import '../library/local_library_picker.dart';
 import '../library/playlist_picker.dart';
 import '../settings/data/app_settings_repository.dart';
 import '../settings/domain/quality_selection.dart';
-import '../settings/domain/app_settings.dart';
+import 'hanime_comments_section.dart';
+import 'presentation/hanime_series_sheet.dart';
+import 'presentation/video_detail_metadata_widgets.dart';
+import 'presentation/video_detail_scroll_physics.dart';
+import 'rule34_comments_section.dart';
 import 'video_player_page.dart';
 
 class VideoDetailPage extends ConsumerStatefulWidget {
@@ -58,25 +64,137 @@ class VideoDetailPage extends ConsumerStatefulWidget {
 }
 
 class _VideoDetailPageState extends ConsumerState<VideoDetailPage>
-    with RouteAware {
+    with RouteAware, WidgetsBindingObserver {
   late Future<VideoDetails> _detailsFuture;
   late final VideoPlayerHandle _playerHandle;
   late final bool _ownsPlayerHandle;
   PageRoute<dynamic>? _route;
 
+  StreamSubscription<NetworkClass>? _networkSubscription;
+  NetworkClass? _lastNetworkClass;
+  bool _hasReceivedNetworkEvent = false;
+  bool _recoveredWhileLoading = false;
+  int _loadGeneration = 0;
+  Object? _currentError;
+  bool _isLoading = false;
+  int _autoRetryCount = 0;
+  static const int _maxAutoRetries = 2;
+  bool _isTopRoute = true;
+  bool _isAppInForeground = true;
+
+  bool get _isPageVisible => mounted && _isTopRoute && _isAppInForeground;
+
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _ownsPlayerHandle = widget.playerHandle == null;
     _playerHandle = widget.playerHandle ?? VideoPlayerHandle();
-    _detailsFuture = _loadDetails();
+    final future = _loadDetails();
+    future.ignore();
+    _detailsFuture = future;
+    _initNetworkMonitoring();
+  }
+
+  void _initNetworkMonitoring() {
+    final service = ref.read(networkStatusServiceProvider);
+    service.current().then((initial) {
+      if (!mounted || _hasReceivedNetworkEvent) return;
+      _lastNetworkClass = initial;
+    });
+    _networkSubscription = service.onStatusChanged.listen(_onNetworkChanged);
+  }
+
+  void _onNetworkChanged(NetworkClass currentClass) {
+    _hasReceivedNetworkEvent = true;
+    final isNowOnline = currentClass != NetworkClass.offline;
+    final wasOffline =
+        _lastNetworkClass == NetworkClass.offline ||
+        (_lastNetworkClass == null &&
+            ((_currentError != null &&
+                    _isRecoverableNetworkError(_currentError)) ||
+                _isLoading));
+    _lastNetworkClass = currentClass;
+
+    if (!wasOffline || !isNowOnline) return;
+    if (_isLoading) {
+      _recoveredWhileLoading = true;
+      return;
+    }
+    if (!_isPageVisible) return;
+    if (_currentError == null || !_isRecoverableNetworkError(_currentError)) {
+      return;
+    }
+    if (_autoRetryCount >= _maxAutoRetries) return;
+
+    _autoRetryCount++;
+    _reload();
+  }
+
+  static bool _isRecoverableNetworkError(Object? error) {
+    if (error == null) return false;
+    if (error is HttpStatusException) {
+      return switch (error.statusCode) {
+        502 || 503 || 504 => true,
+        _ => false,
+      };
+    }
+    if (error is SessionExpiredException) return false;
+    if (error is RequestCancelledException) return false;
+    if (error is HanimeCloudflareException) return false;
+    if (error is DioException) {
+      return switch (error.type) {
+        DioExceptionType.connectionTimeout ||
+        DioExceptionType.receiveTimeout ||
+        DioExceptionType.sendTimeout ||
+        DioExceptionType.connectionError => true,
+        DioExceptionType.badResponse => switch (error.response?.statusCode) {
+          502 || 503 || 504 => true,
+          _ => false,
+        },
+        DioExceptionType.unknown =>
+          error.error is SocketException ||
+              error.error is TimeoutException ||
+              error.error is HttpException,
+        _ => false,
+      };
+    }
+    if (error is SocketException ||
+        error is TimeoutException ||
+        error is HttpException) {
+      return true;
+    }
+    final msg = error.toString().toLowerCase();
+    if (msg.contains('socketexception') ||
+        msg.contains('connection refused') ||
+        msg.contains('connection closed') ||
+        msg.contains('failed host lookup') ||
+        msg.contains('connection timed out') ||
+        msg.contains('network is unreachable') ||
+        msg.contains('网络请求超时') ||
+        msg.contains('无法连接到网站')) {
+      return true;
+    }
+    return false;
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    _isAppInForeground = state == AppLifecycleState.resumed;
   }
 
   @override
   void didUpdateWidget(covariant VideoDetailPage oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.api != widget.api || oldWidget.video.id != widget.video.id) {
-      _detailsFuture = _loadDetails();
+    if (oldWidget.api != widget.api ||
+        oldWidget.video.id != widget.video.id ||
+        oldWidget.video.siteId != widget.video.siteId) {
+      _autoRetryCount = 0;
+      _currentError = null;
+      _recoveredWhileLoading = false;
+      final future = _loadDetails();
+      future.ignore();
+      _detailsFuture = future;
     }
   }
 
@@ -94,26 +212,57 @@ class _VideoDetailPageState extends ConsumerState<VideoDetailPage>
   }
 
   @override
+  void didPush() {
+    _isTopRoute = true;
+  }
+
+  @override
+  void didPop() {
+    _isTopRoute = false;
+  }
+
+  @override
   void didPushNext() {
+    _isTopRoute = false;
     if (shouldPauseVideoForRoutePush(_playerHandle.isFullScreen)) {
       _playerHandle.pause();
     }
   }
 
   @override
+  void didPopNext() {
+    _isTopRoute = true;
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _networkSubscription?.cancel();
+    _networkSubscription = null;
     appRouteObserver.unsubscribe(this);
     if (_ownsPlayerHandle) _playerHandle.dispose();
     super.dispose();
   }
 
+  void _manualReload() {
+    _autoRetryCount = 0;
+    _reload();
+  }
+
   void _reload() {
+    if (!mounted || _isLoading) return;
     setState(() {
-      _detailsFuture = _loadDetails(force: true);
+      final future = _loadDetails(force: true);
+      future.ignore();
+      _detailsFuture = future;
     });
   }
 
   Future<VideoDetails> _loadDetails({bool force = false}) async {
+    final generation = ++_loadGeneration;
+    _isLoading = true;
+    _currentError = null;
+    _recoveredWhileLoading = false;
     try {
       final details = await ref
           .read(predictivePrefetchServiceProvider)
@@ -128,8 +277,28 @@ class _VideoDetailPageState extends ConsumerState<VideoDetailPage>
             resumeDelay: const Duration(seconds: 3),
           );
       unawaited(widget.api.reportWatchHistory(details.video));
+      if (mounted && generation == _loadGeneration) {
+        _isLoading = false;
+        _currentError = null;
+        _recoveredWhileLoading = false;
+      }
       return details;
     } catch (error, stackTrace) {
+      if (!mounted || generation != _loadGeneration) {
+        Error.throwWithStackTrace(error, stackTrace);
+      }
+      _isLoading = false;
+      _currentError = error;
+
+      if (_recoveredWhileLoading &&
+          _isPageVisible &&
+          _isRecoverableNetworkError(error) &&
+          _autoRetryCount < _maxAutoRetries) {
+        _recoveredWhileLoading = false;
+        _autoRetryCount++;
+        _reload();
+      }
+
       Error.throwWithStackTrace(error, stackTrace);
     }
   }
@@ -148,8 +317,8 @@ class _VideoDetailPageState extends ConsumerState<VideoDetailPage>
             }
             if (snapshot.hasError) {
               return _DetailLoadError(
-                message: snapshot.error.toString(),
-                onRetry: _reload,
+                message: friendlyErrorMessage(snapshot.error),
+                onRetry: _manualReload,
               );
             }
             return _VideoDetailsBody(
@@ -177,31 +346,195 @@ class _DetailLoading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final thumbnailUrl = video.thumbnailUrl;
-    return Align(
-      alignment: Alignment.topCenter,
-      child: AspectRatio(
-        aspectRatio: 16 / 9,
-        child: ColoredBox(
-          color: Colors.black,
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              if (thumbnailUrl != null)
-                CachedNetworkImage(
-                  imageUrl: thumbnailUrl,
-                  // 按站点使用正确的 Referer，避免 hanime 缩略图被拒。
-                  httpHeaders: video.site.mediaHeaders(),
-                  fit: BoxFit.cover,
-                  errorWidget: (context, _, _) => const SizedBox.shrink(),
-                ),
-              const ColoredBox(color: Colors.black38),
-              const Center(
-                child: CircularProgressIndicator(color: Colors.white),
+    final title = video.title.trim();
+    final hasTitle = title.isNotEmpty;
+
+    return Column(
+      children: [
+        Align(
+          alignment: Alignment.topCenter,
+          child: AspectRatio(
+            aspectRatio: 16 / 9,
+            child: ColoredBox(
+              color: Colors.black,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  if (thumbnailUrl != null)
+                    CachedNetworkImage(
+                      imageUrl: thumbnailUrl,
+                      httpHeaders: video.site.mediaHeaders(),
+                      fit: BoxFit.cover,
+                      errorWidget: (context, _, _) => const SizedBox.shrink(),
+                    ),
+                  const ColoredBox(color: Colors.black38),
+                  const Center(
+                    child: CircularProgressIndicator(color: Colors.white),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
+        Material(
+          color: colorScheme.surface,
+          child: SizedBox(
+            height: VideoDetailHeaderDelegate.tabsHeight,
+            child: Row(
+              children: [
+                Expanded(
+                  child: Center(
+                    child: AppText(
+                      '简介',
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        color: colorScheme.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: Center(
+                    child: AppText(
+                      '评论',
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        color: colorScheme.onSurfaceVariant.withValues(
+                          alpha: 0.6,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const Divider(height: 1, thickness: 1),
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (hasTitle)
+                  AppText(title, style: theme.textTheme.headlineSmall)
+                else
+                  _SkeletonBlock(
+                    width: double.infinity,
+                    height: 24,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 10,
+                  runSpacing: 8,
+                  children: [
+                    if (video.duration != null)
+                      VideoDetailStatChip(
+                        icon: Icons.schedule,
+                        label: video.duration!,
+                      ),
+                    if (video.site != ContentSite.hanime1 &&
+                        video.views != null)
+                      VideoDetailStatChip(
+                        icon: Icons.visibility_outlined,
+                        label: '${video.views} 次观看',
+                      ),
+                    if (video.rating != null)
+                      VideoDetailStatChip(
+                        icon: Icons.thumb_up_alt_outlined,
+                        label: '${video.rating}%',
+                      ),
+                    if (video.site != ContentSite.hanime1 &&
+                        video.publishedLabel != null)
+                      VideoDetailStatChip(
+                        icon: Icons.calendar_today_outlined,
+                        label: video.publishedLabel!,
+                      ),
+                    if (video.duration == null &&
+                        video.views == null &&
+                        video.rating == null) ...[
+                      _SkeletonBlock(
+                        width: 72,
+                        height: 32,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      _SkeletonBlock(
+                        width: 96,
+                        height: 32,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ],
+                  ],
+                ),
+                const SizedBox(height: 20),
+                ExcludeSemantics(
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: List.generate(
+                      4,
+                      (index) => _SkeletonBlock(
+                        width: 84,
+                        height: 38,
+                        borderRadius: BorderRadius.circular(19),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                _SkeletonBlock(
+                  width: 64,
+                  height: 18,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                const SizedBox(height: 10),
+                ExcludeSemantics(
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: List.generate(
+                      5,
+                      (index) => _SkeletonBlock(
+                        width: (index % 2 == 0) ? 68 : 88,
+                        height: 32,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _SkeletonBlock extends StatelessWidget {
+  const _SkeletonBlock({
+    required this.width,
+    required this.height,
+    this.borderRadius,
+  });
+
+  final double width;
+  final double height;
+  final BorderRadius? borderRadius;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme.surfaceContainerHigh;
+    return Container(
+      width: width,
+      height: height,
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: borderRadius ?? BorderRadius.circular(8),
       ),
     );
   }
@@ -238,6 +571,8 @@ class _DetailLoadError extends StatelessWidget {
     );
   }
 }
+
+enum _MetadataAction { open, subscription }
 
 class _VideoDetailsBody extends StatefulWidget {
   const _VideoDetailsBody({
@@ -705,7 +1040,7 @@ class _VideoDetailsBodyState extends State<_VideoDetailsBody>
       return true;
     } catch (error) {
       if (mounted && showError) {
-        _showMessage(error.toString());
+        _showMessage(friendlyErrorMessage(error), isError: true);
       }
       return false;
     } finally {
@@ -724,6 +1059,7 @@ class _VideoDetailsBodyState extends State<_VideoDetailsBody>
     }
     final previous = _favorite;
     final next = !previous;
+    unawaited(HapticFeedback.lightImpact());
     setState(() {
       _updatingFavorite = true;
       _favorite = next;
@@ -733,7 +1069,10 @@ class _VideoDetailsBodyState extends State<_VideoDetailsBody>
     } catch (error) {
       if (mounted) {
         setState(() => _favorite = previous);
-        _showMessage('同步失败，已恢复原状态：$error');
+        _showMessage(
+          '同步失败，已恢复原状态：${friendlyErrorMessage(error)}',
+          isError: true,
+        );
       }
     } finally {
       if (mounted) {
@@ -756,6 +1095,7 @@ class _VideoDetailsBodyState extends State<_VideoDetailsBody>
     final previousLikes = _hanimeLikes;
     final previousDislikes = _hanimeDislikes;
     final next = !previousLiked;
+    unawaited(HapticFeedback.lightImpact());
     setState(() {
       _updatingHanimeLike = true;
       _hanimeLiked = next;
@@ -779,7 +1119,10 @@ class _VideoDetailsBodyState extends State<_VideoDetailsBody>
           _hanimeLikes = previousLikes;
           _hanimeDislikes = previousDislikes;
         });
-        _showMessage('同步失败，已恢复原状态：$error');
+        _showMessage(
+          '同步失败，已恢复原状态：${friendlyErrorMessage(error)}',
+          isError: true,
+        );
       }
     } finally {
       if (mounted) {
@@ -796,6 +1139,7 @@ class _VideoDetailsBodyState extends State<_VideoDetailsBody>
     }
     final previous = _hanimeSaved;
     final next = !previous;
+    unawaited(HapticFeedback.lightImpact());
     setState(() {
       _updatingHanimeSaved = true;
       _hanimeSaved = next;
@@ -812,7 +1156,10 @@ class _VideoDetailsBodyState extends State<_VideoDetailsBody>
     } catch (error) {
       if (mounted) {
         setState(() => _hanimeSaved = previous);
-        _showMessage('同步失败，已恢复原状态：$error');
+        _showMessage(
+          '同步失败，已恢复原状态：${friendlyErrorMessage(error)}',
+          isError: true,
+        );
       }
     } finally {
       if (mounted) setState(() => _updatingHanimeSaved = false);
@@ -857,7 +1204,7 @@ class _VideoDetailsBodyState extends State<_VideoDetailsBody>
           _hanimeLikes = previousLikes;
           _hanimeDislikes = previousDislikes;
         });
-        _showMessage('同步失败，已恢复原状态：$error');
+        _showMessage('同步失败，已恢复原状态：${friendlyErrorMessage(error)}');
       }
     } finally {
       if (mounted) setState(() => _updatingHanimeRating = false);
@@ -892,7 +1239,7 @@ class _VideoDetailsBodyState extends State<_VideoDetailsBody>
     } catch (error) {
       if (mounted) {
         setState(() => _hanimeUploaderSubscribed = previous);
-        _showMessage('同步失败，已恢复原状态：$error');
+        _showMessage('同步失败，已恢复原状态：${friendlyErrorMessage(error)}');
       }
     } finally {
       if (mounted) setState(() => _updatingHanimeSubscription = false);
@@ -986,7 +1333,7 @@ class _VideoDetailsBodyState extends State<_VideoDetailsBody>
         _showMessage('播放列表已更新。');
       }
     } catch (error) {
-      if (mounted) _showMessage(error.toString());
+      if (mounted) _showMessage(friendlyErrorMessage(error), isError: true);
     } finally {
       if (mounted) setState(() => _addingPlaylist = false);
     }
@@ -1092,7 +1439,7 @@ class _VideoDetailsBodyState extends State<_VideoDetailsBody>
       }
     } catch (error) {
       if (mounted) {
-        _showMessage(error.toString());
+        _showMessage(friendlyErrorMessage(error), isError: true);
       }
     } finally {
       if (mounted) {
@@ -1106,7 +1453,7 @@ class _VideoDetailsBodyState extends State<_VideoDetailsBody>
       await widget.shareService.shareVideo(_details.video);
     } catch (error) {
       if (mounted) {
-        _showMessage('无法打开分享面板：$error');
+        _showMessage('无法打开分享面板：${friendlyErrorMessage(error)}', isError: true);
       }
     }
   }
@@ -1123,7 +1470,7 @@ class _VideoDetailsBodyState extends State<_VideoDetailsBody>
       }
     } catch (error) {
       if (mounted) {
-        _showMessage(error.toString());
+        _showMessage(friendlyErrorMessage(error), isError: true);
       }
     }
   }
@@ -1144,7 +1491,7 @@ class _VideoDetailsBodyState extends State<_VideoDetailsBody>
       }
     } catch (error) {
       if (mounted) {
-        _showMessage(error.toString());
+        _showMessage(friendlyErrorMessage(error), isError: true);
       }
     } finally {
       if (mounted) {
@@ -1298,6 +1645,7 @@ class _VideoDetailsBodyState extends State<_VideoDetailsBody>
       return;
     }
     final subscribed = _subscriptionPaths.contains(item.path);
+    unawaited(HapticFeedback.lightImpact());
     setState(() => _updatingMetadata.add(key));
     try {
       await widget.api.toggleSubscription(
@@ -1318,7 +1666,7 @@ class _VideoDetailsBodyState extends State<_VideoDetailsBody>
       _showMessage(subscribed ? '已取消订阅。' : '已订阅。');
     } catch (error) {
       if (mounted) {
-        _showMessage(error.toString());
+        _showMessage(friendlyErrorMessage(error), isError: true);
       }
     } finally {
       if (mounted) {
@@ -1327,10 +1675,21 @@ class _VideoDetailsBodyState extends State<_VideoDetailsBody>
     }
   }
 
-  void _showMessage(String message) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: AppText(message)));
+  void _showMessage(String message, {bool isError = false}) {
+    if (!mounted) return;
+    final messenger = ScaffoldMessenger.maybeOf(context);
+    if (messenger == null) return;
+    if (!isError) {
+      messenger.clearSnackBars();
+    }
+    messenger.showSnackBar(
+      SnackBar(
+        content: AppText(message),
+        behavior: SnackBarBehavior.floating,
+        duration: Duration(milliseconds: isError ? 3500 : 1500),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+    );
   }
 
   void _clearDescriptionSelection() {
@@ -1385,11 +1744,11 @@ class _VideoDetailsBodyState extends State<_VideoDetailsBody>
         labelStyle: Theme.of(context).textTheme.labelLarge,
         tabs: const [
           Tab(
-            height: _VideoDetailHeaderDelegate.tabsHeight,
+            height: VideoDetailHeaderDelegate.tabsHeight,
             child: AppText('简介'),
           ),
           Tab(
-            height: _VideoDetailHeaderDelegate.tabsHeight,
+            height: VideoDetailHeaderDelegate.tabsHeight,
             child: AppText('评论'),
           ),
         ],
@@ -1405,7 +1764,7 @@ class _VideoDetailsBodyState extends State<_VideoDetailsBody>
         child: NestedScrollView(
           key: _detailScrollKey,
           controller: _detailScrollController,
-          physics: _PlayerHeaderGatePhysics(
+          physics: PlayerHeaderGatePhysics(
             playing: widget.playerHandle.playingListenable,
             buffering: widget.playerHandle.bufferingListenable,
             scrollToTopController: widget.scrollToTopController,
@@ -1414,7 +1773,7 @@ class _VideoDetailsBodyState extends State<_VideoDetailsBody>
           headerSliverBuilder: (context, innerBoxIsScrolled) => [
             SliverPersistentHeader(
               pinned: true,
-              delegate: _VideoDetailHeaderDelegate(
+              delegate: VideoDetailHeaderDelegate(
                 player: KeyedSubtree(
                   key: const ValueKey('video-detail-player-region'),
                   child: player,
@@ -1430,195 +1789,351 @@ class _VideoDetailsBodyState extends State<_VideoDetailsBody>
               GestureDetector(
                 behavior: HitTestBehavior.translucent,
                 onTap: _clearDescriptionSelection,
-                child: ListView(
-                  padding: const EdgeInsets.only(bottom: 28),
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          SizedBox(
-                            width: double.infinity,
-                            child: GestureDetector(
-                              key: const ValueKey(
-                                'video-detail-title-translation-region',
-                              ),
-                              behavior: HitTestBehavior.opaque,
-                              onLongPress: () => showTitleTranslationEditDialog(
-                                context,
-                                translationService: widget.translationService,
-                                videoId: details.video.id,
-                                english: details.video.title,
-                                videoSlug: details.video.slug,
-                                siteId: details.video.siteId,
-                              ),
-                              child: ListenableBuilder(
-                                listenable: widget.translationService,
-                                builder: (context, _) => Align(
-                                  alignment: Alignment.centerLeft,
-                                  child: LocalizedTranslationText(
-                                    value: widget.translationService
-                                        .resolveTitle(
-                                          details.video.id,
-                                          details.video.title,
-                                          siteId: details.video.siteId,
-                                        ),
-                                    style: Theme.of(
+                child: CustomScrollView(
+                  key: const ValueKey('video-detail-scroll-view'),
+                  slivers: [
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                      sliver: SliverToBoxAdapter(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SizedBox(
+                              width: double.infinity,
+                              child: GestureDetector(
+                                key: const ValueKey(
+                                  'video-detail-title-translation-region',
+                                ),
+                                behavior: HitTestBehavior.opaque,
+                                onLongPress: () =>
+                                    showTitleTranslationEditDialog(
                                       context,
-                                    ).textTheme.headlineSmall,
+                                      translationService:
+                                          widget.translationService,
+                                      videoId: details.video.id,
+                                      english: details.video.title,
+                                      videoSlug: details.video.slug,
+                                      siteId: details.video.siteId,
+                                    ),
+                                child: ListenableBuilder(
+                                  listenable: widget.translationService,
+                                  builder: (context, _) => Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: LocalizedTranslationText(
+                                      value: widget.translationService
+                                          .resolveTitle(
+                                            details.video.id,
+                                            details.video.title,
+                                            siteId: details.video.siteId,
+                                          ),
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.headlineSmall,
+                                    ),
                                   ),
                                 ),
                               ),
                             ),
-                          ),
-                          const SizedBox(height: 12),
-                          Wrap(
-                            spacing: 10,
-                            runSpacing: 8,
-                            children: [
-                              if (details.video.duration != null)
-                                _StatChip(
-                                  icon: Icons.schedule,
-                                  label: details.video.duration!,
-                                ),
-                              if (details.video.site != ContentSite.hanime1 &&
-                                  details.video.views != null)
-                                _StatChip(
-                                  icon: Icons.visibility_outlined,
-                                  label: '${details.video.views} 次观看',
-                                ),
-                              if (details.video.rating != null)
-                                _StatChip(
-                                  icon: Icons.thumb_up_alt_outlined,
-                                  label: details.ratingVotes == null
-                                      ? '${details.video.rating}%'
-                                      : '${details.video.rating}% · ${details.ratingVotes} 票',
-                                ),
-                              if (details.video.site != ContentSite.hanime1 &&
-                                  details.video.publishedLabel != null)
-                                _StatChip(
-                                  icon: Icons.calendar_today_outlined,
-                                  label: details.video.publishedLabel!,
-                                ),
-                            ],
-                          ),
-                          const SizedBox(height: 20),
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: [
-                              if (details.video.site == ContentSite.hanime1)
-                                _ActionButton(
-                                  icon: _hanimeLiked
-                                      ? Icons.thumb_up
-                                      : Icons.thumb_up_outlined,
-                                  label:
-                                      '${_hanimeLiked ? '已点赞' : '点赞'} · $_hanimeLikes',
-                                  busy: _updatingHanimeLike,
-                                  onPressed: _toggleHanimeLike,
-                                ),
-                              if (details.video.site == ContentSite.hanime1)
-                                _ActionButton(
-                                  icon: _hanimeRatedNegative
-                                      ? Icons.thumb_down
-                                      : Icons.thumb_down_outlined,
-                                  label: '$_hanimeDislikes',
-                                  busy: _updatingHanimeRating,
-                                  onPressed: () => _rateHanime(false),
-                                ),
-                              if (details.video.site == ContentSite.hanime1)
-                                _ActionButton(
-                                  icon: Icons.playlist_add,
-                                  label: '播放列表',
-                                  busy: _addingPlaylist,
-                                  onPressed: _manageHanimePlaylists,
-                                ),
-                              if (details.video.site == ContentSite.hanime1)
-                                _ActionButton(
-                                  icon: _hanimeSaved
-                                      ? Icons.bookmark
-                                      : Icons.bookmark_border,
-                                  label: _hanimeSaved ? '已稍后观看' : '稍后观看',
-                                  busy: _updatingHanimeSaved,
-                                  onPressed: _toggleHanimeSaved,
-                                ),
-                              if (details
-                                  .video
-                                  .site
-                                  .capabilities
-                                  .accountFavorites)
-                                _ActionButton(
-                                  icon: _favorite
-                                      ? Icons.favorite
-                                      : Icons.favorite_border,
-                                  label: _favorite ? '已收藏' : '收藏',
-                                  busy: _updatingFavorite,
-                                  onPressed: _toggleFavorite,
-                                ),
-                              _ActionButton(
-                                icon: Icons.download,
-                                label: '下载',
-                                busy: _addingDownload,
-                                onPressed: details.sources.isEmpty
-                                    ? null
-                                    : _download,
-                              ),
-                              _ActionButton(
-                                icon: Icons.library_add_outlined,
-                                label: '本地分类库',
-                                busy: false,
-                                onPressed: _addToLocalLibrary,
-                              ),
-                              if (details
-                                  .video
-                                  .site
-                                  .capabilities
-                                  .accountPlaylists)
-                                _ActionButton(
-                                  icon: Icons.playlist_add,
-                                  label: '播放列表',
-                                  busy: _addingPlaylist,
-                                  onPressed: _addToPlaylist,
-                                ),
-                              _ActionButton(
-                                icon: Icons.share_outlined,
-                                label: '分享',
-                                busy: false,
-                                onPressed: _share,
-                              ),
-                            ],
-                          ),
-                          if (details.video.site == ContentSite.hanime1 &&
-                              (details.description != null ||
-                                  details.descriptionTitle != null ||
-                                  details.video.views != null ||
-                                  details.video.publishedLabel != null)) ...[
-                            const SizedBox(height: 24),
-                            SelectionArea(
-                              key: _descriptionSelectionKey,
-                              child: _HanimeDescriptionCard(details: details),
+                            const SizedBox(height: 12),
+                            Wrap(
+                              spacing: 10,
+                              runSpacing: 8,
+                              children: [
+                                if (details.video.duration != null)
+                                  VideoDetailStatChip(
+                                    icon: Icons.schedule,
+                                    label: details.video.duration!,
+                                  ),
+                                if (details.video.site != ContentSite.hanime1 &&
+                                    details.video.views != null)
+                                  VideoDetailStatChip(
+                                    icon: Icons.visibility_outlined,
+                                    label: '${details.video.views} 次观看',
+                                  ),
+                                if (details.video.rating != null)
+                                  VideoDetailStatChip(
+                                    icon: Icons.thumb_up_alt_outlined,
+                                    label: details.ratingVotes == null
+                                        ? '${details.video.rating}%'
+                                        : '${details.video.rating}% · ${details.ratingVotes} 票',
+                                  ),
+                                if (details.video.site != ContentSite.hanime1 &&
+                                    details.video.publishedLabel != null)
+                                  VideoDetailStatChip(
+                                    icon: Icons.calendar_today_outlined,
+                                    label: details.video.publishedLabel!,
+                                  ),
+                              ],
                             ),
-                          ] else if (details.description != null) ...[
-                            const SizedBox(height: 24),
-                            SelectionArea(
-                              key: _descriptionSelectionKey,
-                              child: _CollapsibleDescription(
-                                text: details.description!,
-                              ),
-                            ),
-                          ],
-                          if (details.video.site == ContentSite.hanime1 &&
-                              details.seriesVideos.isNotEmpty) ...[
                             const SizedBox(height: 20),
-                            _HanimeSeriesSection(
-                              seriesTitle: details.seriesTitle ?? '未命名系列',
-                              videos: details.seriesVideos,
-                              layout: widget.settings.settings.videoLayout,
-                              currentVideoId: details.video.id,
-                              onTap: (video) async {
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: [
+                                if (details.video.site == ContentSite.hanime1)
+                                  VideoDetailActionButton(
+                                    icon: _hanimeLiked
+                                        ? Icons.thumb_up
+                                        : Icons.thumb_up_outlined,
+                                    label:
+                                        '${_hanimeLiked ? '已点赞' : '点赞'} · $_hanimeLikes',
+                                    busy: _updatingHanimeLike,
+                                    onPressed: _toggleHanimeLike,
+                                  ),
+                                if (details.video.site == ContentSite.hanime1)
+                                  VideoDetailActionButton(
+                                    icon: _hanimeRatedNegative
+                                        ? Icons.thumb_down
+                                        : Icons.thumb_down_outlined,
+                                    label: '$_hanimeDislikes',
+                                    busy: _updatingHanimeRating,
+                                    onPressed: () => _rateHanime(false),
+                                  ),
+                                if (details.video.site == ContentSite.hanime1)
+                                  VideoDetailActionButton(
+                                    icon: Icons.playlist_add,
+                                    label: '播放列表',
+                                    busy: _addingPlaylist,
+                                    onPressed: _manageHanimePlaylists,
+                                  ),
+                                if (details.video.site == ContentSite.hanime1)
+                                  VideoDetailActionButton(
+                                    icon: _hanimeSaved
+                                        ? Icons.bookmark
+                                        : Icons.bookmark_border,
+                                    label: _hanimeSaved ? '已稍后观看' : '稍后观看',
+                                    busy: _updatingHanimeSaved,
+                                    onPressed: _toggleHanimeSaved,
+                                  ),
+                                if (details
+                                    .video
+                                    .site
+                                    .capabilities
+                                    .accountFavorites)
+                                  VideoDetailActionButton(
+                                    icon: _favorite
+                                        ? Icons.favorite
+                                        : Icons.favorite_border,
+                                    label: _favorite ? '已收藏' : '收藏',
+                                    busy: _updatingFavorite,
+                                    onPressed: _toggleFavorite,
+                                  ),
+                                VideoDetailActionButton(
+                                  icon: Icons.download,
+                                  label: '下载',
+                                  busy: _addingDownload,
+                                  onPressed: details.sources.isEmpty
+                                      ? null
+                                      : _download,
+                                ),
+                                VideoDetailActionButton(
+                                  icon: Icons.library_add_outlined,
+                                  label: '本地分类库',
+                                  busy: false,
+                                  onPressed: _addToLocalLibrary,
+                                ),
+                                if (details
+                                    .video
+                                    .site
+                                    .capabilities
+                                    .accountPlaylists)
+                                  VideoDetailActionButton(
+                                    icon: Icons.playlist_add,
+                                    label: '播放列表',
+                                    busy: _addingPlaylist,
+                                    onPressed: _addToPlaylist,
+                                  ),
+                                VideoDetailActionButton(
+                                  icon: Icons.share_outlined,
+                                  label: '分享',
+                                  busy: false,
+                                  onPressed: _share,
+                                ),
+                              ],
+                            ),
+                            if (details.video.site == ContentSite.hanime1 &&
+                                (details.description != null ||
+                                    details.descriptionTitle != null ||
+                                    details.video.views != null ||
+                                    details.video.publishedLabel != null)) ...[
+                              const SizedBox(height: 24),
+                              SelectionArea(
+                                key: _descriptionSelectionKey,
+                                child: HanimeDescriptionCard(details: details),
+                              ),
+                            ] else if (details.description != null) ...[
+                              const SizedBox(height: 24),
+                              SelectionArea(
+                                key: _descriptionSelectionKey,
+                                child: CollapsibleDescription(
+                                  text: details.description!,
+                                ),
+                              ),
+                            ],
+                            if (details.video.site == ContentSite.hanime1 &&
+                                details.seriesVideos.isNotEmpty) ...[
+                              const SizedBox(height: 20),
+                              HanimeSeriesSection(
+                                seriesTitle: details.seriesTitle ?? '未命名系列',
+                                videos: details.seriesVideos,
+                                layout: widget.settings.settings.videoLayout,
+                                currentVideoId: details.video.id,
+                                onTap: (video) async {
+                                  await widget.playerHandle.pause();
+                                  if (!context.mounted) return;
+                                  context.pushNamed(
+                                    AppRouteNames.video,
+                                    pathParameters: {
+                                      'id': video.id,
+                                      'slug': video.slug,
+                                    },
+                                    queryParameters: {'site': video.siteId},
+                                    extra: video,
+                                  );
+                                },
+                              ),
+                            ],
+                            VideoDetailMetadataSection(
+                              key: ValueKey(
+                                'metadata-${details.video.siteId}-${details.video.id}-category',
+                              ),
+                              title: '分类',
+                              items: metadata
+                                  .where(
+                                    (item) =>
+                                        item.kind == DiscoveryKind.category,
+                                  )
+                                  .toList(growable: false),
+                              fallbackValues: details.categories,
+                              kind: DiscoveryKind.category,
+                              translationService: widget.translationService,
+                              siteId: details.video.siteId,
+                              subscribedPaths: _subscriptionPaths,
+                              updatingKeys: _updatingMetadata,
+                              onTap: _metadataOnTap(details),
+                            ),
+                            VideoDetailMetadataSection(
+                              key: ValueKey(
+                                'metadata-${details.video.siteId}-${details.video.id}-tag',
+                              ),
+                              title: '标签',
+                              items: metadata
+                                  .where(
+                                    (item) => item.kind == DiscoveryKind.tag,
+                                  )
+                                  .toList(growable: false),
+                              fallbackValues: details.tags,
+                              kind: DiscoveryKind.tag,
+                              translationService: widget.translationService,
+                              siteId: details.video.siteId,
+                              subscribedPaths: _subscriptionPaths,
+                              updatingKeys: _updatingMetadata,
+                              onTap: _metadataOnTap(details),
+                            ),
+                            VideoDetailMetadataSection(
+                              key: ValueKey(
+                                'metadata-${details.video.siteId}-${details.video.id}-model',
+                              ),
+                              title: '艺术家',
+                              items: metadata
+                                  .where(
+                                    (item) => item.kind == DiscoveryKind.model,
+                                  )
+                                  .toList(growable: false),
+                              fallbackValues: details.models,
+                              kind: DiscoveryKind.model,
+                              translationService: widget.translationService,
+                              siteId: details.video.siteId,
+                              subscribedPaths: _subscriptionPaths,
+                              updatingKeys: _updatingMetadata,
+                              onTap: _metadataOnTap(details),
+                            ),
+                            if (details.uploader case final uploader?) ...[
+                              const SizedBox(height: 24),
+                              AppText(
+                                '上传者',
+                                style: Theme.of(context).textTheme.titleMedium,
+                              ),
+                              const SizedBox(height: 8),
+                              Card(
+                                margin: EdgeInsets.zero,
+                                child: ListTile(
+                                  leading: SiteAvatar(
+                                    imageUrl: uploader.avatarUrl,
+                                    fallbackIcon: Icons.person_outline,
+                                  ),
+                                  title: Row(
+                                    children: [
+                                      Flexible(child: Text(uploader.name)),
+                                      if (uploader.verified) ...[
+                                        const SizedBox(width: 4),
+                                        Icon(
+                                          Icons.verified,
+                                          size: 18,
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.primary,
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                  trailing:
+                                      details
+                                          .video
+                                          .site
+                                          .capabilities
+                                          .uploaderProfiles
+                                      ? const Icon(Icons.chevron_right)
+                                      : null,
+                                  onTap:
+                                      details
+                                          .video
+                                          .site
+                                          .capabilities
+                                          .uploaderProfiles
+                                      ? () => context.pushNamed(
+                                          AppRouteNames.uploader,
+                                          pathParameters: {'id': uploader.id},
+                                          queryParameters: {
+                                            'name': uploader.name,
+                                          },
+                                          extra: uploader,
+                                        )
+                                      : null,
+                                ),
+                              ),
+                            ],
+                            if (details.relatedVideos.isNotEmpty) ...[
+                              const SizedBox(height: 28),
+                              AppText(
+                                '相关视频',
+                                style: Theme.of(context).textTheme.titleMedium,
+                              ),
+                              const SizedBox(height: 8),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ),
+                    if (details.relatedVideos.isNotEmpty)
+                      ListenableBuilder(
+                        listenable: widget.settings,
+                        builder: (context, _) => VideoCollectionSliver(
+                          layout: widget.settings.settings.videoLayout,
+                          itemCount: details.relatedVideos.length,
+                          listPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                          ),
+                          itemBuilder: (context, index, compact) {
+                            final video = details.relatedVideos[index];
+                            return VideoCard(
+                              video: video,
+                              compact: compact,
+                              onTap: () async {
                                 await widget.playerHandle.pause();
-                                if (!context.mounted) return;
+                                if (!context.mounted) {
+                                  return;
+                                }
                                 context.pushNamed(
                                   AppRouteNames.video,
                                   pathParameters: {
@@ -1629,146 +2144,11 @@ class _VideoDetailsBodyState extends State<_VideoDetailsBody>
                                   extra: video,
                                 );
                               },
-                            ),
-                          ],
-                          _MetadataSection(
-                            title: '分类',
-                            items: metadata
-                                .where(
-                                  (item) => item.kind == DiscoveryKind.category,
-                                )
-                                .toList(growable: false),
-                            fallbackValues: details.categories,
-                            kind: DiscoveryKind.category,
-                            translationService: widget.translationService,
-                            siteId: details.video.siteId,
-                            subscribedPaths: _subscriptionPaths,
-                            updatingKeys: _updatingMetadata,
-                            onTap: _metadataOnTap(details),
-                          ),
-                          _MetadataSection(
-                            title: '标签',
-                            items: metadata
-                                .where((item) => item.kind == DiscoveryKind.tag)
-                                .toList(growable: false),
-                            fallbackValues: details.tags,
-                            kind: DiscoveryKind.tag,
-                            translationService: widget.translationService,
-                            siteId: details.video.siteId,
-                            subscribedPaths: _subscriptionPaths,
-                            updatingKeys: _updatingMetadata,
-                            onTap: _metadataOnTap(details),
-                          ),
-                          _MetadataSection(
-                            title: '艺术家',
-                            items: metadata
-                                .where(
-                                  (item) => item.kind == DiscoveryKind.model,
-                                )
-                                .toList(growable: false),
-                            fallbackValues: details.models,
-                            kind: DiscoveryKind.model,
-                            translationService: widget.translationService,
-                            siteId: details.video.siteId,
-                            subscribedPaths: _subscriptionPaths,
-                            updatingKeys: _updatingMetadata,
-                            onTap: _metadataOnTap(details),
-                          ),
-                          if (details.uploader case final uploader?) ...[
-                            const SizedBox(height: 24),
-                            AppText(
-                              '上传者',
-                              style: Theme.of(context).textTheme.titleMedium,
-                            ),
-                            const SizedBox(height: 8),
-                            Card(
-                              margin: EdgeInsets.zero,
-                              child: ListTile(
-                                leading: SiteAvatar(
-                                  imageUrl: uploader.avatarUrl,
-                                  fallbackIcon: Icons.person_outline,
-                                ),
-                                title: Row(
-                                  children: [
-                                    Flexible(child: Text(uploader.name)),
-                                    if (uploader.verified) ...[
-                                      const SizedBox(width: 4),
-                                      Icon(
-                                        Icons.verified,
-                                        size: 18,
-                                        color: Theme.of(
-                                          context,
-                                        ).colorScheme.primary,
-                                      ),
-                                    ],
-                                  ],
-                                ),
-                                trailing:
-                                    details
-                                        .video
-                                        .site
-                                        .capabilities
-                                        .uploaderProfiles
-                                    ? const Icon(Icons.chevron_right)
-                                    : null,
-                                onTap:
-                                    details
-                                        .video
-                                        .site
-                                        .capabilities
-                                        .uploaderProfiles
-                                    ? () => context.pushNamed(
-                                        AppRouteNames.uploader,
-                                        pathParameters: {'id': uploader.id},
-                                        queryParameters: {
-                                          'name': uploader.name,
-                                        },
-                                        extra: uploader,
-                                      )
-                                    : null,
-                              ),
-                            ),
-                          ],
-                          if (details.relatedVideos.isNotEmpty) ...[
-                            const SizedBox(height: 28),
-                            AppText(
-                              '相关视频',
-                              style: Theme.of(context).textTheme.titleMedium,
-                            ),
-                            const SizedBox(height: 8),
-                            ListenableBuilder(
-                              listenable: widget.settings,
-                              builder: (context, _) => VideoCollectionBox(
-                                layout: widget.settings.settings.videoLayout,
-                                itemCount: details.relatedVideos.length,
-                                itemBuilder: (context, index, compact) {
-                                  final video = details.relatedVideos[index];
-                                  return VideoCard(
-                                    video: video,
-                                    compact: compact,
-                                    onTap: () async {
-                                      await widget.playerHandle.pause();
-                                      if (!context.mounted) {
-                                        return;
-                                      }
-                                      context.pushNamed(
-                                        AppRouteNames.video,
-                                        pathParameters: {
-                                          'id': video.id,
-                                          'slug': video.slug,
-                                        },
-                                        queryParameters: {'site': video.siteId},
-                                        extra: video,
-                                      );
-                                    },
-                                  );
-                                },
-                              ),
-                            ),
-                          ],
-                        ],
+                            );
+                          },
+                        ),
                       ),
-                    ),
+                    const SliverToBoxAdapter(child: SizedBox(height: 28)),
                   ],
                 ),
               ),
@@ -1794,7 +2174,7 @@ class _VideoDetailsBodyState extends State<_VideoDetailsBody>
     return AnimatedBuilder(
       animation: _playerExpandController,
       child: nestedScrollView,
-      builder: (context, child) => _OuterScrollOffsetCorrector(
+      builder: (context, child) => OuterScrollOffsetCorrector(
         position: _detailScrollController.hasClients
             ? _detailScrollController.position
             : null,
@@ -1802,849 +2182,6 @@ class _VideoDetailsBodyState extends State<_VideoDetailsBody>
             ? _playerExpandController.value
             : null,
         child: child!,
-      ),
-    );
-  }
-}
-
-class _HanimeSeriesSection extends StatelessWidget {
-  const _HanimeSeriesSection({
-    required this.seriesTitle,
-    required this.videos,
-    required this.layout,
-    required this.currentVideoId,
-    required this.onTap,
-  });
-  final String seriesTitle;
-  final List<VideoItem> videos;
-  final ContentLayout layout;
-  final String currentVideoId;
-  final Future<void> Function(VideoItem) onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        AppText('系列视频', style: Theme.of(context).textTheme.titleMedium),
-        const SizedBox(height: 6),
-        Row(
-          children: [
-            Expanded(
-              child: AppText(
-                seriesTitle,
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-            ),
-          ],
-        ),
-        Row(
-          children: [
-            AppText(
-              '共${videos.length}集',
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-            const Spacer(),
-            OutlinedButton(
-              onPressed: () => _openSheet(context),
-              style: OutlinedButton.styleFrom(
-                minimumSize: Size.zero,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 5,
-                ),
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                shape: const StadiumBorder(),
-              ),
-              child: const AppText('展开'),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  void _openSheet(BuildContext context) {
-    final sheetHeight = MediaQuery.sizeOf(context).height * .63;
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      showDragHandle: true,
-      builder: (context) => _HanimeSeriesSheet(
-        seriesTitle: seriesTitle,
-        videos: videos,
-        layout: layout,
-        currentVideoId: currentVideoId,
-        sheetHeight: sheetHeight,
-        onTap: onTap,
-      ),
-    );
-  }
-}
-
-class _HanimeSeriesSheet extends StatefulWidget {
-  const _HanimeSeriesSheet({
-    required this.seriesTitle,
-    required this.videos,
-    required this.layout,
-    required this.currentVideoId,
-    required this.sheetHeight,
-    required this.onTap,
-  });
-
-  final String seriesTitle;
-  final List<VideoItem> videos;
-  final ContentLayout layout;
-  final String currentVideoId;
-  final double sheetHeight;
-  final Future<void> Function(VideoItem) onTap;
-
-  @override
-  State<_HanimeSeriesSheet> createState() => _HanimeSeriesSheetState();
-}
-
-class _HanimeSeriesSheetState extends State<_HanimeSeriesSheet> {
-  ScrollController? _scrollController;
-  final _currentItemKey = GlobalKey();
-  var _initialPositionCorrected = false;
-  var _initialPositionAttempts = 0;
-
-  @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_scrollController != null) return;
-    final currentIndex = widget.videos.indexWhere(
-      (video) => video.id == widget.currentVideoId,
-    );
-    final row = currentIndex < 0
-        ? 0
-        : widget.layout == ContentLayout.doubleColumn
-        ? currentIndex ~/ 2
-        : currentIndex;
-    final screenWidth = MediaQuery.sizeOf(context).width;
-    final cardWidth = widget.layout == ContentLayout.doubleColumn
-        ? (screenWidth - 32) / 2
-        : screenWidth - 24;
-    final estimatedItemExtent =
-        cardWidth * 9 / 16 +
-        (widget.layout == ContentLayout.doubleColumn ? 92.0 : 112.0);
-    const estimatedHeaderExtent = 64.0;
-    final initialOffset = math.max(
-      0,
-      estimatedHeaderExtent +
-          row * estimatedItemExtent -
-          (widget.sheetHeight - 48) / 2 +
-          estimatedItemExtent / 2,
-    );
-    _scrollController = ScrollController(
-      initialScrollOffset: initialOffset.toDouble(),
-    );
-    WidgetsBinding.instance.addPostFrameCallback(_correctInitialPosition);
-  }
-
-  void _correctInitialPosition(Duration _) {
-    if (!mounted || _initialPositionCorrected) return;
-    final currentContext = _currentItemKey.currentContext;
-    if (currentContext == null) {
-      // Masonry layouts can defer the target child by one or two frames when
-      // opening a sheet from a cold cache. Retry without animating the sheet.
-      if (++_initialPositionAttempts >= 8) return;
-      WidgetsBinding.instance.addPostFrameCallback(_correctInitialPosition);
-      return;
-    }
-    _initialPositionCorrected = true;
-    Scrollable.ensureVisible(
-      currentContext,
-      alignment: 0.5,
-      duration: Duration.zero,
-      curve: Curves.linear,
-    );
-  }
-
-  @override
-  void dispose() {
-    _scrollController?.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      child: SizedBox(
-        height: widget.sheetHeight,
-        child: CustomScrollView(
-          controller: _scrollController,
-          slivers: [
-            const SliverToBoxAdapter(child: SizedBox(height: 8)),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
-                child: AppText(
-                  widget.seriesTitle,
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-              ),
-            ),
-            if (widget.layout == ContentLayout.doubleColumn)
-              SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                sliver: SliverMasonryGrid.count(
-                  crossAxisCount: 2,
-                  mainAxisSpacing: 2,
-                  crossAxisSpacing: 2,
-                  childCount: widget.videos.length,
-                  itemBuilder: (context, index) =>
-                      _buildItem(context, index, compact: true),
-                ),
-              )
-            else
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(12, 0, 12, 16),
-                sliver: SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) =>
-                        _buildItem(context, index, compact: false),
-                    childCount: widget.videos.length,
-                  ),
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildItem(BuildContext context, int index, {required bool compact}) {
-    final video = widget.videos[index];
-    final item = Stack(
-      fit: StackFit.passthrough,
-      children: [
-        VideoCard(
-          video: video,
-          compact: compact,
-          onTap: () {
-            Navigator.pop(context);
-            if (video.id == widget.currentVideoId) return;
-            widget.onTap(video);
-          },
-        ),
-        if (video.id == widget.currentVideoId)
-          Positioned.fill(
-            child: IgnorePointer(
-              child: ColoredBox(
-                color: Color(0x99000000),
-                child: Center(
-                  child: AppText(
-                    '正在播放',
-                    style: Theme.of(
-                      context,
-                    ).textTheme.titleSmall?.copyWith(color: Colors.white),
-                  ),
-                ),
-              ),
-            ),
-          ),
-      ],
-    );
-    final keyed = video.id == widget.currentVideoId
-        ? KeyedSubtree(key: _currentItemKey, child: item)
-        : item;
-    return RepaintBoundary(child: keyed);
-  }
-}
-
-class _VideoDetailHeaderDelegate extends SliverPersistentHeaderDelegate {
-  const _VideoDetailHeaderDelegate({
-    required this.player,
-    required this.tabs,
-    required this.playerHeight,
-  });
-
-  static const tabsHeight = 36.0;
-  final Widget player;
-  final Widget tabs;
-  final double playerHeight;
-
-  @override
-  double get minExtent => tabsHeight;
-
-  @override
-  double get maxExtent => playerHeight + tabsHeight;
-
-  @override
-  Widget build(
-    BuildContext context,
-    double shrinkOffset,
-    bool overlapsContent,
-  ) {
-    final hiddenPlayerHeight = shrinkOffset.clamp(0.0, maxExtent - minExtent);
-    return ClipRect(
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          Positioned(
-            left: 0,
-            right: 0,
-            top: -hiddenPlayerHeight,
-            height: playerHeight,
-            child: player,
-          ),
-          Positioned(
-            left: 0,
-            right: 0,
-            top: playerHeight - hiddenPlayerHeight,
-            height: tabsHeight,
-            child: tabs,
-          ),
-        ],
-      ),
-    );
-  }
-
-  @override
-  bool shouldRebuild(covariant _VideoDetailHeaderDelegate oldDelegate) =>
-      oldDelegate.player != player ||
-      oldDelegate.tabs != tabs ||
-      oldDelegate.playerHeight != playerHeight;
-}
-
-class _PlayerHeaderGatePhysics extends ScrollPhysics {
-  const _PlayerHeaderGatePhysics({
-    required this.playing,
-    required this.buffering,
-    required this.scrollToTopController,
-    super.parent,
-  });
-
-  final ValueListenable<bool> playing;
-  final ValueListenable<bool> buffering;
-  final ScrollToTopController scrollToTopController;
-
-  bool get _locked =>
-      playing.value || buffering.value || scrollToTopController.suppressed;
-
-  @override
-  bool get allowImplicitScrolling => !_locked && super.allowImplicitScrolling;
-
-  @override
-  _PlayerHeaderGatePhysics applyTo(ScrollPhysics? ancestor) {
-    return _PlayerHeaderGatePhysics(
-      playing: playing,
-      buffering: buffering,
-      scrollToTopController: scrollToTopController,
-      parent: buildParent(ancestor),
-    );
-  }
-
-  @override
-  double applyBoundaryConditions(ScrollMetrics position, double value) {
-    if (_locked && value != position.pixels) {
-      return value - position.pixels;
-    }
-    return super.applyBoundaryConditions(position, value);
-  }
-
-  @override
-  Simulation? createBallisticSimulation(
-    ScrollMetrics position,
-    double velocity,
-  ) {
-    if (_locked) return null;
-    return super.createBallisticSimulation(position, velocity);
-  }
-}
-
-class _OuterScrollOffsetCorrector extends SingleChildRenderObjectWidget {
-  const _OuterScrollOffsetCorrector({
-    required this.position,
-    required this.targetOffset,
-    required super.child,
-  });
-
-  final ScrollPosition? position;
-  final double? targetOffset;
-
-  @override
-  RenderObject createRenderObject(BuildContext context) {
-    return _RenderOuterScrollOffsetCorrector(
-      position: position,
-      targetOffset: targetOffset,
-    );
-  }
-
-  @override
-  void updateRenderObject(
-    BuildContext context,
-    _RenderOuterScrollOffsetCorrector renderObject,
-  ) {
-    renderObject.update(position: position, targetOffset: targetOffset);
-  }
-}
-
-class _RenderOuterScrollOffsetCorrector extends RenderProxyBox {
-  _RenderOuterScrollOffsetCorrector({
-    required this.position,
-    required this.targetOffset,
-  });
-
-  ScrollPosition? position;
-  double? targetOffset;
-
-  void update({
-    required ScrollPosition? position,
-    required double? targetOffset,
-  }) {
-    if (identical(this.position, position) &&
-        this.targetOffset == targetOffset) {
-      return;
-    }
-    this.position = position;
-    this.targetOffset = targetOffset;
-    markNeedsLayout();
-  }
-
-  @override
-  void performLayout() {
-    final scrollPosition = position;
-    final target = targetOffset;
-    if (scrollPosition != null && target != null && scrollPosition.hasPixels) {
-      final correction = target - scrollPosition.pixels;
-      if (correction.abs() > precisionErrorTolerance) {
-        scrollPosition.correctBy(correction);
-      }
-    }
-    super.performLayout();
-  }
-}
-
-enum _MetadataAction { open, subscription }
-
-class _ActionButton extends StatelessWidget {
-  const _ActionButton({
-    required this.icon,
-    required this.label,
-    required this.busy,
-    required this.onPressed,
-  });
-
-  final IconData icon;
-  final String label;
-  final bool busy;
-  final VoidCallback? onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return OutlinedButton.icon(
-      onPressed: busy ? null : onPressed,
-      icon: Icon(icon),
-      label: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          AppText(label),
-          if (busy) ...[
-            const SizedBox(width: 8),
-            const SizedBox.square(
-              dimension: 14,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-class _StatChip extends StatelessWidget {
-  const _StatChip({required this.icon, required this.label});
-
-  final IconData icon;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Chip(avatar: Icon(icon, size: 16), label: AppText(label));
-  }
-}
-
-class _HanimeDescriptionCard extends StatelessWidget {
-  const _HanimeDescriptionCard({required this.details});
-
-  final VideoDetails details;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final uploader = details.uploader;
-    final artistNames = details.models
-        .map((value) => value.trim().toLowerCase())
-        .toSet();
-    final showUploader =
-        uploader != null &&
-        !artistNames.contains(uploader.name.trim().toLowerCase());
-    final metadata = <String>[
-      if (details.video.views case final views?) '${_groupDigits(views)} 次观看',
-      ?details.video.publishedLabel,
-    ];
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (showUploader) ...[
-              AppText(
-                '上传者：${uploader.name}',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-              const SizedBox(height: 4),
-            ],
-            if (metadata.isNotEmpty) ...[
-              Text(
-                metadata.join(' · '),
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-              const SizedBox(height: 5),
-            ],
-            if (details.descriptionTitle case final title?) ...[
-              Text(title, style: theme.textTheme.titleSmall),
-              const SizedBox(height: 5),
-            ],
-            if (details.description case final description?)
-              _CollapsibleDescription(
-                text: description,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  static String _groupDigits(int value) => value.toString().replaceAllMapped(
-    RegExp(r'\B(?=(\d{3})+(?!\d))'),
-    (_) => ',',
-  );
-}
-
-class _CollapsibleDescription extends StatefulWidget {
-  const _CollapsibleDescription({required this.text, this.style});
-
-  final String text;
-  final TextStyle? style;
-
-  @override
-  State<_CollapsibleDescription> createState() =>
-      _CollapsibleDescriptionState();
-}
-
-class _CollapsibleDescriptionState extends State<_CollapsibleDescription> {
-  var _expanded = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final style = widget.style ?? DefaultTextStyle.of(context).style;
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final probe = TextPainter(
-          text: TextSpan(text: widget.text, style: style),
-          textDirection: Directionality.of(context),
-          maxLines: 3,
-        )..layout(maxWidth: constraints.maxWidth);
-        final collapsible = probe.didExceedMaxLines;
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              widget.text,
-              style: style,
-              maxLines: collapsible && !_expanded ? 3 : null,
-              overflow: collapsible && !_expanded
-                  ? TextOverflow.ellipsis
-                  : TextOverflow.visible,
-            ),
-            if (collapsible) ...[
-              const SizedBox(height: 2),
-              TextButton(
-                style: TextButton.styleFrom(
-                  padding: EdgeInsets.zero,
-                  minimumSize: const Size(48, 30),
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-                onPressed: () => setState(() => _expanded = !_expanded),
-                child: AppText(_expanded ? '收起' : '展开'),
-              ),
-            ],
-          ],
-        );
-      },
-    );
-  }
-}
-
-class _AdaptiveMetadataChip extends StatelessWidget {
-  const _AdaptiveMetadataChip({
-    this.avatar,
-    required this.label,
-    this.onPressed,
-  });
-
-  final Widget? avatar;
-  final Widget label;
-  final VoidCallback? onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final chipTheme = ChipTheme.of(context);
-    final shape = RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(16),
-      side: BorderSide(color: theme.colorScheme.outlineVariant),
-    );
-    final maxWidth = (MediaQuery.sizeOf(context).width - 32).clamp(
-      160.0,
-      560.0,
-    );
-    return ConstrainedBox(
-      constraints: BoxConstraints(maxWidth: maxWidth),
-      child: Semantics(
-        button: onPressed != null,
-        child: Material(
-          color:
-              chipTheme.backgroundColor ??
-              theme.colorScheme.surfaceContainerHighest,
-          shape: shape,
-          clipBehavior: Clip.antiAlias,
-          child: InkWell(
-            onTap: onPressed,
-            borderRadius: BorderRadius.circular(16),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  if (avatar != null) ...[
-                    SizedBox.square(
-                      dimension: 24,
-                      child: Center(child: avatar),
-                    ),
-                    const SizedBox(width: 6),
-                  ],
-                  Flexible(
-                    fit: FlexFit.loose,
-                    child: DefaultTextStyle(
-                      style:
-                          chipTheme.labelStyle ?? theme.textTheme.labelLarge!,
-                      child: label,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _MetadataSection extends StatelessWidget {
-  const _MetadataSection({
-    required this.title,
-    required this.items,
-    required this.fallbackValues,
-    required this.kind,
-    required this.translationService,
-    required this.siteId,
-    required this.subscribedPaths,
-    required this.updatingKeys,
-    required this.onTap,
-  });
-
-  final String title;
-  final List<VideoMetadataItem> items;
-  final List<String> fallbackValues;
-  final DiscoveryKind kind;
-  final TranslationService translationService;
-  final String siteId;
-  final Set<String> subscribedPaths;
-  final Set<String> updatingKeys;
-  final ValueChanged<VideoMetadataItem>? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    if (items.isEmpty && fallbackValues.isEmpty) {
-      return const SizedBox.shrink();
-    }
-    return ListenableBuilder(
-      listenable: translationService,
-      builder: (context, _) => Padding(
-        padding: const EdgeInsets.only(top: 24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            AppText(title, style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: items.isEmpty
-                  ? fallbackValues
-                        .take(40)
-                        .map(
-                          (value) => EditableTranslationRegion(
-                            translationService: translationService,
-                            kind: kind,
-                            english: value,
-                            siteId: siteId,
-                            child: _AdaptiveMetadataChip(
-                              label: LocalizedTranslationText(
-                                value: translationService.resolveMetadata(
-                                  kind,
-                                  value,
-                                  siteId: siteId,
-                                ),
-                              ),
-                            ),
-                          ),
-                        )
-                        .toList(growable: false)
-                  : items
-                        .take(40)
-                        .map((item) {
-                          final subscribed = subscribedPaths.contains(
-                            item.path,
-                          );
-                          final busy = updatingKeys.any(
-                            (key) =>
-                                key.endsWith('${item.kind.name}:${item.id}'),
-                          );
-                          return EditableTranslationRegion(
-                            translationService: translationService,
-                            kind: item.kind,
-                            english: item.title,
-                            siteId: siteId,
-                            child: _AdaptiveMetadataChip(
-                              avatar: _metadataAvatar(
-                                context,
-                                item: item,
-                                subscribed: subscribed,
-                                busy: busy,
-                              ),
-                              label: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Flexible(
-                                    child: LocalizedTranslationText(
-                                      value: translationService.resolveMetadata(
-                                        item.kind,
-                                        item.title,
-                                        siteId: siteId,
-                                      ),
-                                      suffix:
-                                          item.upScore == 0 &&
-                                              item.downScore == 0
-                                          ? ''
-                                          : ' · ↑${item.upScore} ↓${item.downScore}',
-                                    ),
-                                  ),
-                                  // 标签热度数字：仿 UI 的浅色括号，位于标签末尾
-                                  // （如 “NTR（7）”），点击搜索时只使用纯标签文本。
-                                  if (item.count != null) ...[
-                                    const SizedBox(width: 2),
-                                    Text(
-                                      '（${item.count}）',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .labelSmall
-                                          ?.copyWith(
-                                            color: Theme.of(
-                                              context,
-                                            ).colorScheme.outline,
-                                          ),
-                                    ),
-                                  ],
-                                ],
-                              ),
-                              onPressed: busy || onTap == null
-                                  ? null
-                                  : () => onTap!(item),
-                            ),
-                          );
-                        })
-                        .toList(growable: false),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  IconData _kindIcon(DiscoveryKind kind) => switch (kind) {
-    DiscoveryKind.tag => Icons.tag,
-    DiscoveryKind.category => Icons.category_outlined,
-    DiscoveryKind.model => Icons.brush_outlined,
-    DiscoveryKind.channel => Icons.live_tv_outlined,
-  };
-
-  Widget _metadataAvatar(
-    BuildContext context, {
-    required VideoMetadataItem item,
-    required bool subscribed,
-    required bool busy,
-  }) {
-    if (busy) {
-      return const SizedBox.square(
-        dimension: 18,
-        child: CircularProgressIndicator(strokeWidth: 2),
-      );
-    }
-    final avatar = item.thumbnailUrl == null
-        ? Icon(_kindIcon(item.kind), size: 18)
-        : SiteAvatar(
-            imageUrl: item.thumbnailUrl,
-            radius: 9,
-            fallbackIcon: _kindIcon(item.kind),
-          );
-    if (!subscribed) {
-      return avatar;
-    }
-    return SizedBox.square(
-      dimension: 20,
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Positioned.fill(child: avatar),
-          Positioned(
-            right: -3,
-            bottom: -3,
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary,
-                shape: BoxShape.circle,
-              ),
-              child: const Padding(
-                padding: EdgeInsets.all(2),
-                child: Icon(Icons.notifications, size: 8, color: Colors.white),
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

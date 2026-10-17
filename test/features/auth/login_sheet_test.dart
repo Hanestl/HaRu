@@ -1,9 +1,9 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_test/flutter_test.dart';
 import 'package:flule34/core/api/rule34video_api.dart';
 import 'package:flule34/core/models/content_source.dart';
 import 'package:flule34/core/session/session_store.dart';
 import 'package:flule34/features/auth/login_sheet.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 import '../../helpers/test_session_harness.dart';
 

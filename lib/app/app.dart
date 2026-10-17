@@ -1,19 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/api/http_adapter_factory.dart';
 import '../features/settings/domain/app_settings.dart';
 import '../l10n/generated/app_localizations.dart';
-import '../shared/video_preview_overlay.dart';
 import '../shared/hanime_cloudflare_gate.dart';
+import '../shared/video_preview_overlay.dart';
 import 'providers.dart';
 import 'router/app_router.dart';
 import 'theme/app_theme.dart';
 
-class Flule34App extends ConsumerWidget {
+class Flule34App extends ConsumerStatefulWidget {
   const Flule34App({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<Flule34App> createState() => _Flule34AppState();
+}
+
+class _Flule34AppState extends ConsumerState<Flule34App> {
+  @override
+  void dispose() {
+    closeSharedHttpAdapters(force: true);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final router = ref.watch(appRouterProvider);
     final settingsRepository = ref.watch(appSettingsRepositoryProvider);
 

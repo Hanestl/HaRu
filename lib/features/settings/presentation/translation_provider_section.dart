@@ -1,13 +1,13 @@
 import 'dart:math';
 
-import 'package:flutter/material.dart';
 import 'package:flule34/l10n/ui_localization.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/providers.dart';
 import '../../../core/models/translation_provider_models.dart';
-import '../../../core/security/error_redaction.dart';
 import '../../../core/services/external_link_service.dart';
+import '../../../shared/error_view.dart';
 import '../../../shared/transient_focus.dart';
 
 class TranslationProviderSection extends ConsumerWidget {
@@ -147,7 +147,7 @@ class TranslationProviderSection extends ConsumerWidget {
         } catch (error) {
           if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: AppText('连接失败：${redactSensitiveText(error)}')),
+              SnackBar(content: AppText('连接失败：${friendlyErrorMessage(error)}')),
             );
           }
         }
@@ -160,7 +160,7 @@ class TranslationProviderSection extends ConsumerWidget {
           if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: AppText('复制翻译服务失败：${redactSensitiveText(error)}'),
+                content: AppText('复制翻译服务失败：${friendlyErrorMessage(error)}'),
               ),
             );
           }
@@ -192,7 +192,7 @@ class TranslationProviderSection extends ConsumerWidget {
             if (context.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: AppText('删除翻译服务失败：${redactSensitiveText(error)}'),
+                  content: AppText('删除翻译服务失败：${friendlyErrorMessage(error)}'),
                 ),
               );
             }
@@ -217,7 +217,7 @@ class TranslationProviderSection extends ConsumerWidget {
     } catch (error) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: AppText('保存翻译服务失败：${redactSensitiveText(error)}')),
+          SnackBar(content: AppText('保存翻译服务失败：${friendlyErrorMessage(error)}')),
         );
       }
     }
@@ -419,7 +419,7 @@ class _ProviderEditDialogState extends ConsumerState<_ProviderEditDialog> {
                 ),
               if (_error != null) ...[
                 const SizedBox(height: 10),
-                Text(
+                AppText(
                   _error!,
                   style: TextStyle(color: Theme.of(context).colorScheme.error),
                 ),
@@ -528,7 +528,9 @@ class _ProviderEditDialogState extends ConsumerState<_ProviderEditDialog> {
         setState(() => _model.text = selected);
       }
     } catch (error) {
-      if (mounted) setState(() => _error = '模型列表拉取失败：$error');
+      if (mounted) {
+        setState(() => _error = '模型列表拉取失败：${friendlyErrorMessage(error)}');
+      }
     } finally {
       if (mounted) setState(() => _loadingModels = false);
     }
@@ -540,7 +542,7 @@ class _ProviderEditDialogState extends ConsumerState<_ProviderEditDialog> {
     try {
       await ExternalLinkService.open(uri);
     } catch (error) {
-      if (mounted) setState(() => _error = error.toString());
+      if (mounted) setState(() => _error = friendlyErrorMessage(error));
     }
   }
 

@@ -1,8 +1,7 @@
 import 'dart:async';
 
 import 'package:drift/drift.dart' show Value;
-import 'package:flutter_test/flutter_test.dart';
-
+import 'package:drift/native.dart';
 import 'package:flule34/core/api/rule34video_api.dart';
 import 'package:flule34/core/database/app_database.dart';
 import 'package:flule34/core/models/video_models.dart';
@@ -11,6 +10,7 @@ import 'package:flule34/features/downloads/data/download_repository.dart';
 import 'package:flule34/features/downloads/domain/download_models.dart';
 import 'package:flule34/features/settings/data/app_settings_repository.dart';
 import 'package:flule34/features/settings/data/app_settings_store.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 import '../../helpers/test_session_harness.dart';
 
@@ -287,6 +287,121 @@ void main() {
     expect(record?.completedAt, isNotNull);
   });
 
+  test('完成事件刷新进度失败时仍可写入终态且不会阻断后续事件链', () async {
+    final db = _FaultInjectableDatabase();
+    addTearDown(db.close);
+    final harness = TestSessionHarness.create(database: db);
+    addTearDown(harness.dispose);
+    await harness.sessionStore.load();
+    final platform = _FakeDownloadPlatformService();
+    final settings = await _createSettings();
+    final repository = DownloadRepository(
+      db,
+      _FakeRule34VideoApi(harness.sessionStore),
+      platform,
+      settings,
+    );
+    addTearDown(repository.dispose);
+    addTearDown(settings.dispose);
+    await repository.initialize();
+
+    final id = await repository.enqueueVideo(
+      details: _details,
+      source: _details.sources.single,
+    );
+    final taskId = (await db.findDownloadRecord(id))!.taskId!;
+
+    // 初始进度写入
+    platform.emit(
+      DownloadProgressEvent(
+        taskId: taskId,
+        bytesDownloaded: 512,
+        totalBytes: 1024,
+      ),
+    );
+    await _waitFor(() async {
+      return (await db.findDownloadRecord(id))?.bytesDownloaded == 512;
+    });
+
+    // 注入故障：进度更新异常
+    db.failUpdateProgress = true;
+
+    platform.emit(
+      DownloadStatusEvent(
+        taskId: taskId,
+        state: DownloadTaskState.complete,
+        filePath: _fileUri,
+        actualBytes: 2048,
+      ),
+    );
+
+    // 验证：即使刷新进度发生异常，终态依然能正确写入，任务不会卡死或状态倒退
+    await _waitFor(() async {
+      return (await db.findDownloadRecord(id))?.state ==
+          DownloadTaskState.complete.storageValue;
+    });
+
+    final record = await db.findDownloadRecord(id);
+    expect(record?.state, DownloadTaskState.complete.storageValue);
+    expect(record?.filePath, _fileUri);
+    expect(record?.completedAt, isNotNull);
+    expect(record?.bytesDownloaded, 2048);
+    expect(record?.totalBytes, 2048);
+
+    // 验证下游文件校验可正常通过
+    platform.inspections[_fileUri] = DownloadFileInspection(
+      exists: true,
+      readable: true,
+      name: record!.fileName,
+      size: 2048,
+    );
+    final validation = await repository.validateFile(record);
+    expect(validation.valid, isTrue);
+
+    // 验证：任务已完成时，迟到的旧进度事件被过滤，不污染已落库的终态字节数
+    platform.emit(
+      DownloadProgressEvent(
+        taskId: taskId,
+        bytesDownloaded: 256,
+        totalBytes: 512,
+      ),
+    );
+    await Future<void>.delayed(const Duration(milliseconds: 20));
+    final recordAfterLateProgress = await db.findDownloadRecord(id);
+    expect(recordAfterLateProgress?.bytesDownloaded, 2048);
+    expect(recordAfterLateProgress?.totalBytes, 2048);
+
+    // 故障恢复后，事件链未损坏，仍可继续处理后续任务
+    db.failUpdateProgress = false;
+    final details2 = _details.copyWith(
+      video: const VideoItem(
+        id: '4505898',
+        title: '第二个测试视频',
+        slug: 'test-video-2',
+      ),
+    );
+    final id2 = await repository.enqueueVideo(
+      details: details2,
+      source: details2.sources.single,
+    );
+    final taskId2 = (await db.findDownloadRecord(id2))!.taskId!;
+    platform.emit(
+      DownloadStatusEvent(
+        taskId: taskId2,
+        state: DownloadTaskState.complete,
+        filePath: _fileUri,
+        actualBytes: 4096,
+      ),
+    );
+    await _waitFor(() async {
+      return (await db.findDownloadRecord(id2))?.state ==
+          DownloadTaskState.complete.storageValue;
+    });
+    final record2 = await db.findDownloadRecord(id2);
+    expect(record2?.bytesDownloaded, 4096);
+    expect(record2?.totalBytes, 4096);
+  });
+
   test('重试使用新的平台任务 ID 且忽略旧任务迟到回调', () async {
     final harness = TestSessionHarness.create();
     addTearDown(harness.dispose);
@@ -516,6 +631,114 @@ void main() {
     expect(result.deleted, 1);
     expect(context.platform.deletedUris[context.record.taskId], _fileUri);
     expect(context.platform.deleteExternalFlags[context.record.taskId], isTrue);
+  });
+
+  test('下载进度节流根据时间、字节阈值和百分比决定是否落库', () {
+    final t0 = DateTime(2026, 1, 1, 12, 0, 0);
+
+    // 未达时间（< 500ms）且增量微小（< 1MB）且百分比未达 1% -> 不落库
+    expect(
+      shouldPersistDownloadProgress(
+        lastPersistedAt: t0,
+        lastPersistedBytes: 100,
+        currentBytes: 150,
+        totalBytes: 10000000,
+        now: t0.add(const Duration(milliseconds: 100)),
+      ),
+      isFalse,
+    );
+
+    // 超过节流间隔（>= 500ms）-> 落库
+    expect(
+      shouldPersistDownloadProgress(
+        lastPersistedAt: t0,
+        lastPersistedBytes: 100,
+        currentBytes: 150,
+        totalBytes: 10000000,
+        now: t0.add(const Duration(milliseconds: 550)),
+      ),
+      isTrue,
+    );
+
+    // 增量超过 1MB -> 落库
+    expect(
+      shouldPersistDownloadProgress(
+        lastPersistedAt: t0,
+        lastPersistedBytes: 100,
+        currentBytes: 100 + 1024 * 1024 + 1,
+        totalBytes: 100000000,
+        now: t0.add(const Duration(milliseconds: 100)),
+      ),
+      isTrue,
+    );
+
+    // 百分比增长超过 1% -> 落库
+    expect(
+      shouldPersistDownloadProgress(
+        lastPersistedAt: t0,
+        lastPersistedBytes: 0,
+        currentBytes: 150,
+        totalBytes: 10000,
+        now: t0.add(const Duration(milliseconds: 100)),
+      ),
+      isTrue,
+    );
+  });
+
+  test('进度事件在状态流转时冲刷最新进度至数据库', () async {
+    final harness = TestSessionHarness.create();
+    addTearDown(harness.dispose);
+    await harness.sessionStore.load();
+    final platform = _FakeDownloadPlatformService();
+    final settings = await _createSettings();
+    final repository = DownloadRepository(
+      harness.database,
+      _FakeRule34VideoApi(harness.sessionStore),
+      platform,
+      settings,
+    );
+    addTearDown(repository.dispose);
+    await repository.initialize();
+
+    final id = await repository.enqueueVideo(
+      details: _details,
+      source: _details.sources.first,
+    );
+    final taskId = platform.requests.single.id;
+
+    // 发送首次进度
+    platform.emit(
+      DownloadProgressEvent(
+        taskId: taskId,
+        bytesDownloaded: 1024 * 1024,
+        totalBytes: 10 * 1024 * 1024,
+      ),
+    );
+    await _waitFor(() async {
+      final record = await harness.database.findDownloadRecord(id);
+      return (record?.bytesDownloaded ?? 0) >= 1024 * 1024;
+    });
+
+    // 发送未达阈值的进度（不足 1MB / 不足 500ms），随后立即暂停
+    platform.emit(
+      DownloadProgressEvent(
+        taskId: taskId,
+        bytesDownloaded: 1024 * 1024 + 500,
+        totalBytes: 10 * 1024 * 1024,
+      ),
+    );
+    platform.emit(
+      DownloadStatusEvent(taskId: taskId, state: DownloadTaskState.paused),
+    );
+    await _waitFor(() async {
+      final record = await harness.database.findDownloadRecord(id);
+      return record?.state == DownloadTaskState.paused.storageValue &&
+          (record?.bytesDownloaded ?? 0) == 1024 * 1024 + 500;
+    });
+
+    final record = (await harness.database.findDownloadRecord(id))!;
+    expect(record.bytesDownloaded, 1024 * 1024 + 500);
+    expect(record.state, DownloadTaskState.paused.storageValue);
   });
 }
 
@@ -769,5 +992,29 @@ final class _FakeDownloadPlatformService implements DownloadPlatformService {
   @override
   void dispose() {
     unawaited(_events.close());
+  }
+}
+
+final class _FaultInjectableDatabase extends AppDatabase {
+  _FaultInjectableDatabase() : super(NativeDatabase.memory());
+
+  bool failUpdateProgress = false;
+
+  @override
+  Future<void> updateDownloadProgress({
+    required String id,
+    required int bytesDownloaded,
+    int? totalBytes,
+  }) {
+    if (failUpdateProgress) {
+      throw StateError(
+        'Simulated database error during updateDownloadProgress',
+      );
+    }
+    return super.updateDownloadProgress(
+      id: id,
+      bytesDownloaded: bytesDownloaded,
+      totalBytes: totalBytes,
+    );
   }
 }

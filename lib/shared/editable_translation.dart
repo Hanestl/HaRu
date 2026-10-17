@@ -1,12 +1,14 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
 import 'package:flule34/l10n/ui_localization.dart';
+import 'package:flutter/material.dart';
 
-import '../core/models/translation_provider_models.dart';
+import '../core/logging/app_log_service.dart';
 import '../core/models/translation_models.dart';
+import '../core/models/translation_provider_models.dart';
 import '../core/models/video_models.dart';
 import '../core/services/translation_service.dart';
+import 'error_view.dart';
 
 class EditableTranslationRegion extends StatelessWidget {
   const EditableTranslationRegion({
@@ -132,10 +134,16 @@ Future<void> showTranslationEditDialog(
       );
     }
   } catch (error) {
+    unawaited(
+      AppLogService.instance.warning(
+        '保存词条翻译失败：$error',
+        component: 'translation_service',
+      ),
+    );
     if (context.mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: AppText('保存翻译失败：$error')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: AppText('保存翻译失败：${friendlyErrorMessage(error)}')),
+      );
     }
   }
 }
@@ -276,7 +284,15 @@ class _TranslationEditDialogState extends State<_TranslationEditDialog> {
         offset: _controller.text.length,
       );
     } catch (error) {
-      if (mounted) setState(() => _errorText = '翻译失败：$error');
+      unawaited(
+        AppLogService.instance.warning(
+          '执行实时翻译失败：$error',
+          component: 'translation_service',
+        ),
+      );
+      if (mounted) {
+        setState(() => _errorText = '翻译失败：${friendlyErrorMessage(error)}');
+      }
     } finally {
       if (mounted) setState(() => _translating = false);
     }
@@ -350,10 +366,16 @@ Future<void> showTitleTranslationEditDialog(
       );
     }
   } catch (error) {
+    unawaited(
+      AppLogService.instance.warning(
+        '保存标题翻译失败：$error；videoId=$videoId',
+        component: 'translation_service',
+      ),
+    );
     if (context.mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: AppText('保存翻译失败：$error')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: AppText('保存翻译失败：${friendlyErrorMessage(error)}')),
+      );
     }
   }
 }

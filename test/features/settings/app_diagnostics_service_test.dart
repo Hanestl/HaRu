@@ -1,10 +1,9 @@
 import 'package:drift/drift.dart';
-import 'package:flutter_test/flutter_test.dart';
-import 'package:package_info_plus/package_info_plus.dart';
-
 import 'package:flule34/core/database/app_database.dart';
 import 'package:flule34/features/settings/data/app_diagnostics_service.dart';
 import 'package:flule34/features/settings/domain/app_settings.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 import '../../helpers/test_session_harness.dart';
 

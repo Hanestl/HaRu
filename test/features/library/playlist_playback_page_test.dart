@@ -1,10 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_test/flutter_test.dart';
-import 'package:video_player_platform_interface/video_player_platform_interface.dart';
-
 import 'package:flule34/app/providers.dart';
 import 'package:flule34/core/api/rule34video_api.dart';
 import 'package:flule34/core/models/video_models.dart';
@@ -15,6 +10,10 @@ import 'package:flule34/core/session/session_store.dart';
 import 'package:flule34/features/library/playlist_playback_page.dart';
 import 'package:flule34/features/settings/data/app_settings_repository.dart';
 import 'package:flule34/features/settings/data/app_settings_store.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:video_player_platform_interface/video_player_platform_interface.dart';
 
 import '../../helpers/test_session_harness.dart';
 
@@ -253,6 +252,9 @@ final class _FakeVideoPlayerPlatform extends VideoPlayerPlatform {
 final class _FakeNetworkStatusService implements NetworkStatusService {
   @override
   Future<NetworkClass> current() async => NetworkClass.wifi;
+
+  @override
+  Stream<NetworkClass> get onStatusChanged => const Stream.empty();
 }
 
 final class _FakeScreenWakeLockService implements ScreenWakeLockService {

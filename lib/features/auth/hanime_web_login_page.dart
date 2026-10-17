@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flule34/l10n/ui_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flule34/l10n/ui_localization.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 import '../../core/api/hanime1_api.dart';

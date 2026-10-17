@@ -1,18 +1,18 @@
-import 'dart:async';
-
-import 'package:flutter/material.dart';
 import 'package:flule34/l10n/ui_localization.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../core/models/video_models.dart';
+import '../../core/database/app_database.dart';
 import '../../core/models/content_source.dart';
 import '../../core/models/hanime_search_models.dart';
-import '../../core/database/app_database.dart';
+import '../../core/models/video_models.dart';
 import '../../features/discover/collection_page.dart';
 import '../../features/discover/discovery_directory_page.dart';
 import '../../features/discover/rankings_page.dart';
 import '../../features/downloads/presentation/downloads_list.dart';
+import '../../features/hanime/hanime_library_pages.dart';
+import '../../features/home/hanime_home_page.dart';
 import '../../features/home/home_page.dart';
 import '../../features/library/library_page.dart';
 import '../../features/library/local_library_page.dart';
@@ -21,17 +21,15 @@ import '../../features/library/playlist_playback_page.dart';
 import '../../features/library/subscription_page.dart';
 import '../../features/profile/account_page.dart';
 import '../../features/profile/hanime_account_page.dart';
-import '../../features/hanime/hanime_library_pages.dart';
 import '../../features/profile/profile_page.dart';
 import '../../features/profile/uploader_page.dart';
 import '../../features/search/search_page.dart';
-import '../../features/settings/presentation/settings_pages.dart';
 import '../../features/settings/domain/app_settings.dart';
+import '../../features/settings/presentation/settings_pages.dart';
 import '../../features/settings/presentation/support_pages.dart';
 import '../../features/settings/presentation/translation_catalog_page.dart';
 import '../../features/shell/app_shell.dart';
 import '../../features/video/video_detail_page.dart';
-import '../../features/home/hanime_home_page.dart';
 import '../../shared/scroll_to_top_overlay.dart';
 import '../providers.dart';
 import 'route_names.dart';
@@ -52,21 +50,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       .settings
       .navigationOrder
       .first;
-  final initialSite = switch (initialDestination) {
-    AppDestination.rule34video => ContentSite.rule34video,
-    AppDestination.hanime => ContentSite.hanime1,
-    _ => null,
-  };
-  if (initialSite != null &&
-      ref.read(appSettingsRepositoryProvider).settings.activeSite !=
-          initialSite) {
-    unawaited(
-      ref.read(appSettingsRepositoryProvider).setActiveSite(initialSite),
-    );
-  }
   Widget scrollablePage(GoRouterState state, Widget child) {
     return ScrollToTopOverlay(
-      key: ValueKey(state.uri.toString()),
+      key: ValueKey(state.uri.path),
       controller: scrollToTopController,
       child: child,
     );

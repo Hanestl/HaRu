@@ -24,6 +24,17 @@ final class HanimePageParser {
   static const _siteId = 'hanime1';
 
   static bool isChallenge(String source) {
+    final lower = source.toLowerCase();
+    if (!lower.contains('just a moment') &&
+        !lower.contains('cloudflare') &&
+        !lower.contains('attention required') &&
+        !lower.contains('checking your browser') &&
+        !lower.contains('verify you are human') &&
+        !lower.contains('you have been blocked') &&
+        !lower.contains('cf-turnstile-response')) {
+      return false;
+    }
+
     final document = html_parser.parse(source);
     final title = document.querySelector('title')?.text.toLowerCase() ?? '';
     final text = document.body?.text.toLowerCase() ?? '';
@@ -36,9 +47,41 @@ final class HanimePageParser {
         document.querySelector('input[name="cf-turnstile-response"]') != null;
   }
 
-  /// 提取登录表单的 CSRF 令牌：优先 `<meta name="csrf-token">`，
-  /// 兜底 `<input name="_token">`。
+  static final _csrfMetaRegex = RegExp(
+    r'''<meta\s+[^>]*name=["']csrf-token["'][^>]*content=["']([^"']+)["']''',
+    caseSensitive: false,
+  );
+  static final _csrfMetaRegexAlt = RegExp(
+    r'''<meta\s+[^>]*content=["']([^"']+)["'][^>]*name=["']csrf-token["']''',
+    caseSensitive: false,
+  );
+  static final _inputTokenRegex = RegExp(
+    r'''<input\s+[^>]*name=["']_token["'][^>]*value=["']([^"']+)["']''',
+    caseSensitive: false,
+  );
+  static final _inputTokenRegexAlt = RegExp(
+    r'''<input\s+[^>]*value=["']([^"']+)["'][^>]*name=["']_token["']''',
+    caseSensitive: false,
+  );
+
+  /// 提取登录表单的 CSRF 令牌：优先使用正则快速提取避免构建整棵 DOM 树，
+  /// 兜底使用 DOM 解析保证完全兼容。
   static String? loginToken(String source) {
+    final metaMatch =
+        _csrfMetaRegex.firstMatch(source) ??
+        _csrfMetaRegexAlt.firstMatch(source);
+    if (metaMatch != null) {
+      final token = metaMatch.group(1)?.trim();
+      if (token != null && token.isNotEmpty) return token;
+    }
+    final inputMatch =
+        _inputTokenRegex.firstMatch(source) ??
+        _inputTokenRegexAlt.firstMatch(source);
+    if (inputMatch != null) {
+      final token = inputMatch.group(1)?.trim();
+      if (token != null && token.isNotEmpty) return token;
+    }
+
     final document = html_parser.parse(source);
     final meta = document
         .querySelector('meta[name="csrf-token"]')
@@ -361,8 +404,12 @@ final class HanimePageParser {
 
   static List<VideoItem> videoList(String source) {
     final document = html_parser.parse(source);
+    return _videoListFromNode(document);
+  }
+
+  static List<VideoItem> _videoListFromNode(dom.Node node) {
     final result = <String, VideoItem>{};
-    for (final link in _videoLinks(document)) {
+    for (final link in _videoLinks(node)) {
       final video = _videoFromLink(link);
       if (video == null) continue;
       final existing = result[video.id];
@@ -379,7 +426,7 @@ final class HanimePageParser {
     for (final wrapper in document.querySelectorAll(
       '.home-rows-videos-wrapper',
     )) {
-      final items = videoList(wrapper.outerHtml);
+      final items = _videoListFromNode(wrapper);
       if (items.isEmpty) continue;
       final title = _sectionTitle(wrapper);
       if (title == null || title.isEmpty) continue;
@@ -524,9 +571,17 @@ final class HanimePageParser {
     return value == null || value.isEmpty ? null : value;
   }
 
-  static Iterable<dom.Element> _videoLinks(dom.Document document) {
+  static Iterable<dom.Element> _videoLinks(dom.Node node) {
+    final List<dom.Element> candidateLinks;
+    if (node is dom.Document) {
+      candidateLinks = node.querySelectorAll('a[href]');
+    } else if (node is dom.Element) {
+      candidateLinks = node.querySelectorAll('a[href]');
+    } else {
+      candidateLinks = const [];
+    }
     final links = <dom.Element>[];
-    for (final link in document.querySelectorAll('a[href]')) {
+    for (final link in candidateLinks) {
       final href = link.attributes['href']?.trim() ?? '';
       final uri = Uri.tryParse(href);
       final videoId = uri?.queryParameters['v']?.trim();

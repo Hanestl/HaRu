@@ -5824,6 +5824,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     'idx_search_histories_user_last_searched',
     'CREATE INDEX idx_search_histories_user_last_searched ON search_histories (user_id, last_searched_at)',
   );
+  late final Index idxLocalLibraryVideosVideoId = Index(
+    'idx_local_library_videos_video_id',
+    'CREATE INDEX idx_local_library_videos_video_id ON local_library_videos (video_id)',
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -5844,6 +5848,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     idxDownloadRecordsTaskId,
     idxDownloadRecordsUserState,
     idxSearchHistoriesUserLastSearched,
+    idxLocalLibraryVideosVideoId,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([

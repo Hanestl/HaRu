@@ -5,32 +5,38 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/api/rule34video_api.dart';
 import '../core/database/app_database.dart';
+import '../core/logging/app_log_service.dart';
+import '../core/models/content_source.dart';
+import '../core/services/hanime_cloudflare_coordinator.dart';
+import '../core/services/media_volume_service.dart';
+import '../core/services/network_status_service.dart';
+import '../core/services/predictive_prefetch_service.dart';
+import '../core/services/screen_wake_lock_service.dart';
+import '../core/services/share_service.dart';
+import '../core/services/source_language_detector.dart';
+import '../core/services/subscription_activity_index.dart';
+import '../core/services/translation_provider_repository.dart';
+import '../core/services/translation_provider_router.dart';
+import '../core/services/translation_service.dart';
+import '../core/services/video_preview_service.dart';
 import '../core/session/secret_store.dart';
 import '../core/session/secure_cookie_storage.dart';
 import '../core/session/session_store.dart';
-import '../core/services/network_status_service.dart';
-import '../core/services/predictive_prefetch_service.dart';
-import '../core/services/media_volume_service.dart';
-import '../core/services/hanime_cloudflare_coordinator.dart';
-import '../core/services/screen_wake_lock_service.dart';
-import '../core/services/share_service.dart';
-import '../core/services/subscription_activity_index.dart';
-import '../core/services/video_preview_service.dart';
-import '../core/services/translation_service.dart';
-import '../core/services/translation_provider_repository.dart';
-import '../core/services/translation_provider_router.dart';
-import '../core/services/source_language_detector.dart';
-import '../core/logging/app_log_service.dart';
-import '../shared/scroll_to_top_overlay.dart';
 import '../features/downloads/data/background_download_platform_service.dart';
 import '../features/downloads/data/download_repository.dart';
 import '../features/downloads/domain/download_models.dart';
-import '../features/library/data/local_library_repository.dart';
 import '../features/library/data/curated_library_seeder.dart';
+import '../features/library/data/local_library_repository.dart';
 import '../features/playback/data/playback_repository.dart';
 import '../features/search/data/search_history_repository.dart';
+import '../features/settings/data/apk_installer.dart';
 import '../features/settings/data/app_settings_repository.dart';
 import '../features/settings/data/app_settings_store.dart';
+import '../features/settings/data/app_update_downloader.dart';
+import '../features/settings/data/app_update_prompt_store.dart';
+import '../features/settings/data/app_update_service.dart';
+import '../features/settings/domain/app_settings.dart';
+import '../shared/scroll_to_top_overlay.dart';
 
 final appSettingsStoreProvider = Provider<AppSettingsStore>((ref) {
   return SharedPreferencesAppSettingsStore();
@@ -44,6 +50,26 @@ final appSettingsRepositoryProvider = Provider<AppSettingsRepository>((ref) {
   final repository = AppSettingsRepository(ref.watch(appSettingsStoreProvider));
   ref.onDispose(repository.dispose);
   return repository;
+});
+
+final updatePromptStoreProvider = Provider<UpdatePromptStore>((ref) {
+  return UpdatePromptStore(SharedPreferencesUpdateNotifiedVersionStore());
+});
+
+final appUpdateServiceProvider = Provider<AppUpdateService>((ref) {
+  final service = AppUpdateService();
+  ref.onDispose(service.close);
+  return service;
+});
+
+final appUpdateDownloaderProvider = Provider<AppUpdateDownloaderApi>((ref) {
+  final downloader = AppUpdateDownloader();
+  ref.onDispose(downloader.close);
+  return downloader;
+});
+
+final apkInstallerProvider = Provider<ApkInstaller>((ref) {
+  return ApkInstaller();
 });
 
 final networkStatusServiceProvider = Provider<NetworkStatusService>((ref) {
@@ -247,7 +273,18 @@ final appInitializationProvider = FutureProvider<void>((ref) async {
   final log = ref.read(appLogServiceProvider);
   await log.initialize();
   try {
-    await ref.read(appSettingsRepositoryProvider).load();
+    final settingsRepo = ref.read(appSettingsRepositoryProvider);
+    await settingsRepo.load();
+    final initialDestination = settingsRepo.settings.navigationOrder.first;
+    final initialSite = switch (initialDestination) {
+      AppDestination.rule34video => ContentSite.rule34video,
+      AppDestination.hanime => ContentSite.hanime1,
+      _ => null,
+    };
+    if (initialSite != null &&
+        settingsRepo.settings.activeSite != initialSite) {
+      await settingsRepo.setActiveSite(initialSite);
+    }
     await ref.read(translationProviderRepositoryProvider).load();
     await ref.read(translationServiceProvider).initialize();
     await ref.read(curatedLibrarySeederProvider).seedIfNeeded();

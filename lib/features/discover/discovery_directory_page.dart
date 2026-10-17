@@ -1,14 +1,16 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
 import 'package:flule34/l10n/ui_localization.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/router/route_names.dart';
 import '../../core/api/rule34video_api.dart';
+import '../../core/logging/app_log_service.dart';
 import '../../core/models/video_models.dart';
 import '../../core/services/translation_service.dart';
 import '../../shared/editable_translation.dart';
+import '../../shared/error_view.dart';
 import '../../shared/localized_translation_text.dart';
 import '../../shared/site_avatar.dart';
 
@@ -128,9 +130,15 @@ class _DiscoveryDirectoryPageState extends State<DiscoveryDirectoryPage> {
       if (!mounted || operation != _searchOperation || _query != query) {
         return;
       }
+      unawaited(
+        AppLogService.instance.warning(
+          '探索目录搜索建议失败；query=$query；错误=$error',
+          component: 'discovery',
+        ),
+      );
       setState(() {
         _searching = false;
-        _searchError = error.toString();
+        _searchError = friendlyErrorMessage(error);
       });
     }
   }
@@ -182,8 +190,14 @@ class _DiscoveryDirectoryPageState extends State<DiscoveryDirectoryPage> {
         _hasMore = page.isNotEmpty && newItems.isNotEmpty;
       });
     } catch (error) {
+      unawaited(
+        AppLogService.instance.warning(
+          '探索目录加载失败；spec=${widget.spec.title}；page=$_page；错误=$error',
+          component: 'discovery',
+        ),
+      );
       if (mounted) {
-        setState(() => _error = error.toString());
+        setState(() => _error = friendlyErrorMessage(error));
       }
     } finally {
       if (mounted) {
@@ -318,7 +332,7 @@ class _DiscoveryDirectoryPageState extends State<DiscoveryDirectoryPage> {
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-            Text(
+            AppText(
               _error!,
               textAlign: TextAlign.center,
               style: TextStyle(color: Theme.of(context).colorScheme.error),

@@ -4,9 +4,13 @@ import 'package:drift/drift.dart';
 import 'package:drift_dev/api/migrations_native.dart';
 import 'package:flule34/core/database/app_database.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'generated/schema.dart';
 
+import 'generated/schema.dart';
 import 'generated/schema_v1.dart' as v1;
+import 'generated/schema_v10.dart' as v10;
+import 'generated/schema_v12.dart' as v12;
+import 'generated/schema_v13.dart' as v13;
+import 'generated/schema_v14.dart' as v14;
 import 'generated/schema_v2.dart' as v2;
 import 'generated/schema_v3.dart' as v3;
 import 'generated/schema_v5.dart' as v5;
@@ -14,9 +18,6 @@ import 'generated/schema_v6.dart' as v6;
 import 'generated/schema_v7.dart' as v7;
 import 'generated/schema_v8.dart' as v8;
 import 'generated/schema_v9.dart' as v9;
-import 'generated/schema_v10.dart' as v10;
-import 'generated/schema_v12.dart' as v12;
-import 'generated/schema_v13.dart' as v13;
 
 void main() {
   driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
@@ -566,6 +567,52 @@ void main() {
           ]);
           expect(await newDb.select(newDb.learnedTranslations).get(), [
             newLearned,
+          ]);
+        },
+      );
+    },
+  );
+
+  test(
+    'migration from v13 to v14 preserves local library video data',
+    () async {
+      const oldVideo = v13.LocalLibraryVideosData(
+        libraryId: 1,
+        videoId: 'video-123',
+        title: '测试视频',
+        slug: 'test-video',
+        thumbnailUrl: 'https://example.com/thumb.jpg',
+        addedAt: 1700000000,
+      );
+      const newVideo = v14.LocalLibraryVideosData(
+        libraryId: 1,
+        videoId: 'video-123',
+        title: '测试视频',
+        slug: 'test-video',
+        thumbnailUrl: 'https://example.com/thumb.jpg',
+        addedAt: 1700000000,
+      );
+
+      await verifier.testWithDataIntegrity(
+        oldVersion: 13,
+        newVersion: 14,
+        createOld: v13.DatabaseAtV13.new,
+        createNew: v14.DatabaseAtV14.new,
+        openTestedDatabase: AppDatabase.new,
+        createItems: (batch, oldDb) {
+          batch.insert(
+            oldDb.localLibraries,
+            v13.LocalLibrariesCompanion.insert(
+              id: const Value(1),
+              name: '我的收藏',
+              normalizedName: '我的收藏',
+            ),
+          );
+          batch.insert(oldDb.localLibraryVideos, oldVideo);
+        },
+        validateItems: (newDb) async {
+          expect(await newDb.select(newDb.localLibraryVideos).get(), [
+            newVideo,
           ]);
         },
       );

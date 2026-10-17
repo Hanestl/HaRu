@@ -2,11 +2,10 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
-import 'package:flutter_test/flutter_test.dart';
-import 'package:package_info_plus/package_info_plus.dart';
-
 import 'package:flule34/features/settings/data/app_update_service.dart';
 import 'package:flule34/features/settings/domain/app_settings.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 void main() {
   test('语义版本比较忽略 v 前缀和构建号', () {
@@ -111,6 +110,287 @@ void main() {
 
     expect(result.status, AppUpdateStatus.updateAvailable);
     expect(result.release?.version, '1.2.0');
+  });
+
+  test('解析 APK 校验用的 digest 与大小字段', () async {
+    final digest = 'sha256:${'ab' * 32}';
+    final dio = Dio()
+      ..httpClientAdapter = _JsonAdapter([
+        {
+          'tag_name': 'v1.1.0',
+          'name': 'HaRu 1.1.0',
+          'html_url': 'https://github.com/example/releases/tag/v1.1.0',
+          'prerelease': false,
+          'draft': false,
+          'assets': [
+            {
+              'name': 'HaRu-1.1.0-arm64-v8a.apk',
+              'browser_download_url':
+                  'https://github.com/example/releases/download/v1.1.0/arm64.apk',
+              'size': 123456,
+              'digest': digest,
+            },
+            {
+              'name': 'HaRu-1.1.0-armeabi-v7a.apk',
+              'browser_download_url':
+                  'https://github.com/example/releases/download/v1.1.0/arm32.apk',
+              'size': 100,
+            },
+          ],
+        },
+      ]);
+    final service = AppUpdateService(
+      client: dio,
+      updateApiUri: Uri.parse('https://api.github.com/repos/example/releases'),
+      packageInfoLoader: () async => PackageInfo(
+        appName: 'HaRu',
+        packageName: 'com.hanestl.flule34',
+        version: '1.0.0',
+        buildNumber: '1',
+      ),
+      abiLoader: () async => const ['arm64-v8a'],
+    );
+
+    final result = await service.check(UpdateChannel.stable);
+
+    expect(result.release?.apkUri?.path, endsWith('/arm64.apk'));
+    expect(result.release?.apkSha256, 'ab' * 32);
+    expect(result.release?.apkSizeBytes, 123456);
+    expect(result.release?.supportsOneTapUpdate, isTrue);
+  });
+
+  test('没有匹配 ABI 时回退到 universal 安装包', () async {
+    final dio = Dio()
+      ..httpClientAdapter = _JsonAdapter([
+        {
+          'tag_name': 'v1.1.0',
+          'name': 'HaRu 1.1.0',
+          'html_url': 'https://github.com/example/releases/tag/v1.1.0',
+          'prerelease': false,
+          'draft': false,
+          'assets': [
+            {
+              'name': 'HaRu-1.1.0-x86_64.apk',
+              'browser_download_url':
+                  'https://github.com/example/releases/download/v1.1.0/x86.apk',
+            },
+            {
+              'name': 'HaRu-1.1.0-universal.apk',
+              'browser_download_url':
+                  'https://github.com/example/releases/download/v1.1.0/u.apk',
+            },
+          ],
+        },
+      ]);
+    final service = AppUpdateService(
+      client: dio,
+      updateApiUri: Uri.parse('https://api.github.com/repos/example/releases'),
+      packageInfoLoader: () async => PackageInfo(
+        appName: 'HaRu',
+        packageName: 'com.hanestl.flule34',
+        version: '1.0.0',
+        buildNumber: '1',
+      ),
+      abiLoader: () async => const ['arm64-v8a'],
+    );
+
+    final result = await service.check(UpdateChannel.stable);
+
+    expect(result.release?.apkUri?.path, endsWith('/u.apk'));
+  });
+
+  test('非法 digest 不会让更新检查失败', () async {
+    final dio = Dio()
+      ..httpClientAdapter = _JsonAdapter([
+        {
+          'tag_name': 'v1.1.0',
+          'name': 'HaRu 1.1.0',
+          'html_url': 'https://github.com/example/releases/tag/v1.1.0',
+          'prerelease': false,
+          'draft': false,
+          'assets': [
+            {
+              'name': 'HaRu-1.1.0-arm64-v8a.apk',
+              'browser_download_url':
+                  'https://github.com/example/releases/download/v1.1.0/a.apk',
+              'digest': 'md5:not-a-sha256',
+            },
+          ],
+        },
+      ]);
+    final service = AppUpdateService(
+      client: dio,
+      updateApiUri: Uri.parse('https://api.github.com/repos/example/releases'),
+      packageInfoLoader: () async => PackageInfo(
+        appName: 'HaRu',
+        packageName: 'com.hanestl.flule34',
+        version: '1.0.0',
+        buildNumber: '1',
+      ),
+      abiLoader: () async => const ['arm64-v8a'],
+    );
+
+    final result = await service.check(UpdateChannel.stable);
+
+    expect(result.release?.apkUri, isNotNull);
+    expect(result.release?.apkSha256, isNull);
+  });
+
+  test('API 被限流时用 SHA256SUMS.txt 补全直链与校验值', () async {
+    final digest = 'ab' * 32;
+    final dio = Dio()
+      ..httpClientAdapter = _RoutingAdapter((options) {
+        if (options.uri.host == 'api.github.com') {
+          return ResponseBody.fromString(
+            '{"message":"rate limit exceeded"}',
+            403,
+            headers: {
+              Headers.contentTypeHeader: ['application/json'],
+            },
+          );
+        }
+        if (options.uri.path.endsWith('SHA256SUMS.txt')) {
+          return ResponseBody.fromString(
+            '$digest  ./HaRu-1.2.0-arm64-v8a.apk\n',
+            200,
+            headers: {
+              Headers.contentTypeHeader: ['text/plain'],
+            },
+          );
+        }
+        return ResponseBody.fromString(
+          '''
+          <feed xmlns="http://www.w3.org/2005/Atom">
+            <entry>
+              <title>HaRu v1.2.0</title>
+              <link rel="alternate" href="https://github.com/example/releases/tag/v1.2.0" />
+              <updated>2026-07-27T00:00:00Z</updated>
+            </entry>
+          </feed>
+          ''',
+          200,
+          headers: {
+            Headers.contentTypeHeader: ['application/atom+xml'],
+          },
+        );
+      });
+    final service = AppUpdateService(
+      client: dio,
+      updateApiUri: Uri.parse('https://api.github.com/repos/example/releases'),
+      releaseFeedUri: Uri.parse('https://github.com/example/releases.atom'),
+      packageInfoLoader: () async => PackageInfo(
+        appName: 'HaRu',
+        packageName: 'com.hanestl.flule34',
+        version: '1.1.1',
+        buildNumber: '1',
+      ),
+      abiLoader: () async => const ['arm64-v8a'],
+    );
+
+    final result = await service.check(UpdateChannel.stable);
+
+    expect(result.status, AppUpdateStatus.updateAvailable);
+    expect(result.release?.version, '1.2.0');
+    expect(
+      result.release?.apkUri?.path,
+      endsWith('/releases/download/v1.2.0/HaRu-1.2.0-arm64-v8a.apk'),
+    );
+    expect(result.release?.apkSha256, digest);
+    expect(result.release?.supportsOneTapUpdate, isTrue);
+  });
+
+  test('SHA256SUMS.txt 缺失时仍回退到发布页', () async {
+    final dio = Dio()
+      ..httpClientAdapter = _RoutingAdapter((options) {
+        if (options.uri.host == 'api.github.com') {
+          return ResponseBody.fromString('{}', 403);
+        }
+        if (options.uri.path.endsWith('SHA256SUMS.txt')) {
+          return ResponseBody.fromString('Not Found', 404);
+        }
+        return ResponseBody.fromString(
+          '''
+          <feed xmlns="http://www.w3.org/2005/Atom">
+            <entry>
+              <title>HaRu v1.2.0</title>
+              <link rel="alternate" href="https://github.com/example/releases/tag/v1.2.0" />
+            </entry>
+          </feed>
+          ''',
+          200,
+          headers: {
+            Headers.contentTypeHeader: ['application/atom+xml'],
+          },
+        );
+      });
+    final service = AppUpdateService(
+      client: dio,
+      updateApiUri: Uri.parse('https://api.github.com/repos/example/releases'),
+      releaseFeedUri: Uri.parse('https://github.com/example/releases.atom'),
+      packageInfoLoader: () async => PackageInfo(
+        appName: 'HaRu',
+        packageName: 'com.hanestl.flule34',
+        version: '1.1.1',
+        buildNumber: '1',
+      ),
+      abiLoader: () async => const ['arm64-v8a'],
+    );
+
+    final result = await service.check(UpdateChannel.stable);
+
+    expect(result.status, AppUpdateStatus.updateAvailable);
+    expect(result.release?.apkUri, isNull);
+    expect(result.release?.supportsOneTapUpdate, isFalse);
+  });
+
+  test('SHA256SUMS.txt 中按 ABI 选择安装包', () async {
+    final dio = Dio()
+      ..httpClientAdapter = _RoutingAdapter((options) {
+        if (options.uri.host == 'api.github.com') {
+          return ResponseBody.fromString('{}', 403);
+        }
+        if (options.uri.path.endsWith('SHA256SUMS.txt')) {
+          return ResponseBody.fromString(
+            '${'11' * 32}  ./HaRu-1.2.0-armeabi-v7a.apk\n'
+            '${'22' * 32}  ./HaRu-1.2.0-arm64-v8a.apk\n',
+            200,
+            headers: {
+              Headers.contentTypeHeader: ['text/plain'],
+            },
+          );
+        }
+        return ResponseBody.fromString(
+          '''
+          <feed xmlns="http://www.w3.org/2005/Atom">
+            <entry>
+              <title>HaRu v1.2.0</title>
+              <link rel="alternate" href="https://github.com/example/releases/tag/v1.2.0" />
+            </entry>
+          </feed>
+          ''',
+          200,
+          headers: {
+            Headers.contentTypeHeader: ['application/atom+xml'],
+          },
+        );
+      });
+    final service = AppUpdateService(
+      client: dio,
+      updateApiUri: Uri.parse('https://api.github.com/repos/example/releases'),
+      releaseFeedUri: Uri.parse('https://github.com/example/releases.atom'),
+      packageInfoLoader: () async => PackageInfo(
+        appName: 'HaRu',
+        packageName: 'com.hanestl.flule34',
+        version: '1.1.1',
+        buildNumber: '1',
+      ),
+      abiLoader: () async => const ['arm64-v8a'],
+    );
+
+    final result = await service.check(UpdateChannel.stable);
+
+    expect(result.release?.apkUri?.path, endsWith('/HaRu-1.2.0-arm64-v8a.apk'));
+    expect(result.release?.apkSha256, '22' * 32);
   });
 }
 

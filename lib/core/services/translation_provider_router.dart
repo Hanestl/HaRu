@@ -2,8 +2,8 @@ import 'dart:convert';
 
 import 'package:dio/dio.dart';
 
-import '../models/translation_provider_models.dart';
 import '../models/translation_models.dart';
+import '../models/translation_provider_models.dart';
 import 'translation_provider_repository.dart';
 
 final class TranslationProviderRouter {

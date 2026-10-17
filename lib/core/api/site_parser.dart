@@ -3,13 +3,24 @@ import 'dart:convert';
 import 'package:html/dom.dart' as dom;
 import 'package:html/parser.dart' as html_parser;
 
+import '../media/video_source_quality.dart';
 import '../models/account_models.dart';
 import '../models/rule34_comment_models.dart';
 import '../models/video_models.dart';
-import '../media/video_source_quality.dart';
 
 class SiteParser {
   static const _baseUri = 'https://rule34video.com/';
+  static final _videoUrlRegex = RegExp(r'/video/(\d+)/([^/]+)/?');
+  static final _percentRatingRegex = RegExp(r'(\d{1,3})\s*%');
+  static final _votesRegex = RegExp(
+    r'\(([\d,.]+\s*[KMB]?)\)',
+    caseSensitive: false,
+  );
+  static final _whitespaceRegex = RegExp(r'\s+');
+  static final _nonDigitsRegex = RegExp(r'[^0-9]');
+  static final _compactNumberRegex = RegExp(
+    r'([0-9]+(?:\.[0-9]+)?)\s*([KMB])?',
+  );
 
   static List<VideoItem> videoList(String source) {
     final document = html_parser.parse(source);
@@ -25,7 +36,7 @@ class SiteParser {
           card.querySelector('a.ma-row__t') ??
           card.querySelector('a[href*="/video/"]');
       final href = link?.attributes['href'] ?? card.attributes['data-url'];
-      final match = RegExp(r'/video/(\d+)/([^/]+)/?').firstMatch(href ?? '');
+      final match = _videoUrlRegex.firstMatch(href ?? '');
       if (match == null) {
         continue;
       }
@@ -55,12 +66,12 @@ class SiteParser {
             card.attributes['data-views'],
       );
       int? rating = _number(
-        RegExp(r'(\d{1,3})\s*%')
+        _percentRatingRegex
             .firstMatch(card.querySelector('.thumb_info .rating')?.text ?? '')
             ?.group(1),
       );
       int? ratingVotes = _compactNumber(
-        RegExp(r'\(([\d,.]+\s*[KMB]?)\)', caseSensitive: false)
+        _votesRegex
             .firstMatch(card.querySelector('.thumb_info .rating')?.text ?? '')
             ?.group(1),
       );
@@ -74,9 +85,7 @@ class SiteParser {
           } else if (text.contains('ago') && publishedLabel == null) {
             publishedLabel = text;
           } else if (text.endsWith('%') && rating == null) {
-            rating = _number(
-              RegExp(r'(\d{1,3})\s*%').firstMatch(text)?.group(1),
-            );
+            rating = _number(_percentRatingRegex.firstMatch(text)?.group(1));
           }
         }
       }
@@ -1040,7 +1049,7 @@ class SiteParser {
   }
 
   static String? _clean(String? value) {
-    final trimmed = value?.replaceAll(RegExp(r'\s+'), ' ').trim();
+    final trimmed = value?.replaceAll(_whitespaceRegex, ' ').trim();
     return trimmed == null || trimmed.isEmpty ? null : trimmed;
   }
 
@@ -1052,7 +1061,7 @@ class SiteParser {
   }
 
   static int? _number(String? value) {
-    return int.tryParse((value ?? '').replaceAll(RegExp(r'[^0-9]'), ''));
+    return int.tryParse((value ?? '').replaceAll(_nonDigitsRegex, ''));
   }
 
   static int? _compactNumber(String? value) {
@@ -1060,9 +1069,7 @@ class SiteParser {
     if (normalized == null) {
       return null;
     }
-    final match = RegExp(
-      r'([0-9]+(?:\.[0-9]+)?)\s*([KMB])?',
-    ).firstMatch(normalized);
+    final match = _compactNumberRegex.firstMatch(normalized);
     if (match == null) {
       return null;
     }

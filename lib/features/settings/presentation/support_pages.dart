@@ -1,7 +1,7 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
 import 'package:flule34/l10n/ui_localization.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -10,11 +10,14 @@ import 'package:package_info_plus/package_info_plus.dart';
 import '../../../app/providers.dart';
 import '../../../app/router/route_names.dart';
 import '../../../core/config/app_build_config.dart';
+import '../../../core/logging/app_log_service.dart';
 import '../../../core/services/external_link_service.dart';
+import '../../../shared/error_view.dart';
 import '../data/app_diagnostics_service.dart';
 import '../data/app_settings_repository.dart';
 import '../data/app_update_service.dart';
 import '../domain/app_settings.dart';
+import 'app_update_flow.dart';
 
 class AppSettingsPage extends ConsumerWidget {
   const AppSettingsPage({super.key});
@@ -195,13 +198,19 @@ class _DiagnosticsPageState extends ConsumerState<DiagnosticsPage> {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
-          if (snapshot.hasError || !snapshot.hasData) {
+          if (snapshot.hasError) {
             return _ErrorState(
-              message: '无法生成诊断信息：${snapshot.error}',
+              message: '无法生成诊断信息：${friendlyErrorMessage(snapshot.error)}',
               onRetry: () => setState(_reload),
             );
           }
-          final report = snapshot.requireData;
+          final report = snapshot.data;
+          if (report == null) {
+            return _ErrorState(
+              message: '暂无诊断信息。',
+              onRetry: () => setState(_reload),
+            );
+          }
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
@@ -260,22 +269,18 @@ class _AppUpdatePageState extends ConsumerState<AppUpdatePage> {
   @override
   void initState() {
     super.initState();
-    _service = AppUpdateService();
-    _check();
+    _service = ref.read(appUpdateServiceProvider);
+    _result = _service.check(_channel);
   }
 
-  @override
-  void dispose() {
-    _service.close();
-    super.dispose();
+  UpdateChannel get _channel {
+    return ref.read(appSettingsRepositoryProvider).settings.updateChannel;
   }
 
   void _check() {
-    final channel = ref
-        .read(appSettingsRepositoryProvider)
-        .settings
-        .updateChannel;
-    _result = _service.check(channel);
+    setState(() {
+      _result = _service.check(_channel);
+    });
   }
 
   @override
@@ -288,13 +293,19 @@ class _AppUpdatePageState extends ConsumerState<AppUpdatePage> {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
-          if (snapshot.hasError || !snapshot.hasData) {
+          if (snapshot.hasError) {
             return _ErrorState(
-              message: '检查更新失败：${snapshot.error}',
+              message: '检查更新失败：${friendlyErrorMessage(snapshot.error)}',
               onRetry: () => setState(_check),
             );
           }
-          final result = snapshot.requireData;
+          final result = snapshot.data;
+          if (result == null) {
+            return _ErrorState(
+              message: '未获取到更新信息。',
+              onRetry: () => setState(_check),
+            );
+          }
           final release = result.release;
           final icon = switch (result.status) {
             AppUpdateStatus.updateAvailable => Icons.system_update,
@@ -355,6 +366,15 @@ class _AppUpdatePageState extends ConsumerState<AppUpdatePage> {
                 icon: const Icon(Icons.refresh),
                 label: const AppText('重新检查'),
               ),
+              if (result.status == AppUpdateStatus.updateAvailable &&
+                  release != null) ...[
+                const SizedBox(height: 12),
+                FilledButton.icon(
+                  onPressed: () => startAppUpdate(context, ref, release),
+                  icon: const Icon(Icons.system_update_alt),
+                  label: const AppText('一键更新'),
+                ),
+              ],
             ],
           );
         },
@@ -371,10 +391,16 @@ Future<void> _saveUpdateChannel(
   try {
     await repository.setUpdateChannel(channel);
   } catch (error) {
+    unawaited(
+      AppLogService.instance.warning(
+        '保存更新通道失败：$error',
+        component: 'app_settings',
+      ),
+    );
     if (context.mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: AppText('保存更新通道失败：$error')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: AppText('保存更新通道失败：${friendlyErrorMessage(error)}')),
+      );
     }
   }
 }
@@ -553,10 +579,16 @@ Future<void> _openExternal(BuildContext context, Uri uri) async {
   try {
     await ExternalLinkService.open(uri);
   } catch (error) {
+    unawaited(
+      AppLogService.instance.warning(
+        '打开外部链接失败：$error；URI=$uri',
+        component: 'external_link',
+      ),
+    );
     if (context.mounted) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: AppText(error.toString())));
+      ).showSnackBar(SnackBar(content: AppText(friendlyErrorMessage(error))));
     }
   }
 }

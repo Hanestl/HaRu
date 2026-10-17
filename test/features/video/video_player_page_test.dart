@@ -1,21 +1,20 @@
 import 'dart:async';
 
 import 'package:better_player_plus/better_player_plus.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_test/flutter_test.dart';
-import 'package:video_player_platform_interface/video_player_platform_interface.dart';
-
 import 'package:flule34/app/providers.dart';
 import 'package:flule34/core/api/rule34video_api.dart';
 import 'package:flule34/core/models/video_models.dart';
-import 'package:flule34/core/session/session_store.dart';
 import 'package:flule34/core/services/network_status_service.dart';
 import 'package:flule34/core/services/screen_wake_lock_service.dart';
+import 'package:flule34/core/session/session_store.dart';
 import 'package:flule34/features/settings/data/app_settings_store.dart';
 import 'package:flule34/features/settings/domain/app_settings.dart';
 import 'package:flule34/features/video/video_player_page.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:video_player_platform_interface/video_player_platform_interface.dart';
 
 import '../../helpers/test_session_harness.dart';
 
@@ -201,6 +200,25 @@ void main() {
         isBuffering: true,
       ),
       isFalse,
+    );
+  });
+
+  test('控制栏隐藏且缓冲未改变时跳过重建，其余情况均重建', () {
+    expect(
+      playerControlsShouldRebuild(visible: false, bufferingChanged: false),
+      isFalse,
+    );
+    expect(
+      playerControlsShouldRebuild(visible: true, bufferingChanged: false),
+      isTrue,
+    );
+    expect(
+      playerControlsShouldRebuild(visible: false, bufferingChanged: true),
+      isTrue,
+    );
+    expect(
+      playerControlsShouldRebuild(visible: true, bufferingChanged: true),
+      isTrue,
     );
   });
 
@@ -460,6 +478,9 @@ void main() {
 final class _FakeNetworkStatusService implements NetworkStatusService {
   @override
   Future<NetworkClass> current() async => NetworkClass.wifi;
+
+  @override
+  Stream<NetworkClass> get onStatusChanged => const Stream.empty();
 }
 
 final class _FakeScreenWakeLockService implements ScreenWakeLockService {

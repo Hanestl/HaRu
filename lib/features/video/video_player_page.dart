@@ -2,11 +2,11 @@ import 'dart:async';
 
 import 'package:better_player_plus/better_player_plus.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flule34/l10n/ui_localization.dart';
 import 'package:flutter/foundation.dart'
     show ValueListenable, ValueNotifier, visibleForTesting;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flule34/l10n/ui_localization.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -15,13 +15,14 @@ import '../../core/api/rule34video_api.dart';
 import '../../core/models/content_source.dart';
 import '../../core/models/video_models.dart';
 import '../../core/security/error_redaction.dart';
-import '../../core/services/network_status_service.dart';
-import '../../shared/scroll_to_top_overlay.dart';
-import '../../shared/localized_translation_text.dart';
-import '../../shared/transient_focus.dart';
 import '../../core/services/media_volume_service.dart';
+import '../../core/services/network_status_service.dart';
 import '../../core/services/screen_wake_lock_service.dart';
 import '../../core/services/translation_service.dart';
+import '../../shared/error_view.dart';
+import '../../shared/localized_translation_text.dart';
+import '../../shared/scroll_to_top_overlay.dart';
+import '../../shared/transient_focus.dart';
 import '../playback/data/playback_repository.dart';
 import '../settings/domain/app_settings.dart';
 import '../settings/domain/quality_selection.dart';
@@ -271,6 +272,11 @@ bool playerShouldShowBufferingIndicator({
   required bool isPlaying,
   required bool isBuffering,
 }) => initialized && isPlaying && isBuffering;
+
+bool playerControlsShouldRebuild({
+  required bool visible,
+  required bool bufferingChanged,
+}) => visible || bufferingChanged;
 
 double playerSpeedIndicatorOpacity(double progress, int index) {
   var phase = progress - index * 0.17;
@@ -810,7 +816,7 @@ class _VideoPlayerPageState extends ConsumerState<VideoPlayerPage>
       setState(() {
         _initializing = false;
         _switchingVideo = false;
-        _error = '无法播放此视频源：${redactSensitiveText(error)}';
+        _error = '无法播放此视频源：${friendlyErrorMessage(error)}';
       });
       return false;
     }
@@ -1178,7 +1184,7 @@ class _VideoPlayerPageState extends ConsumerState<VideoPlayerPage>
         setState(() {
           _initializing = false;
           _switchingVideo = false;
-          _error = '刷新视频地址失败：${redactSensitiveText(error)}';
+          _error = '刷新视频地址失败：${friendlyErrorMessage(error)}';
         });
       }
       unawaited(
@@ -1546,6 +1552,12 @@ class _FluleVideoControlsState extends State<_FluleVideoControls>
         _visible = true;
         visibilityChanged = true;
       }
+    }
+    if (!playerControlsShouldRebuild(
+      visible: _visible,
+      bufferingChanged: bufferingChanged,
+    )) {
+      return;
     }
     setState(() {});
     if (visibilityChanged) {
@@ -2442,7 +2454,7 @@ class _PlayerError extends StatelessWidget {
             children: [
               const Icon(Icons.error_outline, color: Colors.white70, size: 40),
               const SizedBox(height: 12),
-              Text(
+              AppText(
                 message,
                 textAlign: TextAlign.center,
                 style: const TextStyle(color: Colors.white),

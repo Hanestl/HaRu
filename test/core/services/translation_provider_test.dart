@@ -3,19 +3,18 @@ import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:drift/native.dart';
-import 'package:flutter_test/flutter_test.dart';
-
 import 'package:flule34/core/database/app_database.dart';
 import 'package:flule34/core/models/translation_models.dart';
 import 'package:flule34/core/models/translation_provider_models.dart';
 import 'package:flule34/core/models/video_models.dart';
+import 'package:flule34/core/services/source_language_detector.dart';
 import 'package:flule34/core/services/translation_provider_repository.dart';
 import 'package:flule34/core/services/translation_provider_router.dart';
 import 'package:flule34/core/services/translation_service.dart';
-import 'package:flule34/core/services/source_language_detector.dart';
 import 'package:flule34/core/session/secret_store.dart';
 import 'package:flule34/features/settings/data/app_settings_repository.dart';
 import 'package:flule34/features/settings/data/app_settings_store.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test('多翻译服务顺序和密钥分别持久化', () async {

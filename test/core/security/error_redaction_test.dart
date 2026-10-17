@@ -1,6 +1,5 @@
-import 'package:flutter_test/flutter_test.dart';
-
 import 'package:flule34/core/security/error_redaction.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test('异常文本会隐藏视频令牌、Cookie、授权信息和账号字段', () {

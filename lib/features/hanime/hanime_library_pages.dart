@@ -1,24 +1,25 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
 import 'package:flule34/l10n/ui_localization.dart';
-import 'package:go_router/go_router.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../app/providers.dart';
 import '../../app/router/route_names.dart';
 import '../../core/api/rule34video_api.dart';
+import '../../core/logging/app_log_service.dart';
 import '../../core/models/content_source.dart';
 import '../../core/models/hanime_library_models.dart';
 import '../../core/models/hanime_playlist_models.dart';
 import '../../core/models/hanime_search_models.dart';
 import '../../core/models/video_models.dart';
-import '../../core/logging/app_log_service.dart';
 import '../../core/services/predictive_prefetch_service.dart';
+import '../../shared/error_view.dart';
 import '../../shared/site_avatar.dart';
+import '../../shared/transient_focus.dart';
 import '../../shared/video_feed.dart';
 import '../../shared/video_list_filters.dart';
-import '../../shared/transient_focus.dart';
-import '../../app/providers.dart';
 import '../settings/domain/app_settings.dart';
 
 /// Hanime 点赞列表页（需登录）。
@@ -217,7 +218,13 @@ class _HanimeSubscriptionsViewState
       );
       if (mounted) setState(() => _artists = result.artists);
     } catch (error) {
-      if (mounted) setState(() => _error = error.toString());
+      unawaited(
+        AppLogService.instance.warning(
+          '加载 Hanime 订阅作者失败；错误=$error',
+          component: 'hanime_library',
+        ),
+      );
+      if (mounted) setState(() => _error = friendlyErrorMessage(error));
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -461,11 +468,19 @@ class _HanimeSubscriptionDetailPageState
         ).showSnackBar(SnackBar(content: AppText(next ? '已订阅。' : '已取消订阅。')));
       }
     } catch (error) {
+      unawaited(
+        AppLogService.instance.warning(
+          '同步 Hanime 订阅状态失败：$error',
+          component: 'hanime_library',
+        ),
+      );
       if (mounted) {
         setState(() => _subscribed = previous);
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: AppText('同步失败，已恢复原状态：$error')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: AppText('同步失败，已恢复原状态：${friendlyErrorMessage(error)}'),
+          ),
+        );
       }
     } finally {
       if (mounted) setState(() => _updating = false);
@@ -682,7 +697,7 @@ class _HanimePlaylistsViewState extends State<HanimePlaylistsView>
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                AppText('播放列表加载失败：${snapshot.error}'),
+                AppText('播放列表加载失败：${friendlyErrorMessage(snapshot.error)}'),
                 const SizedBox(height: 12),
                 OutlinedButton.icon(
                   onPressed: _refresh,

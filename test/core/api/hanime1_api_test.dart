@@ -2,14 +2,13 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
-import 'package:flutter_test/flutter_test.dart';
-
 import 'package:flule34/core/api/hanime1_api.dart';
 import 'package:flule34/core/api/hanime1_parser.dart';
 import 'package:flule34/core/api/rule34video_api.dart';
 import 'package:flule34/core/models/hanime_library_models.dart';
 import 'package:flule34/core/models/hanime_search_models.dart';
 import 'package:flule34/core/services/hanime_cloudflare_coordinator.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 import '../../helpers/test_session_harness.dart';
 
@@ -738,6 +737,153 @@ void main() {
       (request) => request.uri.path == '/user/2002/report',
     );
     expect(report.data, containsPair('reportable-type', 'comment'));
+  });
+
+  test('createPlaylist 在服务端返回 500 时抛出 HttpStatusException(500)', () async {
+    final harness = TestSessionHarness.create();
+    addTearDown(harness.dispose);
+    await harness.sessionStore.load();
+    await harness.sessionStore.authenticateHanime('2002');
+
+    final api = Hanime1Api(
+      sessionStore: harness.sessionStore,
+      httpClientAdapter: _TestAdapter((options) {
+        if (options.uri.path == '/watch') {
+          return ResponseBody.fromString(
+            '<meta name="csrf-token" content="token-123">',
+            200,
+          );
+        }
+        if (options.uri.path == '/createPlaylist') {
+          return ResponseBody.fromString('Internal Server Error', 500);
+        }
+        return ResponseBody.fromString('{}', 200);
+      }),
+    );
+    addTearDown(api.close);
+
+    expect(
+      () => api.createPlaylist(videoId: 'video-1', title: 'New list'),
+      throwsA(
+        isA<HttpStatusException>().having(
+          (e) => e.statusCode,
+          'statusCode',
+          500,
+        ),
+      ),
+    );
+  });
+
+  test(
+    'createPlaylist 在服务端返回 302 重定向到 /login 时抛出 SessionExpiredException',
+    () async {
+      final harness = TestSessionHarness.create();
+      addTearDown(harness.dispose);
+      await harness.sessionStore.load();
+      await harness.sessionStore.authenticateHanime('2002');
+
+      final api = Hanime1Api(
+        sessionStore: harness.sessionStore,
+        httpClientAdapter: _TestAdapter((options) {
+          if (options.uri.path == '/watch') {
+            return ResponseBody.fromString(
+              '<meta name="csrf-token" content="token-123">',
+              200,
+            );
+          }
+          if (options.uri.path == '/createPlaylist') {
+            expect(options.followRedirects, isFalse);
+            return ResponseBody.fromString(
+              '',
+              302,
+              headers: {
+                'location': ['https://hanime1.me/login'],
+              },
+            );
+          }
+          return ResponseBody.fromString('{}', 200);
+        }),
+      );
+      addTearDown(api.close);
+
+      expect(
+        () => api.createPlaylist(videoId: 'video-1', title: 'New list'),
+        throwsA(isA<SessionExpiredException>()),
+      );
+    },
+  );
+
+  test('createPlaylist 在服务端返回 302 重定向到目标内容页时判定成功', () async {
+    final harness = TestSessionHarness.create();
+    addTearDown(harness.dispose);
+    await harness.sessionStore.load();
+    await harness.sessionStore.authenticateHanime('2002');
+
+    final api = Hanime1Api(
+      sessionStore: harness.sessionStore,
+      httpClientAdapter: _TestAdapter((options) {
+        if (options.uri.path == '/watch') {
+          return ResponseBody.fromString(
+            '<meta name="csrf-token" content="token-123">',
+            200,
+          );
+        }
+        if (options.uri.path == '/createPlaylist') {
+          expect(options.followRedirects, isFalse);
+          return ResponseBody.fromString(
+            '<div>ok</div>',
+            302,
+            headers: {
+              'location': ['https://hanime1.me/playlist/my-list'],
+            },
+          );
+        }
+        return ResponseBody.fromString('{}', 200);
+      }),
+    );
+    addTearDown(api.close);
+
+    await expectLater(
+      api.createPlaylist(videoId: 'video-1', title: 'New list'),
+      completes,
+    );
+  });
+
+  test('大页面解析下放到 Isolate 后仍返回完整结果', () async {
+    final harness = TestSessionHarness.create();
+    addTearDown(harness.dispose);
+    await harness.sessionStore.load();
+    await harness.sessionStore.authenticateHanime('2002');
+    final api = Hanime1Api(
+      sessionStore: harness.sessionStore,
+      httpClientAdapter: _TestAdapter((options) {
+        if (options.uri.path != '/subscriptions') {
+          return ResponseBody.fromString('<html></html>', 200);
+        }
+        return ResponseBody.fromString('''
+          <!-- ${'x' * 12000} -->
+          <div class="subscriptions-nav">
+            <div class="subscriptions-artist-card">
+              <img src="https://cdn.example/artist.jpg">
+              <div class="card-mobile-title">Artist One</div>
+            </div>
+          </div>
+          <div class="content-padding-new">
+            <div class="video-item-container" title="Subscription Video">
+              <a class="video-link" href="/watch?v=sub-1">
+                <img class="main-thumb" src="https://cdn.example/sub.jpg">
+              </a>
+            </div>
+          </div>
+        ''', 200);
+      }),
+    );
+    addTearDown(api.close);
+
+    final page = await api.loadSubscriptionPage(1);
+
+    expect(page.artists.single.name, 'Artist One');
+    expect(page.videos.single.id, 'sub-1');
   });
 }
 

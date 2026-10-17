@@ -1,7 +1,6 @@
-import 'package:flutter_test/flutter_test.dart';
-
 import 'package:flule34/core/models/translation_models.dart';
 import 'package:flule34/features/settings/presentation/translation_catalog_page.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test('最近更新排序把 API 和用户时间排在纯内置词条之前', () {

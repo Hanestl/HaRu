@@ -1,9 +1,13 @@
-import 'package:flutter/material.dart';
+import 'dart:async';
+
 import 'package:flule34/l10n/ui_localization.dart';
+import 'package:flutter/material.dart';
 
 import '../../core/api/rule34video_api.dart';
+import '../../core/logging/app_log_service.dart';
 import '../../core/models/content_source.dart';
 import '../../core/services/external_link_service.dart';
+import '../../shared/error_view.dart';
 import '../../shared/site_badge.dart';
 import 'hanime_web_login_page.dart';
 
@@ -89,8 +93,14 @@ class _LoginSheetState extends State<_LoginSheet> {
         Navigator.of(context).pop(true);
       }
     } catch (error) {
+      unawaited(
+        AppLogService.instance.warning(
+          '账号登录提交失败；site=${widget.site.name}；错误=$error',
+          component: 'auth',
+        ),
+      );
       if (mounted) {
-        setState(() => _error = error.toString());
+        setState(() => _error = friendlyErrorMessage(error));
       }
     } finally {
       if (mounted) {
@@ -161,7 +171,7 @@ class _LoginSheetState extends State<_LoginSheet> {
               ),
               if (_error != null) ...[
                 const SizedBox(height: 12),
-                Text(
+                AppText(
                   _error!,
                   style: TextStyle(color: Theme.of(context).colorScheme.error),
                 ),
@@ -230,8 +240,14 @@ class _LoginSheetState extends State<_LoginSheet> {
     try {
       await ExternalLinkService.open(uri);
     } catch (error) {
+      unawaited(
+        AppLogService.instance.warning(
+          '打开网站失败；uri=$uri；错误=$error',
+          component: 'auth',
+        ),
+      );
       if (mounted) {
-        setState(() => _error = error.toString());
+        setState(() => _error = friendlyErrorMessage(error));
       }
     }
   }

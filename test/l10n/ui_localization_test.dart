@@ -1,7 +1,6 @@
+import 'package:flule34/l10n/ui_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:flule34/l10n/ui_localization.dart';
 
 void main() {
   test('四种界面语言使用各自文案', () {
@@ -53,5 +52,42 @@ void main() {
     );
     expect(localizeUiText(const Locale('ja'), source), isNot(contains('共')));
     expect(localizeUiText(const Locale('ko'), source), isNot(contains('用户')));
+  });
+
+  test('动态异常消息在三语下不再残留中文原文', () {
+    // 这些消息的插值里嵌套了字符串字面量，曾因字面量正则被内层引号截断而
+    // 永远进不了词表，英文界面下呈中英混排。
+    const samples = <String>[
+      'Hanime 登录请求失败：未知错误',
+      'Hanime 网络请求失败：未知错误',
+      '无法识别这个订阅，请从相关视频详情页订阅。',
+      '无法识别这个订阅，请从相关视频详情页取消。',
+    ];
+    const markers = <String>['登录请求失败', '网络请求失败', '无法识别这个订阅', '未知错误'];
+    final han = RegExp(r'[\u3400-\u9fff]');
+    for (final language in const ['en', 'ko']) {
+      final locale = Locale(language);
+      for (final sample in samples) {
+        final rendered = localizeUiText(locale, sample);
+        expect(
+          han.hasMatch(rendered),
+          isFalse,
+          reason: '$language: 「$sample」-> 「$rendered」',
+        );
+      }
+    }
+    for (final language in const ['en', 'ja', 'ko']) {
+      final locale = Locale(language);
+      for (final sample in samples) {
+        final rendered = localizeUiText(locale, sample);
+        for (final marker in markers) {
+          expect(
+            rendered.contains(marker),
+            isFalse,
+            reason: '$language: 「$sample」-> 「$rendered」仍含「$marker」',
+          );
+        }
+      }
+    }
   });
 }

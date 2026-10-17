@@ -1,11 +1,10 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_test/flutter_test.dart';
-
 import 'package:flule34/app/providers.dart';
 import 'package:flule34/core/models/video_models.dart';
 import 'package:flule34/core/services/video_preview_service.dart';
 import 'package:flule34/shared/video_preview_overlay.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   testWidgets('纯画面预览窗口避让底部导航并可点外部关闭', (tester) async {

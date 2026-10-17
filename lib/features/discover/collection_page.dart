@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:flule34/l10n/ui_localization.dart';
+import 'package:flutter/material.dart';
 
 import '../../core/api/rule34video_api.dart';
 import '../../core/models/video_models.dart';
@@ -7,8 +7,8 @@ import '../../core/services/translation_service.dart';
 import '../../shared/editable_translation.dart';
 import '../../shared/localized_translation_text.dart';
 import '../../shared/site_avatar.dart';
-import '../../shared/video_feed.dart';
 import '../../shared/transient_focus.dart';
+import '../../shared/video_feed.dart';
 import '../search/video_filter_sheet.dart';
 
 class CollectionPage extends StatefulWidget {

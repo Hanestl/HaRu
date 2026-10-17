@@ -1,9 +1,8 @@
 import 'dart:io';
 
-import 'package:flutter_test/flutter_test.dart';
-
 import 'package:flule34/core/api/hanime1_parser.dart';
 import 'package:flule34/core/models/video_models.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test('Hanime 视频键、规范链接和能力与 Rule34Video 隔离', () {

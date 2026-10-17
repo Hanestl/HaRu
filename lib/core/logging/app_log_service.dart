@@ -44,6 +44,8 @@ final class AppLogService {
   Future<Directory>? _directoryFuture;
   Future<void> _writeChain = Future<void>.value();
   var _cleared = false;
+  String? _lastPurgeDateKey;
+  int? _approximateTotalBytes;
   final Future<Directory> Function() _supportDirectory;
   final DateTime Function() _clock;
   // 测试环境（flutter test）下全局单例直接跳过磁盘写入：真实文件 IO
@@ -65,6 +67,7 @@ final class AppLogService {
       final directory = await _directory();
       await directory.create(recursive: true);
       await _purge(directory);
+      _lastPurgeDateKey = _dateKey(_clock());
       await _clearExportFiles();
     } on Object {
       // 日志不能阻止应用启动。
@@ -105,16 +108,35 @@ final class AppLogService {
       try {
         if (_cleared) {
           _cleared = false;
+          _lastPurgeDateKey = null;
+          _approximateTotalBytes = null;
         }
         final directory = await _directory();
         await directory.create(recursive: true);
-        await _purge(directory);
         final now = _clock();
-        final file = File(
-          '${directory.path}${Platform.pathSeparator}$_filePrefix${_dateKey(now)}$_fileSuffix',
+        final currentDateKey = _dateKey(now);
+        if (_approximateTotalBytes == null ||
+            _lastPurgeDateKey != currentDateKey) {
+          await _purge(directory);
+          _lastPurgeDateKey = currentDateKey;
+        }
+        var targetFile = File(
+          '${directory.path}${Platform.pathSeparator}$_filePrefix$currentDateKey$_fileSuffix',
         );
-        if (await file.exists() && await file.length() >= _maxFileBytes) {
-          return;
+        if (await targetFile.exists() &&
+            await targetFile.length() >= _maxFileBytes) {
+          var index = 1;
+          while (true) {
+            final nextFile = File(
+              '${directory.path}${Platform.pathSeparator}$_filePrefix$currentDateKey.$index$_fileSuffix',
+            );
+            if (!await nextFile.exists() ||
+                await nextFile.length() < _maxFileBytes) {
+              targetFile = nextFile;
+              break;
+            }
+            index++;
+          }
         }
         final safeMessage = redactSensitiveText(
           message,
@@ -123,8 +145,16 @@ final class AppLogService {
         final line =
             '${now.toIso8601String()} [$level] [$component] '
             '${safeMessage.replaceAll('\n', '\\n')}\n';
-        await file.writeAsString(line, mode: FileMode.append, encoding: utf8);
-        await _purge(directory);
+        final lineBytes = utf8.encode(line).length;
+        await targetFile.writeAsString(
+          line,
+          mode: FileMode.append,
+          encoding: utf8,
+        );
+        _approximateTotalBytes = (_approximateTotalBytes ?? 0) + lineBytes;
+        if (_approximateTotalBytes! > _maxTotalBytes) {
+          await _purge(directory);
+        }
       } on Object {
         // 记录失败不能影响业务流程。
       }
@@ -145,7 +175,16 @@ final class AppLogService {
         files.add(entity);
       }
     }
-    files.sort((left, right) => left.path.compareTo(right.path));
+    files.sort((left, right) {
+      final leftKey = _fileSortKey(left.path);
+      final rightKey = _fileSortKey(right.path);
+      if (leftKey != null && rightKey != null) {
+        final dateComp = leftKey.$1.compareTo(rightKey.$1);
+        if (dateComp != 0) return dateComp;
+        return leftKey.$2.compareTo(rightKey.$2);
+      }
+      return left.path.compareTo(right.path);
+    });
     return files;
   }
 
@@ -177,6 +216,7 @@ final class AppLogService {
         totalBytes += length;
       }
     }
+    _approximateTotalBytes = totalBytes;
   }
 
   Future<LogStorageInfo> storageInfo() async {
@@ -233,6 +273,7 @@ final class AppLogService {
     }
     await _clearExportFiles();
     _cleared = true;
+    _approximateTotalBytes = 0;
   }
 
   Future<void> _clearExportFiles() async {
@@ -254,18 +295,25 @@ final class AppLogService {
       '${value.month.toString().padLeft(2, '0')}-'
       '${value.day.toString().padLeft(2, '0')}';
 
-  DateTime? _dateFromFile(String path) {
-    final name = path.split(Platform.pathSeparator).last;
+  (DateTime, int)? _fileSortKey(String path) {
+    final name = path.split(RegExp(r'[\\/]')).last;
     final match = RegExp(
-      '^${RegExp.escape(_filePrefix)}(\\d{4})-(\\d{2})-(\\d{2})${RegExp.escape(_fileSuffix)}\$',
+      '^${RegExp.escape(_filePrefix)}(\\d{4})-(\\d{2})-(\\d{2})(?:\\.(\\d+))?${RegExp.escape(_fileSuffix)}\$',
     ).firstMatch(name);
     if (match == null) {
       return null;
     }
-    return DateTime.tryParse(
+    final date = DateTime.tryParse(
       '${match.group(1)}-${match.group(2)}-${match.group(3)}',
     );
+    if (date == null) {
+      return null;
+    }
+    final index = int.tryParse(match.group(4) ?? '0') ?? 0;
+    return (date, index);
   }
+
+  DateTime? _dateFromFile(String path) => _fileSortKey(path)?.$1;
 }
 
 final class LogStorageInfo {

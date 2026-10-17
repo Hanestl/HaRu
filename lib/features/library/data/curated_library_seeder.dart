@@ -28,10 +28,23 @@ final class CuratedLibrarySeeder {
   Future<void> seedIfNeeded() async {
     final manifest = _CuratedManifest.parse(await _loader.load());
     await _database.transaction(() async {
+      final existingLibraries = await _database
+          .select(_database.localLibraries)
+          .get();
+      final existingNormalizedNames = existingLibraries
+          .map((item) => item.normalizedName)
+          .toSet();
+
+      final seedKeys = manifest.libraries.map((item) => item.key).toList();
+      final allSeedStates = await (_database.select(
+        _database.curatedLibrarySeeds,
+      )..where((item) => item.seedKey.isIn(seedKeys))).get();
+      final seedStateMap = {
+        for (final state in allSeedStates) state.seedKey: state,
+      };
+
       for (final preset in manifest.libraries) {
-        final existingState = await (_database.select(
-          _database.curatedLibrarySeeds,
-        )..where((item) => item.seedKey.equals(preset.key))).getSingleOrNull();
+        final existingState = seedStateMap[preset.key];
         if (existingState?.dismissed == true ||
             (existingState?.packVersion ?? 0) >= manifest.version) {
           continue;
@@ -46,7 +59,11 @@ final class CuratedLibrarySeeder {
           final preferredName = existingState == null
               ? preset.name
               : '${preset.name}（内置新增 v${manifest.version}）';
-          final resolvedName = await _availableLibraryName(preferredName);
+          final resolvedName = _availableLibraryName(
+            preferredName,
+            existingNormalizedNames,
+          );
+          existingNormalizedNames.add(_normalizeName(resolvedName));
           final libraryId = await _database
               .into(_database.localLibraries)
               .insert(
@@ -96,52 +113,58 @@ final class CuratedLibrarySeeder {
     });
   }
 
-  Future<String> _availableLibraryName(String preferredName) async {
+  String _availableLibraryName(
+    String preferredName,
+    Set<String> existingNames,
+  ) {
     final preferred = preferredName.trim();
-    if (!await _libraryNameExists(preferred)) {
+    if (!existingNames.contains(_normalizeName(preferred))) {
       return preferred;
     }
     const suffix = '（精选）';
     final withSuffix = '$preferred$suffix';
-    if (!await _libraryNameExists(withSuffix)) {
+    if (!existingNames.contains(_normalizeName(withSuffix))) {
       return withSuffix;
     }
     var index = 2;
-    while (await _libraryNameExists('$preferred（精选 $index）')) {
+    while (existingNames.contains(_normalizeName('$preferred（精选 $index）'))) {
       index += 1;
     }
     return '$preferred（精选 $index）';
   }
 
-  Future<bool> _libraryNameExists(String name) async {
-    final existing =
-        await (_database.select(_database.localLibraries)..where(
-              (item) => item.normalizedName.equals(_normalizeName(name)),
-            ))
-            .getSingleOrNull();
-    return existing != null;
-  }
-
   Future<Set<String>> _existingVideoIds(_CuratedLibrary preset) async {
     final base = _normalizeName(preset.name);
-    final libraries = await _database.select(_database.localLibraries).get();
-    final libraryIds = libraries
-        .where(
-          (library) =>
-              library.seedKey == preset.key ||
-              _normalizeName(library.name) == base ||
-              _normalizeName(library.name).startsWith('$base（内置新增'),
-        )
+    final prefix = '$base（内置新增';
+    final escapedPrefix = '${_escapeLike(prefix)}%';
+    final libraries =
+        await (_database.select(_database.localLibraries)..where(
+              (tbl) =>
+                  tbl.seedKey.equals(preset.key) |
+                  tbl.normalizedName.equals(base) |
+                  tbl.normalizedName.like(escapedPrefix, escapeChar: r'\'),
+            ))
+            .get();
+    if (libraries.isEmpty) return <String>{};
+    // 只信任 SQL 侧判定（seedKey / 同名 / 转义后的前缀 LIKE）：这里若再做一次
+    // Dart 过滤，会掩盖 LIKE 转义是否生效，令 R3-6 回归用例失去判别力。
+    final matched = libraries
         .map((library) => library.id)
         .toList(growable: false);
-    if (libraryIds.isEmpty) return <String>{};
     final videos = await (_database.select(
       _database.localLibraryVideos,
-    )..where((item) => item.libraryId.isIn(libraryIds))).get();
+    )..where((item) => item.libraryId.isIn(matched))).get();
     return videos.map((video) => video.videoId).toSet();
   }
 
   String _normalizeName(String value) => value.trim().toLowerCase();
+
+  static String _escapeLike(String value) {
+    return value
+        .replaceAll(r'\', r'\\')
+        .replaceAll('%', r'\%')
+        .replaceAll('_', r'\_');
+  }
 }
 
 final class _CuratedManifest {

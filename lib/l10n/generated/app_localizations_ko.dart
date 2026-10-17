@@ -9,9 +9,6 @@ class AppLocalizationsKo extends AppLocalizations {
   AppLocalizationsKo([String locale = 'ko']) : super(locale);
 
   @override
-  String get ui45be8e30 => '(\\d+)\\s*(초|분|분|시간|시간|일|주|주|월|월|월|년)\\s* 전';
-
-  @override
   String get ui7b86fa60 => '2.5D 애니메이션';
 
   @override
@@ -33,6 +30,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get ui0be8a2c8 => '60분 이상';
 
   @override
+  String get ui5756c92c => '<html 조각>';
+
+  @override
   String get ui6e93de1b => '===== 최근 7일간의 로그 =====';
 
   @override
@@ -45,12 +45,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String get ui186386f2 => '앱 설정';
 
   @override
-  String ui1bb6cf0e(String p0) {
-    return '쿠키 이름=$p0';
-  }
+  String get ui417bf31e => 'Chat 응답 형식이 올바르지 않습니다';
 
   @override
   String get ui14d5d228 => 'DeepL 요금제 및 엔드포인트';
+
+  @override
+  String get ui72f234b8 => 'DeepL 응답 형식이 올바르지 않습니다';
 
   @override
   String get ui57e4db6c => 'Git 커밋';
@@ -69,72 +70,74 @@ class AppLocalizationsKo extends AppLocalizations {
   String get ui18362f38 => 'HaRu 번역 라이브러리';
 
   @override
-  String ui2cd06f4c(String p0) {
-    return '하니메 착륙 선택 카테고리; 장르=$p0';
-  }
+  String get ui2a29886f => 'Hanime 시청 기록 삭제';
+
+  @override
+  String get ui48a1e8a9 => 'Hanime 보관함 작업';
+
+  @override
+  String get ui6a657fe9 => 'Hanime 공식 웹사이트 로그인';
 
   @override
   String get ui3fd23b15 => '하니메 재생목록';
 
   @override
+  String get ui1e79d09d => 'Hanime 즐겨찾기 관리는 현재 앱 내에서 지원되지 않습니다.';
+
+  @override
   String get ui33a113c4 => 'Hanime이 좋아한 것';
 
   @override
-  String ui12696fd4(String p0) {
-    return '하니메 필터시트 적용; 요약=$p0';
+  String get ui2dff86e7 => 'Hanime 좋아요 작업';
+
+  @override
+  String ui15642644(String p0) {
+    return 'Hanime 로그인 요청에 실패했습니다: $p0';
   }
 
   @override
   String get ui0136f228 => 'Hanime 필터링 및 정렬';
 
   @override
-  String ui553f848b(String p0) {
-    return '하니메 필터가 적용되었습니다. 요약=$p0';
+  String ui7dc6eb1b(String p0) {
+    return 'Hanime 네트워크 요청에 실패했습니다: $p0';
   }
 
   @override
-  String ui3b3b256b(String p0, String p1) {
-    return 'Hanime은 작가 작품 필터링을 구독합니다. 아티스트=$p0; 페이지=$p1;';
-  }
+  String get ui341110e9 => 'Hanime 댓글 작업';
 
   @override
-  String ui3deb27cd(String p0, String p1) {
-    return 'Hanime 댓글이 성공적으로 제출되었습니다. 비디오=$p0; 답장=$p1';
-  }
-
-  @override
-  String ui73e7844e(String p0) {
-    return 'Hanime 세부정보 페이지 메타데이터 클릭; 종류=$p0;';
-  }
+  String get ui0fd18fa1 => 'Hanime 상세 페이지에서 재생 가능한 비디오 소스를 반환하지 않았습니다.';
 
   @override
   String get ui27638fa8 => '하니메 계정';
 
   @override
-  String ui081c5de6(String p0, String p1, String p2) {
-    return 'Hanime 홈 채널 전환; 채널=$p0; 인덱스=$p1; 시드=$p2';
-  }
+  String get ui4ac3cece => 'Hanime 계정 프로필 이미지 업로드';
+
+  @override
+  String get ui4b73143a =>
+      'Hanime 페이지가 Cloudflare 제한을 받고 있어 브라우저 보조 접근이 완료되지 않았습니다.';
 
   @override
   String get ui77cbd28c => '하니메 검증';
 
   @override
-  String ui4a1461a3(String p0, String p1) {
-    return '하니메=$p0; 현재 범위=$p1';
-  }
-
-  @override
-  String ui042e6d42(String p0) {
-    return '하니메 로그인=$p0';
-  }
+  String get ui2e244a94 => 'Messages 응답 형식이 올바르지 않습니다';
 
   @override
   String get ui103930a8 => '이메일 주소를 입력하면 MyMemory의 무료 할당량을 늘릴 수 있습니다.';
 
   @override
-  String ui35377097(String p0) {
-    return 'R34V 로그인=$p0;';
+  String get ui345ef1cb => 'MyMemory 응답 형식이 올바르지 않습니다';
+
+  @override
+  String ui76229bcf(String p0) {
+    return 'MyMemory 상태 $p0 반환됨';
   }
+
+  @override
+  String get ui74b8531a => 'Responses 응답 형식이 올바르지 않습니다';
 
   @override
   String get ui2c98e3c6 => 'Rule34Video 계정';
@@ -146,8 +149,8 @@ class AppLocalizationsKo extends AppLocalizations {
   String get ui34eda443 => 'Wi-Fi에서는 최대 720p, 모바일 데이터에서는 최대 360p';
 
   @override
-  String ui0fed973b(String p0, String p1) {
-    return '시도=$p0; 시간 소비=${p1}ms';
+  String ui78defc63(String p0, String p1) {
+    return '$p0 - $p1초';
   }
 
   @override
@@ -198,6 +201,11 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String ui196d3c87(String p0) {
     return '$p0개월';
+  }
+
+  @override
+  String ui3f6d7631(String p0) {
+    return '$p0의 모델명이 설정되지 않았습니다';
   }
 
   @override
@@ -264,6 +272,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get ui2046553b => '1열';
 
   @override
+  String get ui0a9e6b7f => '원클릭 업데이트';
+
+  @override
+  String get ui12469822 => '만';
+
+  @override
   String get ui0b8ef7e3 => '이전';
 
   @override
@@ -308,6 +322,17 @@ class AppLocalizationsKo extends AppLocalizations {
   String get ui7fc5cfeb => '다운로드 파일을 더 이상 사용할 수 없거나 이 MP4를 재생할 앱이 없습니다.';
 
   @override
+  String ui495af0fd(String p0) {
+    return '업데이트 패키지(HTTP $p0)를 다운로드하지 못했습니다. 나중에 다시 시도해 주세요.';
+  }
+
+  @override
+  String get ui714ebd00 => '업데이트 패키지를 다운로드하지 못했습니다. 나중에 다시 시도해 주세요.';
+
+  @override
+  String get ui225e3259 => '업데이트 패키지 다운로드 시간이 초과되었습니다. 네트워크를 확인한 후 다시 시도해 주세요.';
+
+  @override
   String get ui5cade6e1 => '다운로드 서비스를 일시적으로 이용할 수 없습니다.';
 
   @override
@@ -324,6 +349,17 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get ui10ebf8e5 => '존재하지 않음';
+
+  @override
+  String ui2d12eadf(String p0) {
+    return '지원되지 않는 번역 라이브러리 버전입니다: $p0';
+  }
+
+  @override
+  String get ui22dbd975 => 'AI 번역 프로토콜이 아닙니다';
+
+  @override
+  String get ui2970e3de => 'HaRu 번역 라이브러리 파일이 아닙니다';
 
   @override
   String get ui34e49ede => '제한 없음';
@@ -364,6 +400,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get ui72607f99 => '댓글 신고';
 
   @override
+  String get ui2a3fe43c => '억';
+
+  @override
   String get ui11b84182 => 'Wi-Fi에서만 다운로드';
 
   @override
@@ -391,16 +430,6 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get ui44ac200e => '처음부터 연속 재생';
-
-  @override
-  String ui6d8b62f1(String p0) {
-    return '미디어 라이브러리에서 로그인을 요청합니다. 범위=hanime1; 섹션=$p0';
-  }
-
-  @override
-  String ui4aca9b31(String p0, String p1) {
-    return '미디어 라이브러리에서 로그인을 요청합니다. 범위=$p0; 섹션=$p1';
-  }
 
   @override
   String get ui794510bf => '재생목록에서 삭제';
@@ -474,6 +503,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get ui1d0485f9 => '개월';
 
   @override
+  String get ui5545b6b8 => '억';
+
+  @override
   String get ui4fcf2a14 => '전체 화면';
 
   @override
@@ -496,7 +528,15 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String ui7aeb2e98(String p0) {
+    return '총 $p0화';
+  }
+
+  @override
   String get ui64efd37a => 'HaRu 소개';
+
+  @override
+  String get ui361cc8b7 => '닫기';
 
   @override
   String get ui29c40c72 => '끄면 이 기기에 저장된 모든 재생 위치가 삭제됩니다.';
@@ -523,9 +563,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String get ui38d59e4d => '내장';
 
   @override
-  String ui4d75ae49(String p0, String p1) {
-    return '다운로드 준비; 사이트=$p0; 동영상=$p1;';
-  }
+  String get ui3245a83c => '업데이트 패키지를 작성하지 못했습니다. 기기 저장 공간을 확인한 후 다시 시도해 주세요.';
+
+  @override
+  String get ui0ff3423a => '오류가 발생했습니다. 잠시 후 다시 시도하세요.';
 
   @override
   String get ui2f5fd7d1 => '공유';
@@ -636,6 +677,9 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String get ui50138d2b => '포그라운드 콘텐츠 로딩 시작됨';
+
+  @override
   String ui7050fd74(String p0) {
     return '다음 동영상을 로드하지 못했습니다: $p0';
   }
@@ -656,6 +700,9 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String get ui000f0cb3 => '익명 사용자';
+
+  @override
   String get ui71c021b7 => '동영상 1개 반복';
 
   @override
@@ -668,6 +715,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get ui6ffe0a80 => '원문';
 
   @override
+  String get ui62f1bb01 => '설정으로 이동';
+
+  @override
   String get ui54ec6c15 => '원문 + 번역문';
 
   @override
@@ -678,6 +728,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get ui2e2d0cb3 => '게시 시간';
+
+  @override
+  String get ui676a6b3b => '새 버전이 발견되었습니다';
 
   @override
   String ui0e705d18(String p0) {
@@ -730,6 +783,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get ui35027352 => '이 기기에 있는 현재 계정의 검색 기록만 삭제됩니다.';
 
   @override
+  String get ui51f9b5e4 => 'HTTPS 링크만 열 수 있습니다.';
+
+  @override
   String get ui73b35752 =>
       '앱의 모든 다운로드 기록을 삭제합니다. Download/Flule34에 저장된 동영상은 유지되며 진행 중인 작업은 먼저 취소됩니다.';
 
@@ -778,6 +834,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get ui7f54b07b => '백그라운드 재생';
 
   @override
+  String get ui02a3d205 => '백그라운드 구독 정리가 현재 작업에 양보되었습니다.';
+
+  @override
+  String get ui30c46183 => '백그라운드 사전 로드가 현재 작업에 양보되었습니다.';
+
+  @override
   String get ui4763b5c2 => '아니요';
 
   @override
@@ -802,6 +864,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get ui1b8fd367 => '답장하다...';
+
+  @override
+  String get ui0efec179 => '답글 내용은 비워둘 수 없습니다.';
 
   @override
   String ui24039614(String p0) {
@@ -879,46 +944,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get ui17588e00 => '라이브러리';
 
   @override
-  String ui38869fe7(String p0) {
-    return '미디어 라이브러리 보조 페이지 전환; 범위=hanime1; 섹션=$p0';
-  }
-
-  @override
-  String ui7a3a4547(String p0) {
-    return '미디어 라이브러리 보조 페이지 전환; 범위=로컬; 섹션=$p0';
-  }
-
-  @override
-  String ui1c3a6602(String p0) {
-    return '미디어 라이브러리 보조 페이지 전환; 범위=rule34video; 섹션=$p0';
-  }
-
-  @override
-  String ui0ee3985f(String p0) {
-    return '미디어 라이브러리 목록 요청이 완료되었습니다. 범위=rule34video; 섹션=$p0;';
-  }
-
-  @override
-  String ui1e113600(String p0) {
-    return '미디어 라이브러리 목록 요청이 시작됩니다. 범위=rule34video; 섹션=$p0;';
-  }
-
-  @override
-  String ui14cdfa21(String p0) {
-    return '미디어 라이브러리 열기;범위=$p0;';
-  }
-
-  @override
-  String ui5e9a8d3f(String p0) {
-    return '미디어 라이브러리 로그인 상태 변경; R34V=$p0;';
-  }
-
-  @override
-  String ui21db214e(String p0, String p1) {
-    return '미디어 라이브러리 범위 전환; =$p0에서; =$p1에';
-  }
-
-  @override
   String get ui2a120a57 => '미디어 라이브러리 범위 순서';
 
   @override
@@ -926,6 +951,19 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get ui60514b78 => '안전하게 병합';
+
+  @override
+  String get ui0a4deada => '보안 인증서 확인에 실패했습니다.';
+
+  @override
+  String get ui67804bce =>
+      '설치 패키지 서명이 설치된 버전과 일치하지 않으므로 설치를 덮어쓸 수 없습니다. 수동으로 다운로드하고 설치하려면 GitHub로 이동하세요.';
+
+  @override
+  String get ui4573775f => '업데이트 패키지를 설치하지 못했습니다. 나중에 다시 시도해 주세요.';
+
+  @override
+  String get ui4768e1cf => '설치 시간이 초과되었습니다. 나중에 다시 시도해 주세요.';
 
   @override
   String get ui2cfae1da => '광범위한 검색';
@@ -997,6 +1035,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get ui17aba12e => '시간';
 
   @override
+  String get ui422fcf83 => '설치 권한이 활성화되지 않았습니다. 나중에 다시 시도해 주세요.';
+
+  @override
   String get ui2d851aa0 => '로그인하지 않음';
 
   @override
@@ -1011,7 +1052,22 @@ class AppLocalizationsKo extends AppLocalizations {
   String get ui59bc6fa1 => '펼치기';
 
   @override
+  String ui605cc69a(String p0) {
+    return '더보기 ($p0)';
+  }
+
+  @override
   String get ui0543d520 => '다운로드됨';
+
+  @override
+  String ui21b8fcdc(String p0) {
+    return '$p0 다운로드됨';
+  }
+
+  @override
+  String ui419fd1e2(String p0, String p1) {
+    return '$p0 / $p1 다운로드됨';
+  }
 
   @override
   String ui4c1b3a95(String p0) {
@@ -1060,6 +1116,12 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get ui37453e63 => '취소됨';
+
+  @override
+  String get ui2374725a => '업데이트 패키지 다운로드가 취소되었습니다.';
+
+  @override
+  String get ui0c5e75d4 => '설치가 취소되었습니다.';
 
   @override
   String get ui7bbd0e24 => '즐겨찾기에서 제거했습니다.';
@@ -1173,9 +1235,6 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
-  String get ui103ff6bd => '앱 초기화가 완료되었습니다.';
-
-  @override
   String get ui75af3770 => '앱 로그';
 
   @override
@@ -1183,6 +1242,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get ui390d6cf3 => '적용(제한 없음)';
+
+  @override
+  String get ui256813a5 => '기반 네트워크 어댑터가 해제되어 요청을 시작할 수 없습니다.';
 
   @override
   String get ui37fc4085 => '하단 탐색 순서';
@@ -1194,9 +1256,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get ui0a663237 => '켜면 앱을 전환하거나 화면을 꺼도 오디오가 계속 재생됩니다.';
 
   @override
-  String ui08cdac2b(String p0, String p1) {
-    return '비디오 미리보기를 시작합니다. 사이트=$p0; 비디오=$p1;';
-  }
+  String get ui12e4a250 => '시작일';
 
   @override
   String get ui13034753 => '오픈소스 라이선스';
@@ -1235,6 +1295,13 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String get ui09b4d081 => '현재 환경에 쓸 수 있는 번역 데이터베이스가 없습니다';
+
+  @override
+  String get ui111ba46f =>
+      '현재 장치는 자동 설치를 지원하지 않습니다. 설치 패키지를 수동으로 다운로드하려면 GitHub로 이동하세요.';
+
+  @override
   String get ui1ef7e413 => '현재 계정 ID';
 
   @override
@@ -1256,11 +1323,6 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get ui608e380c => '학습된 번역 복원';
-
-  @override
-  String ui351ef4b1(String p0) {
-    return '재생 재개, 플레이어 자동 펼치기 시작; video=$p0;';
-  }
 
   @override
   String get ui67d3b06d => '내 정보';
@@ -1318,9 +1380,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get ui7d6a579d => '모델 목록 불러오기';
 
   @override
-  String get ui1a86336b => '드래그하여 조정하세요. 콜드 스타트 ​​중에는 첫 번째 항목이 기본값입니다.';
-
-  @override
   String get ui4c4f7a5b => '월 지정…';
 
   @override
@@ -1334,9 +1393,6 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get ui7ab117f8 => '출처순';
-
-  @override
-  String get ui70c4de19 => '태그와 주제로 탐색';
 
   @override
   String get ui0db93df0 => '조회수로 인기 콘텐츠 탐색';
@@ -1363,9 +1419,6 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get ui549d6c00 => '제외:';
-
-  @override
-  String get ui3cca6594 => '콘텐츠 탐색';
 
   @override
   String get ui6ec4c172 => 'API 형식';
@@ -1475,6 +1528,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get ui264bb7d8 => '재생목록이 웹사이트 계정에서 삭제됩니다.';
 
   @override
+  String get ui25177a33 => '재생목록 페이지 이동에 진전이 없습니다. 새로고침 후 다시 시도해 주세요.';
+
+  @override
   String ui766b41bc(String p0) {
     return '재생목록 로드 실패: $p0';
   }
@@ -1501,60 +1557,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String get ui201d2aa4 => '재생목록 작업';
 
   @override
+  String get ui59fbd342 => '재생목록 작업에 실패했습니다.';
+
+  @override
+  String get ui6ef9f29e => '재생목록 편집 페이지에 제목 필드가 없습니다.';
+
+  @override
   String get ui7e8be483 => '플레이어 초기화 후 동영상 길이 정보가 제공되지 않았습니다.';
-
-  @override
-  String ui536e06b3(String p0) {
-    return '플레이어가 자동으로 재개되기 시작합니다. 시도=$p0;';
-  }
-
-  @override
-  String ui7479d54b(String p0) {
-    return '플레이어 접기 권한 업데이트; video=$p0;';
-  }
-
-  @override
-  String ui5b401ab2(String p0) {
-    return '플레이어 오류 보고: $p0;';
-  }
-
-  @override
-  String ui5a50b4ab(String p0) {
-    return '플레이어 자동 펼치기 완료; video=$p0;';
-  }
-
-  @override
-  String get ui78522c85 => '플레이어 자동 복구에 실패했습니다. 이유=대체 소스 없음;';
-
-  @override
-  String ui0dd3d83f(String p0) {
-    return '플레이어 자동 복구 예외; $p0;';
-  }
-
-  @override
-  String ui19faffc9(String p0, String p1) {
-    return '플레이어가 자동으로 성공적으로 재개되었습니다. $p0; 시간 소비 = ${p1}ms';
-  }
-
-  @override
-  String ui0146f5aa(String p0) {
-    return '플레이어 자동 복구를 로드하지 못했습니다. $p0;';
-  }
-
-  @override
-  String ui4e45686b(String p0) {
-    return '플레이어는 자동으로 대체 소스 선택을 재개합니다. =$p0에서;';
-  }
-
-  @override
-  String ui4cee68a6(String p0) {
-    return '플레이어 로드 실패: $p0;';
-  }
-
-  @override
-  String ui09679598(String p0) {
-    return '재생 중 상세 스크롤이 경계에 도달하여 시각적 오버스크롤 비활성화; video=$p0;';
-  }
 
   @override
   String get ui206c2436 => '파일 재생';
@@ -1587,6 +1596,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String get ui31d7af87 => '작업을 완료하지 못했습니다. 잠시 후 다시 시도하세요.';
 
   @override
+  String get ui28c15475 => '작업 시간이 초과되었습니다. 잠시 후 다시 시도하세요.';
+
+  @override
+  String get ui5e1b9757 =>
+      'Google 원터치 로그인 또는 공식 웹사이트 이메일/비밀번호 로그인을 지원하며, 완료 후 자동으로 돌아옵니다.';
+
+  @override
   String get ui0d933ab7 => '즐겨찾기';
 
   @override
@@ -1606,6 +1622,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get ui053602da => '데이터베이스 구조';
+
+  @override
+  String get ui146d33d9 => '데이터 분석에 실패했습니다. 사이트 구조가 업데이트되었을 수 있습니다.';
 
   @override
   String get ui1ce03cf7 => '파일이 존재하지 않습니다';
@@ -1637,11 +1656,32 @@ class AppLocalizationsKo extends AppLocalizations {
   String get ui742da263 => '번역 서비스 만들기';
 
   @override
+  String ui0d7ee0fa(String p0) {
+    return '새 버전 $p0이 출시되었습니다. 지금 다운로드하여 설치하시겠습니까?';
+  }
+
+  @override
+  String get ui7bd4dd1e => '없음';
+
+  @override
+  String get ui196ad4c7 => '시스템 설치 프로그램을 시작할 수 없습니다. 나중에 다시 시도해 주세요.';
+
+  @override
+  String ui6f78c40a(String p0) {
+    return '시스템 설치 프로그램을 시작할 수 없습니다: $p0';
+  }
+
+  @override
   String get ui3180d36c => '동영상을 Download/Flule34에 저장할 수 없습니다.';
 
   @override
   String ui180bd386(String p0) {
     return '공유 패널을 열 수 없습니다: $p0';
+  }
+
+  @override
+  String ui07590f5f(String p0) {
+    return '링크를 열 수 없습니다: $p0';
   }
 
   @override
@@ -1655,10 +1695,50 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String get ui44f277c1 => '사고 파라미터 호환 방식을 확인할 수 없습니다';
+
+  @override
+  String get ui50aa2314 => '작업 토큰을 가져올 수 없습니다.';
+
+  @override
+  String get ui79cdaeac => '로그인 양식의 검증 토큰을 가져올 수 없습니다.';
+
+  @override
+  String get ui06546e23 => '업로더 프로필을 분석하지 못했습니다. 잠시 후 다시 시도해 주세요.';
+
+  @override
+  String get ui57f26ed1 => '현재 계정 프로필을 분석하지 못했습니다. 잠시 후 다시 시도해 주세요.';
+
+  @override
+  String get ui33dbf598 => '계정 편집 정보를 분석할 수 없습니다.';
+
+  @override
+  String get ui15bf560f => '비디오 작성자를 식별할 수 없습니다.';
+
+  @override
+  String get ui5825923c => '이 업로더의 구독 정보를 식별할 수 없습니다.';
+
+  @override
+  String ui6f7f557a(String p0) {
+    return '이 구독을 식별할 수 없습니다. 관련 동영상 상세 페이지에서 $p0하세요.';
+  }
+
+  @override
   String get ui2dfcd562 => '웹페이지 콘텐츠를 읽을 수 없습니다. 클릭하여 다시 시도해 주세요.';
 
   @override
   String get ui0b6ddbbb => 'GitHub에 연결할 수 없습니다. 네트워크를 확인한 후 다시 시도하세요.';
+
+  @override
+  String get ui5262de17 => '웹사이트에 연결할 수 없습니다';
+
+  @override
+  String get ui67fe026b => '웹사이트에 연결할 수 없습니다. 네트워크를 확인해 주세요.';
+
+  @override
+  String ui6991b83f(String p0) {
+    return '날짜: $p0';
+  }
 
   @override
   String get ui22636da6 => '일본 IP는 확인에 실패할 수 있습니다.';
@@ -1699,6 +1779,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get ui7b1cd931 => '일시 중지';
 
   @override
+  String get ui7167f83b => '진단 정보가 없습니다.';
+
+  @override
   String get ui585c23ff => '현재 업데이트를 확인할 수 없습니다. 잠시 후 다시 시도하세요.';
 
   @override
@@ -1723,6 +1806,27 @@ class AppLocalizationsKo extends AppLocalizations {
   String get ui2d102f6b => '아바타 변경';
 
   @override
+  String get ui0b0c36f2 => '업데이트 패키지 다운로드에 실패했습니다. 나중에 다시 시도해 주세요.';
+
+  @override
+  String get ui1a5d4948 => '업데이트 패키지가 현재 시스템과 호환되지 않습니다.';
+
+  @override
+  String get ui59cb7d12 => '업데이트 패키지가 완전히 저장되지 않았습니다. 다시 시도해 주세요.';
+
+  @override
+  String get ui4ebfc1da => '업데이트 패키지 크기 확인에 실패했습니다. 다시 시도해 주세요.';
+
+  @override
+  String get ui75071796 => '업데이트 패키지가 설치되었습니다.';
+
+  @override
+  String get ui7999a1cf => '업데이트 패키지가 잘못되었거나 손상되었습니다. 다시 다운로드하세요.';
+
+  @override
+  String get ui154411ba => '업데이트 패키지 확인에 실패했습니다. 다시 시도해 주세요.';
+
+  @override
   String ui2bef8164(String p0) {
     return '업데이트 실패: $p0';
   }
@@ -1742,7 +1846,13 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String get ui19f3097b => '업데이트 지침';
+
+  @override
   String get ui1d030a86 => '업데이트 채널';
+
+  @override
+  String get ui7e47c566 => '이전 구독 항목이 아직 정리 중입니다. 다시 불러와 주세요.';
 
   @override
   String get ui69112ae8 => '최소 투표 수';
@@ -1781,6 +1891,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get ui4124f57e => '가장 뜨거운';
 
   @override
+  String get ui7437a4c3 => '최소 길이 (초)';
+
+  @override
   String get ui23dfffd1 => '최근 수정순';
 
   @override
@@ -1796,6 +1909,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get ui3f66748c => '긴 순';
 
   @override
+  String get ui31829b08 => '최대 길이는 최소 길이보다 작을 수 없습니다';
+
+  @override
+  String get ui1965e2dd => '최대 길이 (초)';
+
+  @override
   String get ui72d8c6d5 => '사용 가능한 최고 화질';
 
   @override
@@ -1808,15 +1927,45 @@ class AppLocalizationsKo extends AppLocalizations {
   String get ui625d464f => '달';
 
   @override
+  String ui06e923cf(String p0) {
+    return '$p0개의 구독을 현재 더 이상 불러올 수 없습니다.';
+  }
+
+  @override
+  String ui24ed3263(String p0) {
+    return '$p0개의 구독을 현재 읽어올 수 없습니다.';
+  }
+
+  @override
   String get ui7ee4b38a => '서비스 이름';
 
   @override
-  String get ui0b0f8079 => '마운트되지 않음';
+  String ui46b673b1(String p0) {
+    return '서버 응답 이상 ($p0)';
+  }
 
   @override
-  String ui5801f5b9(String p0, String p1) {
-    return '처리되지 않은 비동기 예외: $p0\n$p1';
+  String ui21fa42fa(String p0) {
+    return '서버에서 HTTP $p0을(를) 반환했습니다.';
   }
+
+  @override
+  String get ui34f469a4 => '서버가 대상 주소가 없는 리디렉션을 반환했습니다.';
+
+  @override
+  String get ui496de832 => '서버 리디렉션 횟수가 너무 많습니다.';
+
+  @override
+  String get ui7f356142 => '이름 없는 재생목록';
+
+  @override
+  String get ui441a34c3 => '이름 없는 시리즈';
+
+  @override
+  String get ui10bbdc2d => '제목 없는 비디오';
+
+  @override
+  String get ui0b0f8079 => '마운트되지 않음';
 
   @override
   String ui1d2649c7(String p0) {
@@ -1824,10 +1973,25 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String get ui5134b0d1 => '미설정';
+
+  @override
   String get ui6c16defb => '로그인되지 않았습니다.';
 
   @override
+  String get ui2219a9fe => '알 수 없는 번역 유형';
+
+  @override
+  String get ui3b6c4912 => '알 수 없는 오류';
+
+  @override
+  String get ui32a1bf89 => '업데이트 정보를 가져오지 못했습니다.';
+
+  @override
   String get ui73b71caa => '구성되지 않음';
+
+  @override
+  String get ui440ed665 => 'API 키가 구성되지 않았습니다';
 
   @override
   String get ui593a76ae => '로컬 라이브러리';
@@ -1836,7 +2000,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String get ui0760582c => '로컬 라이브러리';
 
   @override
+  String get ui12e85520 => '로컬 데이터베이스 읽기/쓰기 오류입니다. 다시 시도하세요.';
+
+  @override
   String get ui5af2b9c7 => '로컬 진단 로그';
+
+  @override
+  String get ui78d79e7d => '로컬 언어 식별';
 
   @override
   String get ui42457eeb => '로컬 머신';
@@ -1857,9 +2027,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get ui06231f4e => '빌드 모드';
 
   @override
-  String get ui3a3a5f44 => '아티스트 페이지 찾기';
-
-  @override
   String get ui29d7c1b1 => 'HaRu 및 타사 Flutter 종속 항목의 라이선스 보기';
 
   @override
@@ -1875,6 +2042,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get ui682b70e0 => '자격 증명을 제외한 실행 환경 요약 보기 및 복사';
+
+  @override
+  String get ui7c04d205 => '더 보기';
 
   @override
   String get ui37042e79 => '진단 정보 보기';
@@ -1908,10 +2078,18 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String get ui0acd808e => '모델 목록 응답 형식이 올바르지 않습니다';
+
+  @override
   String get ui703ce28e => '모델 이름';
 
   @override
   String get ui1375925f => '동영상 썸네일 흐리게';
+
+  @override
+  String ui61cd3d84(String p0) {
+    return '돌아오신 것을 환영합니다, $p0님! Hanime에 성공적으로 로그인했습니다.';
+  }
 
   @override
   String get ui43f69efd => '다운로드 중';
@@ -1922,18 +2100,19 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String get ui68d41e66 => '업데이트 패키지 다운로드 중';
+
+  @override
   String get ui34d9a170 => '동영상 URL 새로고침 중…';
 
   @override
   String get ui57036f5e => '처리 중';
 
   @override
-  String get ui1e85b6dc => '미디어 재생 중';
+  String get ui0d9565c5 => '재생 중';
 
   @override
-  String ui0e786c06(String p0, String p1) {
-    return '구독 콘텐츠 정리 $p0/$p1';
-  }
+  String get ui1e85b6dc => '미디어 재생 중';
 
   @override
   String get ui3dcae6c0 => '확인 결과를 기다리는 중입니다... 오랫동안 응답이 없으면 재시도를 클릭해 주세요.';
@@ -1977,6 +2156,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get ui108cc700 => '이 빌드에는 GitHub 릴리스 업데이트 소스가 구성되어 있지 않습니다.';
 
   @override
+  String get ui4ddaf211 => '이 유형은 구독을 지원하지 않습니다.';
+
+  @override
+  String get ui4e1b0f19 => '이 유형은 현재 앱 내에서 구독 취소를 지원하지 않습니다.';
+
+  @override
   String get ui3a0a0c97 => '이 동영상에는 바로 재생할 수 있는 MP4 소스가 없습니다.';
 
   @override
@@ -1984,9 +2169,6 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get ui7cb7a0c5 => '이 동영상 소스를 아직 사용할 수 없습니다. 동영상 URL을 다시 새로고침하세요.';
-
-  @override
-  String get ui62dcc4bc => '매번 새로운 무작위 동영상 묶음 불러오기';
 
   @override
   String get ui51c846f1 => '매번 확인';
@@ -2008,6 +2190,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get ui29c894b2 => '사용 가능한 백업 정의가 없습니다. 나중에 다시 시도해 주세요.';
+
+  @override
+  String get ui59f601fd => '번역 서비스가 활성화되지 않았습니다.';
 
   @override
   String ui61fe8d4a(String p0, String p1) {
@@ -2055,6 +2240,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get ui1408d9d3 => '일치하는 번역이 없습니다.';
 
   @override
+  String get ui3ca6cd4f => '사용 가능한 모델이 반환되지 않았습니다';
+
+  @override
   String get ui522cef73 => '인스턴트 국수';
 
   @override
@@ -2073,37 +2261,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get ui06cf3f13 => '연결 테스트';
 
   @override
-  String ui1d96670f(String p0) {
-    return '브라우저의 기본 페이지를 로드하지 못했습니다. 오류 코드 = $p0;';
-  }
-
-  @override
-  String get ui33fbe6ce => '브라우저 챌린지 화면 종료; cf_clearance 대기 중;';
-
-  @override
-  String ui129ae59c(String p0) {
-    return '브라우저에서 Cloudflare 챌린지 감지; 경로=$p0;';
-  }
-
-  @override
-  String ui67cd734f(String p0, String p1) {
-    return '브라우저 지원 확인이 완료되었습니다. 트리거=$p0; 경로=$p1;';
-  }
-
-  @override
-  String ui2c065af1(String p0) {
-    return '브라우저 지원 확인 팝업 창이 표시되었습니다. 경로=$p0';
-  }
-
-  @override
-  String ui521398c6(String p0) {
-    return '브라우저 페이지 로드 시작; 경로=$p0';
-  }
-
-  @override
-  String get ui2bce8045 => '사이트 콘텐츠 카테고리 찾아보기';
-
-  @override
   String get ui1bdcacb9 => '웹사이트의 최고 평점 동영상 탐색';
 
   @override
@@ -2114,11 +2271,6 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get ui28b4fe80 => '화질';
-
-  @override
-  String ui57e9c7ab(String p0) {
-    return '화질=$p0';
-  }
 
   @override
   String get ui1226aec8 => '지우기';
@@ -2190,6 +2342,9 @@ class AppLocalizationsKo extends AppLocalizations {
       '적은 투표로 비율이 지나치게 높아지는 것을 피하려면 좋아요 비율과 투표 수를 함께 확인하세요.';
 
   @override
+  String get ui4992052a => '싫어요';
+
+  @override
   String get ui71e94df2 => '인기';
 
   @override
@@ -2200,9 +2355,6 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get ui795ab7fb => '인기 동영상';
-
-  @override
-  String get ui5137980d => '인기 동영상, 최고 평점 동영상 및 아티스트 순위';
 
   @override
   String get ui0ac00f7c => '증오심이나 악의적인 콘텐츠를 조장합니다.';
@@ -2227,14 +2379,15 @@ class AppLocalizationsKo extends AppLocalizations {
   String get ui1be4cbb9 => '사용자';
 
   @override
+  String get ui6bab46da => '사용자 ID 형식이 잘못되었습니다';
+
+  @override
   String ui2ff2035d(String p0) {
     return '사용자 ID: $p0';
   }
 
   @override
-  String ui19930fad(String p0) {
-    return '사용자가 확인 페이지 새로고침을 수동으로 다시 시도합니다. 경로=$p0;';
-  }
+  String get ui04f9f7a4 => '사용자가 더 높은 우선순위의 작업을 시작했습니다';
 
   @override
   String ui07df625b(String p0) {
@@ -2290,6 +2443,15 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get ui4bd42f4c => '로그인하면 검색 기록이 계정별로 안전하게 저장됩니다.';
+
+  @override
+  String get ui1179dcd5 => '로그인에 실패했습니다. 계정, 비밀번호 또는 인증 요구사항을 확인해 주세요.';
+
+  @override
+  String get ui5a4df1a7 => '로그인에 실패했습니다. 계정과 비밀번호를 확인해 주세요.';
+
+  @override
+  String get ui7d58135d => '로그인 상태가 만료되었습니다. 다시 로그인해 주세요.';
 
   @override
   String get ui257d2512 => '대상 언어';
@@ -2357,6 +2519,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get ui68bc4e82 => '사이트 메시지';
 
   @override
+  String get ui1becc780 => '사이트 서비스를 일시적으로 사용할 수 없습니다. 잠시 후 다시 시도하세요.';
+
+  @override
   String get ui6fe1719c => '쿠키를 기다릴 수 없습니다 → 새로 고침 → 다시 도전';
 
   @override
@@ -2364,10 +2529,6 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get ui106c1db7 => '재시도를 기다리는 중';
-
-  @override
-  String get ui50c5f340 =>
-      '10초 이상 확인 결과를 기다린 후 사용자에게 수동으로 다시 시도하라는 메시지가 표시됩니다.';
 
   @override
   String get ui373ece32 => '필터';
@@ -2405,11 +2566,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get ui7aa38d36 => '유형';
 
   @override
-  String ui6107c243(String p0, String p1) {
-    return '유형=$p0; 시간 소비=${p1}ms';
-  }
-
-  @override
   String ui0dbe3ac7(String p0) {
     return '추천 라이브러리 $p0에 중복된 동영상이 있습니다.';
   }
@@ -2436,8 +2592,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get ui3c28fff7 => '추천 동영상 항목에 필수 필드가 없습니다.';
 
   @override
-  String get ui058d6015 =>
-      '系统中断|网络连接中断|connection reset|socketexception|timed?\\s*out|broken pipe';
+  String get ui54ac0aa3 => '시리즈 동영상';
 
   @override
   String get ui05a078da => '시스템에서 공용 다운로드 폴더에 대한 쓰기 권한을 허용하지 않았습니다.';
@@ -2447,6 +2602,16 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get ui111afc5c => '시스템에서 다운로드 작업을 대기열에 다시 추가하지 못했습니다.';
+
+  @override
+  String get ui3dbce44e =>
+      '시스템이 이 설치를 차단했습니다. \"알 수 없는 애플리케이션 설치\" 권한을 확인해주세요.';
+
+  @override
+  String get ui7344fe1b => '종료일';
+
+  @override
+  String get ui7df2c519 => '종료일은 시작일보다 빠를 수 없습니다';
 
   @override
   String get ui5cb65115 => '계속';
@@ -2507,7 +2672,34 @@ class AppLocalizationsKo extends AppLocalizations {
   String get ui5c5b8e6e => '네트워크 재생 정책';
 
   @override
+  String get ui2d500e9d => '네트워크 요청 시간이 초과되었습니다';
+
+  @override
+  String get ui23b94735 => '네트워크 요청 시간이 초과되었습니다. 잠시 후 다시 시도해 주세요.';
+
+  @override
+  String get ui3778b430 => '네트워크 요청에 문제가 발생했습니다. 다시 시도하세요.';
+
+  @override
   String get ui5d909650 => '네트워크 연결이 중단되었습니다. 네트워크를 확인한 후 다시 시도하세요.';
+
+  @override
+  String get ui24c5d5a2 => '네트워크 연결에 실패했습니다. 네트워크 상태를 확인하세요.';
+
+  @override
+  String get ui5717be7d => '네트워크 연결 오류입니다. 네트워크를 확인하세요.';
+
+  @override
+  String get ui21d8799f => '네트워크 연결 오류입니다. 네트워크를 확인한 후 다시 시도하세요.';
+
+  @override
+  String get ui121f0e14 => '네트워크 오류';
+
+  @override
+  String get ui3ce8e370 => '웹 / Google 계정 로그인';
+
+  @override
+  String get ui7fe12441 => '번역은 비워둘 수 없습니다';
 
   @override
   String ui4c8d7732(String p0) {
@@ -2518,7 +2710,30 @@ class AppLocalizationsKo extends AppLocalizations {
   String get ui20251330 => '번역 라이브러리';
 
   @override
+  String ui6053d6fa(String p0) {
+    return '번역 라이브러리에 지원되지 않는 대상 언어가 포함되어 있습니다: $p0';
+  }
+
+  @override
+  String get ui3a3c90e9 => '번역 라이브러리에 비정상적인 길이의 필드가 포함되어 있습니다';
+
+  @override
+  String get ui2cec6aea => '번역 라이브러리 파일은 10 MB를 초과할 수 없습니다';
+
+  @override
+  String get ui06ac6475 => '번역 라이브러리에 entries가 없습니다';
+
+  @override
+  String get ui04eb7dc2 => '번역 라이브러리 항목 수가 100,000개를 초과합니다';
+
+  @override
+  String get ui0250a335 => '번역 라이브러리 키 필드에 잘못된 문자가 포함되어 있습니다';
+
+  @override
   String get ui0e144c39 => '번역 서비스';
+
+  @override
+  String get ui071ebcfb => '번역 서비스가 아직 구성되지 않았습니다';
 
   @override
   String get ui4e721b57 => '번역 대상 언어';
@@ -2527,17 +2742,16 @@ class AppLocalizationsKo extends AppLocalizations {
   String get ui7312260a => '번역 설정';
 
   @override
-  String ui56a4f7ec(String p0) {
-    return '소요 시간=${p0}ms';
-  }
-
-  @override
-  String ui0cfe710c(String p0) {
-    return '시간 소모=${p0}ms;';
+  String ui6f7c8396(String p0) {
+    return '번역 에셋이 JSON 객체가 아닙니다: $p0';
   }
 
   @override
   String get ui42682f0b => '자동';
+
+  @override
+  String get ui653fb447 =>
+      '업데이트 패키지를 자동으로 설치하려면 \"알 수 없는 응용 프로그램 설치\" 권한이 필요합니다. 하루가 시스템 설정에서 애플리케이션을 설치하도록 허용하고 돌아오세요.';
 
   @override
   String get ui3a3ee33c =>
@@ -2547,19 +2761,51 @@ class AppLocalizationsKo extends AppLocalizations {
   String get ui4e37cc82 => '자동 번역';
 
   @override
+  String get ui1a28517b => '사용자 지정...';
+
+  @override
+  String get ui401af108 => '사용자 지정 날짜';
+
+  @override
+  String get ui1b64dd4b => '사용자 지정 길이';
+
+  @override
+  String get ui50983ec8 => '사용자 지정 필터 범위가 잘못되었습니다.';
+
+  @override
   String get ui1d2c54c2 => '아티스트';
 
   @override
   String get ui273d81af => '아티스트 순위';
 
   @override
+  String get ui2947cbbe => '아티스트 구독';
+
+  @override
   String get ui296bcd5e => '데이터 절약';
+
+  @override
+  String get ui0559c77a => '재생목록 보안 토큰을 가져오지 못했습니다. 새로고침 후 다시 시도해 주세요.';
+
+  @override
+  String get ui3451174b => '만';
 
   @override
   String get ui5c249ba5 => '리판';
 
   @override
+  String get ui38959118 => '조회수';
+
+  @override
+  String get ui67fc978a => '조회수';
+
+  @override
   String get ui7f179fc8 => '동영상';
+
+  @override
+  String ui248185b4(String p0) {
+    return '동영상 $p0';
+  }
 
   @override
   String get ui4fbae4c2 => '동영상 저장 위치: Download/Flule34';
@@ -2585,15 +2831,10 @@ class AppLocalizationsKo extends AppLocalizations {
       '동영상은 선택한 공용 폴더에 직접 저장됩니다. 기본 위치는 Downloads/Flule34입니다. 내 정보 → 다운로드에서 오른쪽 위 버튼을 눌러 변경할 수 있습니다.';
 
   @override
-  String get ui3c64ae15 => '동영상 세부정보';
+  String get ui0ee94f25 => '비디오 상세 응답이 비정상입니다. 잠시 후 다시 시도해 주세요.';
 
   @override
   String get ui6fbc2348 => '동영상 미리보기';
-
-  @override
-  String ui2d82e410(String p0, String p1) {
-    return '비디오 미리보기에 실패했습니다. 사이트=$p0; 비디오=$p1';
-  }
 
   @override
   String get ui7b8f2379 => '컨트롤 잠금 해제';
@@ -2624,10 +2865,19 @@ class AppLocalizationsKo extends AppLocalizations {
   String get ui592e7edb => '기기';
 
   @override
+  String get ui2e92dd76 => '장치에 업데이트 패키지를 설치할 저장 공간이 부족합니다.';
+
+  @override
+  String get ui17add25c => '접근이 제한되었습니다. 보안 인증이 필요할 수 있습니다.';
+
+  @override
   String get ui11313487 => '최고 평점';
 
   @override
   String get ui491e642c => '코멘트';
+
+  @override
+  String get ui22cd66c8 => '댓글 내용은 비워둘 수 없습니다.';
 
   @override
   String get ui7d9b7107 => '댓글을 로드하지 못했습니다. 다시 시도하려면 클릭하세요.';
@@ -2651,10 +2901,25 @@ class AppLocalizationsKo extends AppLocalizations {
   String get ui5e9e6941 => '번역문은 비워 둘 수 없습니다';
 
   @override
+  String get ui139f12da => '클라이언트가 종료되어 요청을 시작할 수 없습니다.';
+
+  @override
+  String get ui6ebae107 => '이 버전에는 다운로드 가능한 설치 패키지가 없습니다.';
+
+  @override
+  String get ui5accb58a => '이 버전에는 다운로드 가능한 설치 패키지가 없으며 GitHub 릴리스 페이지가 열렸습니다.';
+
+  @override
+  String get ui244129bf => '이 유형은 번역이 허용되지 않습니다';
+
+  @override
   String get ui52575ad3 => '언어 표시 모드';
 
   @override
   String get ui16d86fec => '설명';
+
+  @override
+  String get ui4e258c29 => '먼저 API 키를 입력해 주세요';
 
   @override
   String get ui7894fed1 => '유효한 기본 URL을 먼저 입력하세요.';
@@ -2663,13 +2928,42 @@ class AppLocalizationsKo extends AppLocalizations {
   String get ui19e258a9 => '먼저 Hanime에 로그인하세요.';
 
   @override
+  String get ui3ee081eb => '먼저 Hanime 계정에 로그인해 주세요.';
+
+  @override
+  String get ui57f971fd => '이 기능을 사용하려면 먼저 로그인해 주세요.';
+
+  @override
   String get ui7ce74a5f => '페이지에서 인증을 완료해 주세요. 성공하면 앱으로 자동으로 돌아갑니다.';
 
   @override
   String get ui190ff633 => '이름, 기본 URL, 모델 및 API 키를 모두 입력하세요.';
 
   @override
+  String get ui2033b3c1 => '요청 실패';
+
+  @override
+  String get ui673534a9 => '요청이 실패했습니다. 잠시 후 다시 시도해 주세요.';
+
+  @override
+  String ui64ba2be4(String p0) {
+    return '요청 실패: $p0';
+  }
+
+  @override
+  String get ui0d97efea => '요청이 취소되었습니다.';
+
+  @override
+  String get ui4bc1c631 => '요청한 콘텐츠가 존재하지 않거나 삭제되었습니다.';
+
+  @override
+  String get ui3a579d8a => '요청 시간이 초과되었습니다. 다시 시도하세요.';
+
+  @override
   String get ui61ca1aa4 => '2자 이상 입력해주세요.';
+
+  @override
+  String get ui7d47ba9d => '0부터 36000 사이의 정수를 입력하세요';
 
   @override
   String get ui61cb4e40 => '비밀번호를 입력해주세요.';
@@ -2684,13 +2978,16 @@ class AppLocalizationsKo extends AppLocalizations {
   String get ui77044f29 => '내 정보로 돌아가 로그인한 뒤 계정 정보를 확인하세요.';
 
   @override
-  String get ui4af5a957 => '본 기기, R34V 및 Hanime의 표시 순서를 조정합니다.';
-
-  @override
   String get ui6447b2e3 => '계정 및 라이브러리';
 
   @override
   String get ui6527aff1 => '계정에 아직 재생목록이 없습니다.';
+
+  @override
+  String get ui65413ec5 => '계정과 비밀번호는 비워둘 수 없습니다.';
+
+  @override
+  String get ui2d477648 => '계정 상태가 변경되었습니다';
 
   @override
   String get ui04e867ba => '계정 정보가 업데이트되었습니다.';
@@ -2706,11 +3003,6 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get ui1c47ee05 => '시스템 설정 따르기';
-
-  @override
-  String ui58ccc0dc(String p0, String p1) {
-    return '경로=$p0; 진행률=$p1;';
-  }
 
   @override
   String ui76da0fc0(String p0) {
@@ -2746,6 +3038,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get ui58a37252 => '뒤로';
+
+  @override
+  String get ui3caf8ced => '빈 번역문이 반환되었습니다';
 
   @override
   String get ui10524b4c => '아직 다운로드 작업이 없습니다.';
@@ -2801,6 +3096,9 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String get ui2c70d970 => '연결 시간이 초과되었습니다. 네트워크 설정을 확인하고 다시 시도하세요.';
+
+  @override
   String get ui15cf6bb2 => '종료';
 
   @override
@@ -2819,10 +3117,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get ui0c4a5e14 => '로그아웃하시겠습니까?';
 
   @override
-  String get ui2b4f5fd9 =>
-      'R34V, Hanime 홈페이지, 일반 동영상 목록, 검색결과, 지역 카테고리 라이브러리에 적용됩니다.';
-
-  @override
   String get ui736d6f73 => '카테고리를 선택하여 탐색을 시작하거나 바로 위에 키워드 검색을 입력할 수 있습니다.';
 
   @override
@@ -2838,9 +3132,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get ui2bbcf0c4 => '모델 선택';
 
   @override
-  String get ui53e6ce38 => '시스템 언어를 따르거나 인터페이스 언어를 고정합니다';
-
-  @override
   String get ui5b975d06 => '설정된 GitHub Releases 소스에서 확인';
 
   @override
@@ -2854,6 +3145,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get ui273538ab => '일부 자동 완성 제안을 일시적으로 사용할 수 없습니다.';
+
+  @override
+  String get ui5e31cf42 => '일부 구독을 현재 읽어올 수 없습니다. 잠시 후 다시 시도해 주세요.';
 
   @override
   String get ui40cbba27 => '리판';
@@ -2892,9 +3186,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get ui06efd73d => '무작위';
 
   @override
-  String get ui74a56f94 => '무작위 탐색';
-
-  @override
   String get ui5d3798d3 => '개인정보 보호 및 데이터';
 
   @override
@@ -2906,6 +3197,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get ui4b4e6624 => '비밀번호 숨기기';
+
+  @override
+  String get ui36eeedcb => '설치 권한이 필요합니다';
 
   @override
   String get ui25621c61 => '백그라운드 다운로드 진행률을 안정적으로 표시하려면 알림 권한이 필요합니다.';
@@ -2926,6 +3220,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get ui7f532d14 => '순서대로 재생';
+
+  @override
+  String get ui1ebb446b => '사전 로드 서비스가 해제되었습니다';
 
   @override
   String get ui73db46a3 => '사전 출시 버전';

@@ -3,13 +3,13 @@ import 'dart:collection';
 
 import 'package:dio/dio.dart';
 
+import '../../features/settings/data/app_settings_repository.dart';
 import '../api/rule34video_api.dart';
 import '../logging/app_log_service.dart';
 import '../models/hanime_search_models.dart';
 import '../models/video_models.dart';
 import '../session/session_store.dart';
 import 'subscription_activity_index.dart';
-import '../../features/settings/data/app_settings_repository.dart';
 
 abstract final class PredictivePrefetchKey {
   static String video(String id, {String siteId = 'rule34video'}) =>

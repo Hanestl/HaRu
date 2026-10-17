@@ -1,15 +1,17 @@
 import 'dart:async';
 
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter/material.dart';
 import 'package:flule34/l10n/ui_localization.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/router/route_names.dart';
 import '../../../core/database/app_database.dart';
+import '../../../core/logging/app_log_service.dart';
+import '../../../shared/error_view.dart';
+import '../../../shared/transient_focus.dart';
 import '../data/download_repository.dart';
 import '../domain/download_models.dart';
-import '../../../shared/transient_focus.dart';
 
 class DownloadManagementPage extends StatefulWidget {
   const DownloadManagementPage({
@@ -155,10 +157,16 @@ class _DownloadManagementPageState extends State<DownloadManagementPage> {
         context,
       ).showSnackBar(SnackBar(content: AppText(message)));
     } catch (error) {
+      unawaited(
+        AppLogService.instance.warning(
+          '批量删除下载记录失败：$error',
+          component: 'download_management',
+        ),
+      );
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: AppText(error.toString())));
+        ).showSnackBar(SnackBar(content: AppText(friendlyErrorMessage(error))));
       }
     } finally {
       if (mounted) {
@@ -178,18 +186,46 @@ class _DownloadManagementPageState extends State<DownloadManagementPage> {
   }
 }
 
-class DownloadsList extends StatelessWidget {
+class DownloadsList extends StatefulWidget {
   const DownloadsList({super.key, required this.repository});
 
   final DownloadRepository repository;
 
   @override
+  State<DownloadsList> createState() => _DownloadsListState();
+}
+
+class _DownloadsListState extends State<DownloadsList> {
+  late Stream<List<DownloadRecord>> _downloadsStream;
+
+  @override
+  void initState() {
+    super.initState();
+    _initStream();
+  }
+
+  @override
+  void didUpdateWidget(covariant DownloadsList oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.repository != widget.repository) {
+      _initStream();
+    }
+  }
+
+  void _initStream() {
+    _downloadsStream = widget.repository.watchCurrentUserDownloads();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return StreamBuilder<List<DownloadRecord>>(
-      stream: repository.watchCurrentUserDownloads(),
+      stream: _downloadsStream,
       builder: (context, snapshot) {
         if (snapshot.hasError) {
-          return Center(child: AppText(snapshot.error.toString()));
+          return AppErrorView(
+            error: snapshot.error,
+            onRetry: () => setState(_initStream),
+          );
         }
         if (!snapshot.hasData) {
           return const Center(child: CircularProgressIndicator());
@@ -218,7 +254,7 @@ class DownloadsList extends StatelessWidget {
             }
             return _DownloadCard(
               record: records[index - 1],
-              repository: repository,
+              repository: widget.repository,
             );
           },
         );
@@ -502,10 +538,16 @@ class _DownloadCardState extends State<_DownloadCard>
         );
       }
     } catch (error) {
+      unawaited(
+        AppLogService.instance.warning(
+          '打开下载文件失败：$error',
+          component: 'download_management',
+        ),
+      );
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: AppText('打开下载失败：$error')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: AppText('打开下载失败：${friendlyErrorMessage(error)}')),
+        );
       }
     } finally {
       if (mounted) {
@@ -534,10 +576,16 @@ class _DownloadCardState extends State<_DownloadCard>
         ).showSnackBar(SnackBar(content: AppText(message)));
       }
     } catch (error) {
+      unawaited(
+        AppLogService.instance.warning(
+          '下载操作失败：$error',
+          component: 'download_management',
+        ),
+      );
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: AppText(error.toString())));
+        ).showSnackBar(SnackBar(content: AppText(friendlyErrorMessage(error))));
       }
     } finally {
       if (mounted) {

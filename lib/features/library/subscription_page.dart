@@ -1,8 +1,9 @@
-import 'package:flutter/material.dart';
 import 'package:flule34/l10n/ui_localization.dart';
+import 'package:flutter/material.dart';
 
 import '../../core/api/rule34video_api.dart';
 import '../../core/models/video_models.dart';
+import '../../shared/error_view.dart';
 import '../../shared/video_feed.dart';
 import 'subscription_actions.dart';
 
@@ -89,7 +90,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: AppText(error.toString())));
+        ).showSnackBar(SnackBar(content: AppText(friendlyErrorMessage(error))));
       }
     } finally {
       if (mounted) {

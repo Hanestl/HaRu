@@ -1,16 +1,18 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
 import 'package:flule34/l10n/ui_localization.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../app/providers.dart';
 import '../app/router/route_names.dart';
+import '../core/logging/app_log_service.dart';
 import '../core/models/video_models.dart';
 import '../core/services/predictive_prefetch_service.dart';
 import '../features/settings/data/app_settings_repository.dart';
 import '../features/settings/domain/app_settings.dart';
+import 'error_view.dart';
 import 'video_card.dart';
 import 'video_collection_layout.dart';
 import 'video_list_filters.dart';
@@ -191,7 +193,13 @@ class _VideoFeedState extends ConsumerState<VideoFeed>
       if (!mounted) {
         return;
       }
-      setState(() => _error = error.toString());
+      unawaited(
+        AppLogService.instance.warning(
+          '视频流加载失败；错误=$error',
+          component: 'video_feed',
+        ),
+      );
+      setState(() => _error = friendlyErrorMessage(error));
     } finally {
       if (mounted) {
         setState(() => _loading = false);
@@ -350,7 +358,7 @@ class _VideoFeedState extends ConsumerState<VideoFeed>
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
         child: Column(
           children: [
-            Text(
+            AppText(
               _error!,
               textAlign: TextAlign.center,
               style: TextStyle(color: Theme.of(context).colorScheme.error),

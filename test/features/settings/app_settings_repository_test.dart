@@ -1,12 +1,11 @@
-import 'package:flutter_test/flutter_test.dart';
-
 import 'package:flule34/core/models/content_source.dart';
+import 'package:flule34/core/models/translation_models.dart';
 import 'package:flule34/core/models/video_models.dart';
 import 'package:flule34/features/settings/data/app_settings_repository.dart';
 import 'package:flule34/features/settings/data/app_settings_store.dart';
 import 'package:flule34/features/settings/domain/app_settings.dart';
 import 'package:flule34/features/settings/domain/quality_selection.dart';
-import 'package:flule34/core/models/translation_models.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test('设置使用安全默认值并持久化变更', () async {

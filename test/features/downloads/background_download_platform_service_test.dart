@@ -1,8 +1,7 @@
 import 'package:background_downloader/background_downloader.dart';
-import 'package:flutter_test/flutter_test.dart';
-
 import 'package:flule34/features/downloads/data/background_download_platform_service.dart';
 import 'package:flule34/features/downloads/domain/download_models.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   final task = DownloadTask(

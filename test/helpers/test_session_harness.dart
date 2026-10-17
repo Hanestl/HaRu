@@ -30,8 +30,8 @@ final class TestSessionHarness {
     required this.sessionStore,
   });
 
-  factory TestSessionHarness.create() {
-    final database = AppDatabase(NativeDatabase.memory());
+  factory TestSessionHarness.create({AppDatabase? database}) {
+    final resolvedDatabase = database ?? AppDatabase(NativeDatabase.memory());
     final secretStore = MemorySecretStore();
     final cookieJar = PersistCookieJar(
       persistSession: true,
@@ -40,10 +40,10 @@ final class TestSessionHarness {
     final sessionStore = SessionStore(
       cookieJar: cookieJar,
       secretStore: secretStore,
-      database: database,
+      database: resolvedDatabase,
     );
     return TestSessionHarness._(
-      database: database,
+      database: resolvedDatabase,
       secretStore: secretStore,
       sessionStore: sessionStore,
     );

@@ -102,12 +102,6 @@ abstract class AppLocalizations {
     Locale('zh'),
   ];
 
-  /// HaRu UI: (\d+)\s*(秒|分钟|分鐘|小时|小時|天|周|週|个月|個月|月|年)\s*前
-  ///
-  /// In zh, this message translates to:
-  /// **'(\\d+)\\s*(秒|分钟|分鐘|小时|小時|天|周|週|个月|個月|月|年)\\s*前'**
-  String get ui45be8e30;
-
   /// HaRu UI: 2.5D動畫
   ///
   /// In zh, this message translates to:
@@ -150,6 +144,12 @@ abstract class AppLocalizations {
   /// **'60 分钟以上'**
   String get ui0be8a2c8;
 
+  /// HaRu UI: <html片段>
+  ///
+  /// In zh, this message translates to:
+  /// **'<html片段>'**
+  String get ui5756c92c;
+
   /// HaRu UI: ===== 最近 7 天日志 =====
   ///
   /// In zh, this message translates to:
@@ -174,17 +174,23 @@ abstract class AppLocalizations {
   /// **'App 设置'**
   String get ui186386f2;
 
-  /// HaRu UI: Cookie 名称={p0}
+  /// HaRu UI: Chat 返回格式无效
   ///
   /// In zh, this message translates to:
-  /// **'Cookie 名称={p0}'**
-  String ui1bb6cf0e(String p0);
+  /// **'Chat 返回格式无效'**
+  String get ui417bf31e;
 
   /// HaRu UI: DeepL 套餐与端点
   ///
   /// In zh, this message translates to:
   /// **'DeepL 套餐与端点'**
   String get ui14d5d228;
+
+  /// HaRu UI: DeepL 返回格式无效
+  ///
+  /// In zh, this message translates to:
+  /// **'DeepL 返回格式无效'**
+  String get ui72f234b8;
 
   /// HaRu UI: Git 提交
   ///
@@ -216,11 +222,23 @@ abstract class AppLocalizations {
   /// **'HaRu 翻译库'**
   String get ui18362f38;
 
-  /// HaRu UI: Hanime landing 选择分类；genre={p0}
+  /// HaRu UI: Hanime 历史删除
   ///
   /// In zh, this message translates to:
-  /// **'Hanime landing 选择分类；genre={p0}'**
-  String ui2cd06f4c(String p0);
+  /// **'Hanime 历史删除'**
+  String get ui2a29886f;
+
+  /// HaRu UI: Hanime 媒体库操作
+  ///
+  /// In zh, this message translates to:
+  /// **'Hanime 媒体库操作'**
+  String get ui48a1e8a9;
+
+  /// HaRu UI: Hanime 官网登录
+  ///
+  /// In zh, this message translates to:
+  /// **'Hanime 官网登录'**
+  String get ui6a657fe9;
 
   /// HaRu UI: Hanime 播放列表
   ///
@@ -228,17 +246,29 @@ abstract class AppLocalizations {
   /// **'Hanime 播放列表'**
   String get ui3fd23b15;
 
+  /// HaRu UI: Hanime 暂不支持在应用内管理收藏。
+  ///
+  /// In zh, this message translates to:
+  /// **'Hanime 暂不支持在应用内管理收藏。'**
+  String get ui1e79d09d;
+
   /// HaRu UI: Hanime 点赞
   ///
   /// In zh, this message translates to:
   /// **'Hanime 点赞'**
   String get ui33a113c4;
 
-  /// HaRu UI: Hanime 筛选 sheet 应用；摘要={p0}
+  /// HaRu UI: Hanime 点赞操作
   ///
   /// In zh, this message translates to:
-  /// **'Hanime 筛选 sheet 应用；摘要={p0}'**
-  String ui12696fd4(String p0);
+  /// **'Hanime 点赞操作'**
+  String get ui2dff86e7;
+
+  /// HaRu UI: Hanime 登录请求失败：{p0}
+  ///
+  /// In zh, this message translates to:
+  /// **'Hanime 登录请求失败：{p0}'**
+  String ui15642644(String p0);
 
   /// HaRu UI: Hanime 筛选与排序
   ///
@@ -246,29 +276,23 @@ abstract class AppLocalizations {
   /// **'Hanime 筛选与排序'**
   String get ui0136f228;
 
-  /// HaRu UI: Hanime 筛选已应用；摘要={p0}
+  /// HaRu UI: Hanime 网络请求失败：{p0}
   ///
   /// In zh, this message translates to:
-  /// **'Hanime 筛选已应用；摘要={p0}'**
-  String ui553f848b(String p0);
+  /// **'Hanime 网络请求失败：{p0}'**
+  String ui7dc6eb1b(String p0);
 
-  /// HaRu UI: Hanime 订阅作者作品筛选；artist={p0}；page={p1}；
+  /// HaRu UI: Hanime 评论操作
   ///
   /// In zh, this message translates to:
-  /// **'Hanime 订阅作者作品筛选；artist={p0}；page={p1}；'**
-  String ui3b3b256b(String p0, String p1);
+  /// **'Hanime 评论操作'**
+  String get ui341110e9;
 
-  /// HaRu UI: Hanime 评论提交成功；video={p0}；reply={p1}
+  /// HaRu UI: Hanime 详情页没有返回可播放的视频源。
   ///
   /// In zh, this message translates to:
-  /// **'Hanime 评论提交成功；video={p0}；reply={p1}'**
-  String ui3deb27cd(String p0, String p1);
-
-  /// HaRu UI: Hanime 详情页元数据点击；kind={p0}；
-  ///
-  /// In zh, this message translates to:
-  /// **'Hanime 详情页元数据点击；kind={p0}；'**
-  String ui73e7844e(String p0);
+  /// **'Hanime 详情页没有返回可播放的视频源。'**
+  String get ui0fd18fa1;
 
   /// HaRu UI: Hanime 账号
   ///
@@ -276,11 +300,17 @@ abstract class AppLocalizations {
   /// **'Hanime 账号'**
   String get ui27638fa8;
 
-  /// HaRu UI: Hanime 首页切换频道；频道={p0}；索引={p1}；种子={p2}
+  /// HaRu UI: Hanime 账号头像上传
   ///
   /// In zh, this message translates to:
-  /// **'Hanime 首页切换频道；频道={p0}；索引={p1}；种子={p2}'**
-  String ui081c5de6(String p0, String p1, String p2);
+  /// **'Hanime 账号头像上传'**
+  String get ui4ac3cece;
+
+  /// HaRu UI: Hanime 页面受到 Cloudflare 限制，浏览器辅助访问未完成。
+  ///
+  /// In zh, this message translates to:
+  /// **'Hanime 页面受到 Cloudflare 限制，浏览器辅助访问未完成。'**
+  String get ui4b73143a;
 
   /// HaRu UI: Hanime 验证
   ///
@@ -288,17 +318,11 @@ abstract class AppLocalizations {
   /// **'Hanime 验证'**
   String get ui77cbd28c;
 
-  /// HaRu UI: Hanime={p0}；当前范围={p1}
+  /// HaRu UI: Messages 返回格式无效
   ///
   /// In zh, this message translates to:
-  /// **'Hanime={p0}；当前范围={p1}'**
-  String ui4a1461a3(String p0, String p1);
-
-  /// HaRu UI: Hanime登录={p0}
-  ///
-  /// In zh, this message translates to:
-  /// **'Hanime登录={p0}'**
-  String ui042e6d42(String p0);
+  /// **'Messages 返回格式无效'**
+  String get ui2e244a94;
 
   /// HaRu UI: MyMemory 可用邮箱标识提高免费额度。
   ///
@@ -306,11 +330,23 @@ abstract class AppLocalizations {
   /// **'MyMemory 可用邮箱标识提高免费额度。'**
   String get ui103930a8;
 
-  /// HaRu UI: R34V登录={p0}；
+  /// HaRu UI: MyMemory 返回格式无效
   ///
   /// In zh, this message translates to:
-  /// **'R34V登录={p0}；'**
-  String ui35377097(String p0);
+  /// **'MyMemory 返回格式无效'**
+  String get ui345ef1cb;
+
+  /// HaRu UI: MyMemory 返回状态 {p0}
+  ///
+  /// In zh, this message translates to:
+  /// **'MyMemory 返回状态 {p0}'**
+  String ui76229bcf(String p0);
+
+  /// HaRu UI: Responses 返回格式无效
+  ///
+  /// In zh, this message translates to:
+  /// **'Responses 返回格式无效'**
+  String get ui74b8531a;
 
   /// HaRu UI: Rule34Video 账号
   ///
@@ -330,11 +366,11 @@ abstract class AppLocalizations {
   /// **'Wi-Fi 最高 720p，移动网络最高 360p'**
   String get ui34eda443;
 
-  /// HaRu UI: attempt={p0}；耗时={p1}ms
+  /// HaRu UI: {p0} - {p1} 秒
   ///
   /// In zh, this message translates to:
-  /// **'attempt={p0}；耗时={p1}ms'**
-  String ui0fed973b(String p0, String p1);
+  /// **'{p0} - {p1} 秒'**
+  String ui78defc63(String p0, String p1);
 
   /// HaRu UI: {p0} · 已下载
   ///
@@ -395,6 +431,12 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'{p0} 月'**
   String ui196d3c87(String p0);
+
+  /// HaRu UI: {p0} 未配置模型名
+  ///
+  /// In zh, this message translates to:
+  /// **'{p0} 未配置模型名'**
+  String ui3f6d7631(String p0);
 
   /// HaRu UI: {p0} 次观看
   ///
@@ -474,6 +516,18 @@ abstract class AppLocalizations {
   /// **'一列'**
   String get ui2046553b;
 
+  /// HaRu UI: 一键更新
+  ///
+  /// In zh, this message translates to:
+  /// **'一键更新'**
+  String get ui0a9e6b7f;
+
+  /// HaRu UI: 万
+  ///
+  /// In zh, this message translates to:
+  /// **'万'**
+  String get ui12469822;
+
   /// HaRu UI: 上一个
   ///
   /// In zh, this message translates to:
@@ -552,6 +606,24 @@ abstract class AppLocalizations {
   /// **'下载文件已失效或没有可播放此 MP4 的应用。'**
   String get ui7fc5cfeb;
 
+  /// HaRu UI: 下载更新包失败（HTTP {p0}），请稍后重试。
+  ///
+  /// In zh, this message translates to:
+  /// **'下载更新包失败（HTTP {p0}），请稍后重试。'**
+  String ui495af0fd(String p0);
+
+  /// HaRu UI: 下载更新包失败，请稍后重试。
+  ///
+  /// In zh, this message translates to:
+  /// **'下载更新包失败，请稍后重试。'**
+  String get ui714ebd00;
+
+  /// HaRu UI: 下载更新包超时，请检查网络后重试。
+  ///
+  /// In zh, this message translates to:
+  /// **'下载更新包超时，请检查网络后重试。'**
+  String get ui225e3259;
+
   /// HaRu UI: 下载服务暂不可用。
   ///
   /// In zh, this message translates to:
@@ -587,6 +659,24 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'不存在'**
   String get ui10ebf8e5;
+
+  /// HaRu UI: 不支持的翻译库版本：{p0}
+  ///
+  /// In zh, this message translates to:
+  /// **'不支持的翻译库版本：{p0}'**
+  String ui2d12eadf(String p0);
+
+  /// HaRu UI: 不是 AI 翻译协议
+  ///
+  /// In zh, this message translates to:
+  /// **'不是 AI 翻译协议'**
+  String get ui22dbd975;
+
+  /// HaRu UI: 不是 HaRu 翻译库文件
+  ///
+  /// In zh, this message translates to:
+  /// **'不是 HaRu 翻译库文件'**
+  String get ui2970e3de;
 
   /// HaRu UI: 不限
   ///
@@ -660,6 +750,12 @@ abstract class AppLocalizations {
   /// **'举报评论'**
   String get ui72607f99;
 
+  /// HaRu UI: 亿
+  ///
+  /// In zh, this message translates to:
+  /// **'亿'**
+  String get ui2a3fe43c;
+
   /// HaRu UI: 仅 Wi-Fi 下载
   ///
   /// In zh, this message translates to:
@@ -714,18 +810,6 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'从头连续播放'**
   String get ui44ac200e;
-
-  /// HaRu UI: 从媒体库请求登录；范围=hanime1；section={p0}
-  ///
-  /// In zh, this message translates to:
-  /// **'从媒体库请求登录；范围=hanime1；section={p0}'**
-  String ui6d8b62f1(String p0);
-
-  /// HaRu UI: 从媒体库请求登录；范围={p0}；section={p1}
-  ///
-  /// In zh, this message translates to:
-  /// **'从媒体库请求登录；范围={p0}；section={p1}'**
-  String ui4aca9b31(String p0, String p1);
 
   /// HaRu UI: 从播放列表移除
   ///
@@ -847,6 +931,12 @@ abstract class AppLocalizations {
   /// **'個月'**
   String get ui1d0485f9;
 
+  /// HaRu UI: 億
+  ///
+  /// In zh, this message translates to:
+  /// **'億'**
+  String get ui5545b6b8;
+
   /// HaRu UI: 全屏
   ///
   /// In zh, this message translates to:
@@ -883,11 +973,23 @@ abstract class AppLocalizations {
   /// **'共 {p0} 条 · 内置 {p1} · API {p2} · 用户 {p3}'**
   String ui3b4a622d(String p0, String p1, String p2, String p3);
 
+  /// HaRu UI: 共{p0}集
+  ///
+  /// In zh, this message translates to:
+  /// **'共{p0}集'**
+  String ui7aeb2e98(String p0);
+
   /// HaRu UI: 关于 HaRu
   ///
   /// In zh, this message translates to:
   /// **'关于 HaRu'**
   String get ui64efd37a;
+
+  /// HaRu UI: 关闭
+  ///
+  /// In zh, this message translates to:
+  /// **'关闭'**
+  String get ui361cc8b7;
 
   /// HaRu UI: 关闭后将清除全部本地播放进度。
   ///
@@ -937,11 +1039,17 @@ abstract class AppLocalizations {
   /// **'内置'**
   String get ui38d59e4d;
 
-  /// HaRu UI: 准备下载；站点={p0}；视频={p1}；
+  /// HaRu UI: 写入更新包失败，请检查设备存储空间后重试。
   ///
   /// In zh, this message translates to:
-  /// **'准备下载；站点={p0}；视频={p1}；'**
-  String ui4d75ae49(String p0, String p1);
+  /// **'写入更新包失败，请检查设备存储空间后重试。'**
+  String get ui3245a83c;
+
+  /// HaRu UI: 出错了，请稍后重试
+  ///
+  /// In zh, this message translates to:
+  /// **'出错了，请稍后重试'**
+  String get ui0ff3423a;
 
   /// HaRu UI: 分享
   ///
@@ -1129,6 +1237,12 @@ abstract class AppLocalizations {
   /// **'刷新视频地址失败：{p0}'**
   String ui1b5c10c1(String p0);
 
+  /// HaRu UI: 前台内容开始加载
+  ///
+  /// In zh, this message translates to:
+  /// **'前台内容开始加载'**
+  String get ui50138d2b;
+
   /// HaRu UI: 加载下一视频失败：{p0}
   ///
   /// In zh, this message translates to:
@@ -1159,6 +1273,12 @@ abstract class AppLocalizations {
   /// **'匹配译名：{p0}'**
   String ui3c554cab(String p0);
 
+  /// HaRu UI: 匿名用户
+  ///
+  /// In zh, this message translates to:
+  /// **'匿名用户'**
+  String get ui000f0cb3;
+
   /// HaRu UI: 单集循环
   ///
   /// In zh, this message translates to:
@@ -1183,6 +1303,12 @@ abstract class AppLocalizations {
   /// **'原文'**
   String get ui6ffe0a80;
 
+  /// HaRu UI: 去设置
+  ///
+  /// In zh, this message translates to:
+  /// **'去设置'**
+  String get ui62f1bb01;
+
   /// HaRu UI: 双语
   ///
   /// In zh, this message translates to:
@@ -1206,6 +1332,12 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'发布时间'**
   String get ui2e2d0cb3;
+
+  /// HaRu UI: 发现新版本
+  ///
+  /// In zh, this message translates to:
+  /// **'发现新版本'**
+  String get ui676a6b3b;
 
   /// HaRu UI: 发现新版本 {p0}。
   ///
@@ -1291,6 +1423,12 @@ abstract class AppLocalizations {
   /// **'只会清除当前账号在这台设备上的搜索记录。'**
   String get ui35027352;
 
+  /// HaRu UI: 只允许打开 HTTPS 链接。
+  ///
+  /// In zh, this message translates to:
+  /// **'只允许打开 HTTPS 链接。'**
+  String get ui51f9b5e4;
+
   /// HaRu UI: 只删除 App 中的全部下载记录，已经保存到 Download/Flule34 的视频会保留。进行中的任务会先取消。
   ///
   /// In zh, this message translates to:
@@ -1375,6 +1513,18 @@ abstract class AppLocalizations {
   /// **'后台播放'**
   String get ui7f54b07b;
 
+  /// HaRu UI: 后台订阅整理已让位于当前操作。
+  ///
+  /// In zh, this message translates to:
+  /// **'后台订阅整理已让位于当前操作。'**
+  String get ui02a3d205;
+
+  /// HaRu UI: 后台预加载已让位于当前操作。
+  ///
+  /// In zh, this message translates to:
+  /// **'后台预加载已让位于当前操作。'**
+  String get ui30c46183;
+
   /// HaRu UI: 否
   ///
   /// In zh, this message translates to:
@@ -1422,6 +1572,12 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'回复...'**
   String get ui1b8fd367;
+
+  /// HaRu UI: 回复内容不能为空。
+  ///
+  /// In zh, this message translates to:
+  /// **'回复内容不能为空。'**
+  String get ui0efec179;
 
   /// HaRu UI: 回复加载失败：{p0}
   ///
@@ -1561,54 +1717,6 @@ abstract class AppLocalizations {
   /// **'媒体库'**
   String get ui17588e00;
 
-  /// HaRu UI: 媒体库二级页切换；范围=hanime1；section={p0}
-  ///
-  /// In zh, this message translates to:
-  /// **'媒体库二级页切换；范围=hanime1；section={p0}'**
-  String ui38869fe7(String p0);
-
-  /// HaRu UI: 媒体库二级页切换；范围=local；section={p0}
-  ///
-  /// In zh, this message translates to:
-  /// **'媒体库二级页切换；范围=local；section={p0}'**
-  String ui7a3a4547(String p0);
-
-  /// HaRu UI: 媒体库二级页切换；范围=rule34video；section={p0}
-  ///
-  /// In zh, this message translates to:
-  /// **'媒体库二级页切换；范围=rule34video；section={p0}'**
-  String ui1c3a6602(String p0);
-
-  /// HaRu UI: 媒体库列表请求完成；范围=rule34video；section={p0}；
-  ///
-  /// In zh, this message translates to:
-  /// **'媒体库列表请求完成；范围=rule34video；section={p0}；'**
-  String ui0ee3985f(String p0);
-
-  /// HaRu UI: 媒体库列表请求开始；范围=rule34video；section={p0}；
-  ///
-  /// In zh, this message translates to:
-  /// **'媒体库列表请求开始；范围=rule34video；section={p0}；'**
-  String ui1e113600(String p0);
-
-  /// HaRu UI: 媒体库打开；范围={p0}；
-  ///
-  /// In zh, this message translates to:
-  /// **'媒体库打开；范围={p0}；'**
-  String ui14cdfa21(String p0);
-
-  /// HaRu UI: 媒体库登录状态变化；R34V={p0}；
-  ///
-  /// In zh, this message translates to:
-  /// **'媒体库登录状态变化；R34V={p0}；'**
-  String ui5e9a8d3f(String p0);
-
-  /// HaRu UI: 媒体库范围切换；from={p0}；to={p1}
-  ///
-  /// In zh, this message translates to:
-  /// **'媒体库范围切换；from={p0}；to={p1}'**
-  String ui21db214e(String p0, String p1);
-
   /// HaRu UI: 媒体库范围顺序
   ///
   /// In zh, this message translates to:
@@ -1626,6 +1734,30 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'安全合并'**
   String get ui60514b78;
+
+  /// HaRu UI: 安全证书验证失败
+  ///
+  /// In zh, this message translates to:
+  /// **'安全证书验证失败'**
+  String get ui0a4deada;
+
+  /// HaRu UI: 安装包签名与已安装版本不一致，无法覆盖安装，请前往 GitHub 手动下载安装。
+  ///
+  /// In zh, this message translates to:
+  /// **'安装包签名与已安装版本不一致，无法覆盖安装，请前往 GitHub 手动下载安装。'**
+  String get ui67804bce;
+
+  /// HaRu UI: 安装更新包失败，请稍后重试。
+  ///
+  /// In zh, this message translates to:
+  /// **'安装更新包失败，请稍后重试。'**
+  String get ui4573775f;
+
+  /// HaRu UI: 安装超时，请稍后重试。
+  ///
+  /// In zh, this message translates to:
+  /// **'安装超时，请稍后重试。'**
+  String get ui4768e1cf;
 
   /// HaRu UI: 宽泛搜索
   ///
@@ -1747,6 +1879,12 @@ abstract class AppLocalizations {
   /// **'小時'**
   String get ui17aba12e;
 
+  /// HaRu UI: 尚未开启安装权限，请稍后重试。
+  ///
+  /// In zh, this message translates to:
+  /// **'尚未开启安装权限，请稍后重试。'**
+  String get ui422fcf83;
+
   /// HaRu UI: 尚未登录
   ///
   /// In zh, this message translates to:
@@ -1771,11 +1909,29 @@ abstract class AppLocalizations {
   /// **'展开'**
   String get ui59bc6fa1;
 
+  /// HaRu UI: 展开({p0})
+  ///
+  /// In zh, this message translates to:
+  /// **'展开({p0})'**
+  String ui605cc69a(String p0);
+
   /// HaRu UI: 已下载
   ///
   /// In zh, this message translates to:
   /// **'已下载'**
   String get ui0543d520;
+
+  /// HaRu UI: 已下载 {p0}
+  ///
+  /// In zh, this message translates to:
+  /// **'已下载 {p0}'**
+  String ui21b8fcdc(String p0);
+
+  /// HaRu UI: 已下载 {p0} / {p1}
+  ///
+  /// In zh, this message translates to:
+  /// **'已下载 {p0} / {p1}'**
+  String ui419fd1e2(String p0, String p1);
 
   /// HaRu UI: 已从“{p0}”移出。
   ///
@@ -1848,6 +2004,18 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'已取消'**
   String get ui37453e63;
+
+  /// HaRu UI: 已取消下载更新包。
+  ///
+  /// In zh, this message translates to:
+  /// **'已取消下载更新包。'**
+  String get ui2374725a;
+
+  /// HaRu UI: 已取消安装。
+  ///
+  /// In zh, this message translates to:
+  /// **'已取消安装。'**
+  String get ui0c5e75d4;
 
   /// HaRu UI: 已取消收藏。
   ///
@@ -2047,12 +2215,6 @@ abstract class AppLocalizations {
   /// **'应用 {p0} 个条件'**
   String ui7be16f02(String p0);
 
-  /// HaRu UI: 应用初始化完成。
-  ///
-  /// In zh, this message translates to:
-  /// **'应用初始化完成。'**
-  String get ui103ff6bd;
-
   /// HaRu UI: 应用日志
   ///
   /// In zh, this message translates to:
@@ -2070,6 +2232,12 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'应用（不限）'**
   String get ui390d6cf3;
+
+  /// HaRu UI: 底座网络适配器已释放，无法发起请求。
+  ///
+  /// In zh, this message translates to:
+  /// **'底座网络适配器已释放，无法发起请求。'**
+  String get ui256813a5;
 
   /// HaRu UI: 底部导航顺序
   ///
@@ -2089,11 +2257,11 @@ abstract class AppLocalizations {
   /// **'开启后，切换应用或关闭屏幕时继续播放声音。'**
   String get ui0a663237;
 
-  /// HaRu UI: 开始视频预览；site={p0}；video={p1}；
+  /// HaRu UI: 开始日期
   ///
   /// In zh, this message translates to:
-  /// **'开始视频预览；site={p0}；video={p1}；'**
-  String ui08cdac2b(String p0, String p1);
+  /// **'开始日期'**
+  String get ui12e4a250;
 
   /// HaRu UI: 开源许可
   ///
@@ -2161,6 +2329,18 @@ abstract class AppLocalizations {
   /// **'当前版本：{p0}'**
   String ui34dcc5aa(String p0);
 
+  /// HaRu UI: 当前环境没有可写入的翻译数据库
+  ///
+  /// In zh, this message translates to:
+  /// **'当前环境没有可写入的翻译数据库'**
+  String get ui09b4d081;
+
+  /// HaRu UI: 当前设备不支持自动安装，请前往 GitHub 手动下载安装包。
+  ///
+  /// In zh, this message translates to:
+  /// **'当前设备不支持自动安装，请前往 GitHub 手动下载安装包。'**
+  String get ui111ba46f;
+
   /// HaRu UI: 当前账号 ID
   ///
   /// In zh, this message translates to:
@@ -2202,12 +2382,6 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'恢复已学习翻译'**
   String get ui608e380c;
-
-  /// HaRu UI: 恢复播放，开始自动展开播放器；video={p0}；
-  ///
-  /// In zh, this message translates to:
-  /// **'恢复播放，开始自动展开播放器；video={p0}；'**
-  String ui351ef4b1(String p0);
 
   /// HaRu UI: 我的
   ///
@@ -2305,12 +2479,6 @@ abstract class AppLocalizations {
   /// **'拉取模型列表'**
   String get ui7d6a579d;
 
-  /// HaRu UI: 拖动调整；冷启动时默认进入第一项。
-  ///
-  /// In zh, this message translates to:
-  /// **'拖动调整；冷启动时默认进入第一项。'**
-  String get ui1a86336b;
-
   /// HaRu UI: 指定月份…
   ///
   /// In zh, this message translates to:
@@ -2340,12 +2508,6 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'按来源排序'**
   String get ui7ab117f8;
-
-  /// HaRu UI: 按标签和内容主题探索
-  ///
-  /// In zh, this message translates to:
-  /// **'按标签和内容主题探索'**
-  String get ui70c4de19;
 
   /// HaRu UI: 按观看量浏览热门内容
   ///
@@ -2394,12 +2556,6 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'排除：'**
   String get ui549d6c00;
-
-  /// HaRu UI: 探索内容
-  ///
-  /// In zh, this message translates to:
-  /// **'探索内容'**
-  String get ui3cca6594;
 
   /// HaRu UI: 接口类型
   ///
@@ -2599,6 +2755,12 @@ abstract class AppLocalizations {
   /// **'播放列表会从网站账号中删除。'**
   String get ui264bb7d8;
 
+  /// HaRu UI: 播放列表分页未取得进展，请刷新重试。
+  ///
+  /// In zh, this message translates to:
+  /// **'播放列表分页未取得进展，请刷新重试。'**
+  String get ui25177a33;
+
   /// HaRu UI: 播放列表加载失败：{p0}
   ///
   /// In zh, this message translates to:
@@ -2647,77 +2809,23 @@ abstract class AppLocalizations {
   /// **'播放列表操作'**
   String get ui201d2aa4;
 
+  /// HaRu UI: 播放列表操作失败。
+  ///
+  /// In zh, this message translates to:
+  /// **'播放列表操作失败。'**
+  String get ui59fbd342;
+
+  /// HaRu UI: 播放列表编辑页面缺少标题字段。
+  ///
+  /// In zh, this message translates to:
+  /// **'播放列表编辑页面缺少标题字段。'**
+  String get ui6ef9f29e;
+
   /// HaRu UI: 播放器初始化后未提供视频时长。
   ///
   /// In zh, this message translates to:
   /// **'播放器初始化后未提供视频时长。'**
   String get ui7e8be483;
-
-  /// HaRu UI: 播放器开始自动恢复；attempt={p0}；
-  ///
-  /// In zh, this message translates to:
-  /// **'播放器开始自动恢复；attempt={p0}；'**
-  String ui536e06b3(String p0);
-
-  /// HaRu UI: 播放器折叠权限更新；video={p0}；
-  ///
-  /// In zh, this message translates to:
-  /// **'播放器折叠权限更新；video={p0}；'**
-  String ui7479d54b(String p0);
-
-  /// HaRu UI: 播放器报告异常：{p0}；
-  ///
-  /// In zh, this message translates to:
-  /// **'播放器报告异常：{p0}；'**
-  String ui5b401ab2(String p0);
-
-  /// HaRu UI: 播放器自动展开完成；video={p0}；
-  ///
-  /// In zh, this message translates to:
-  /// **'播放器自动展开完成；video={p0}；'**
-  String ui5a50b4ab(String p0);
-
-  /// HaRu UI: 播放器自动恢复失败；reason=no-alternate-source；
-  ///
-  /// In zh, this message translates to:
-  /// **'播放器自动恢复失败；reason=no-alternate-source；'**
-  String get ui78522c85;
-
-  /// HaRu UI: 播放器自动恢复异常；{p0}；
-  ///
-  /// In zh, this message translates to:
-  /// **'播放器自动恢复异常；{p0}；'**
-  String ui0dd3d83f(String p0);
-
-  /// HaRu UI: 播放器自动恢复成功；{p0}；耗时={p1}ms
-  ///
-  /// In zh, this message translates to:
-  /// **'播放器自动恢复成功；{p0}；耗时={p1}ms'**
-  String ui19faffc9(String p0, String p1);
-
-  /// HaRu UI: 播放器自动恢复装载失败；{p0}；
-  ///
-  /// In zh, this message translates to:
-  /// **'播放器自动恢复装载失败；{p0}；'**
-  String ui0146f5aa(String p0);
-
-  /// HaRu UI: 播放器自动恢复选择备用源；from={p0}；
-  ///
-  /// In zh, this message translates to:
-  /// **'播放器自动恢复选择备用源；from={p0}；'**
-  String ui4e45686b(String p0);
-
-  /// HaRu UI: 播放器装载失败：{p0}；
-  ///
-  /// In zh, this message translates to:
-  /// **'播放器装载失败：{p0}；'**
-  String ui4cee68a6(String p0);
-
-  /// HaRu UI: 播放态详情滚动触发边界反馈，已禁用视觉拉伸；video={p0}；
-  ///
-  /// In zh, this message translates to:
-  /// **'播放态详情滚动触发边界反馈，已禁用视觉拉伸；video={p0}；'**
-  String ui09679598(String p0);
 
   /// HaRu UI: 播放文件
   ///
@@ -2773,6 +2881,18 @@ abstract class AppLocalizations {
   /// **'操作未能完成，请稍后重试。'**
   String get ui31d7af87;
 
+  /// HaRu UI: 操作超时，请稍后重试
+  ///
+  /// In zh, this message translates to:
+  /// **'操作超时，请稍后重试'**
+  String get ui28c15475;
+
+  /// HaRu UI: 支持 Google 一键登入或官网邮箱密码登录，登录完成后会自动返回。
+  ///
+  /// In zh, this message translates to:
+  /// **'支持 Google 一键登入或官网邮箱密码登录，登录完成后会自动返回。'**
+  String get ui5e1b9757;
+
   /// HaRu UI: 收藏
   ///
   /// In zh, this message translates to:
@@ -2814,6 +2934,12 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'数据库结构'**
   String get ui053602da;
+
+  /// HaRu UI: 数据解析失败，站点结构可能已更新
+  ///
+  /// In zh, this message translates to:
+  /// **'数据解析失败，站点结构可能已更新'**
+  String get ui146d33d9;
 
   /// HaRu UI: 文件不存在
   ///
@@ -2869,6 +2995,30 @@ abstract class AppLocalizations {
   /// **'新建翻译服务'**
   String get ui742da263;
 
+  /// HaRu UI: 新版本 {p0} 已发布，是否立即下载并安装？
+  ///
+  /// In zh, this message translates to:
+  /// **'新版本 {p0} 已发布，是否立即下载并安装？'**
+  String ui0d7ee0fa(String p0);
+
+  /// HaRu UI: 无
+  ///
+  /// In zh, this message translates to:
+  /// **'无'**
+  String get ui7bd4dd1e;
+
+  /// HaRu UI: 无法启动系统安装器，请稍后重试。
+  ///
+  /// In zh, this message translates to:
+  /// **'无法启动系统安装器，请稍后重试。'**
+  String get ui196ad4c7;
+
+  /// HaRu UI: 无法启动系统安装器：{p0}
+  ///
+  /// In zh, this message translates to:
+  /// **'无法启动系统安装器：{p0}'**
+  String ui6f78c40a(String p0);
+
   /// HaRu UI: 无法将视频保存到 Download/Flule34。
   ///
   /// In zh, this message translates to:
@@ -2880,6 +3030,12 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'无法打开分享面板：{p0}'**
   String ui180bd386(String p0);
+
+  /// HaRu UI: 无法打开链接：{p0}
+  ///
+  /// In zh, this message translates to:
+  /// **'无法打开链接：{p0}'**
+  String ui07590f5f(String p0);
 
   /// HaRu UI: 无法播放此视频源：{p0}
   ///
@@ -2893,6 +3049,60 @@ abstract class AppLocalizations {
   /// **'无法生成诊断信息：{p0}'**
   String ui310db05f(String p0);
 
+  /// HaRu UI: 无法确定思考参数兼容方式
+  ///
+  /// In zh, this message translates to:
+  /// **'无法确定思考参数兼容方式'**
+  String get ui44f277c1;
+
+  /// HaRu UI: 无法获取操作令牌。
+  ///
+  /// In zh, this message translates to:
+  /// **'无法获取操作令牌。'**
+  String get ui50aa2314;
+
+  /// HaRu UI: 无法获取登录表单的校验令牌。
+  ///
+  /// In zh, this message translates to:
+  /// **'无法获取登录表单的校验令牌。'**
+  String get ui79cdaeac;
+
+  /// HaRu UI: 无法解析上传者资料，请稍后重试。
+  ///
+  /// In zh, this message translates to:
+  /// **'无法解析上传者资料，请稍后重试。'**
+  String get ui06546e23;
+
+  /// HaRu UI: 无法解析当前账号资料，请稍后重试。
+  ///
+  /// In zh, this message translates to:
+  /// **'无法解析当前账号资料，请稍后重试。'**
+  String get ui57f26ed1;
+
+  /// HaRu UI: 无法解析账号编辑资料。
+  ///
+  /// In zh, this message translates to:
+  /// **'无法解析账号编辑资料。'**
+  String get ui33dbf598;
+
+  /// HaRu UI: 无法识别视频作者。
+  ///
+  /// In zh, this message translates to:
+  /// **'无法识别视频作者。'**
+  String get ui15bf560f;
+
+  /// HaRu UI: 无法识别这个上传者的订阅信息。
+  ///
+  /// In zh, this message translates to:
+  /// **'无法识别这个上传者的订阅信息。'**
+  String get ui5825923c;
+
+  /// HaRu UI: 无法识别这个订阅，请从相关视频详情页{p0}。
+  ///
+  /// In zh, this message translates to:
+  /// **'无法识别这个订阅，请从相关视频详情页{p0}。'**
+  String ui6f7f557a(String p0);
+
   /// HaRu UI: 无法读取网页内容，可以点重试。
   ///
   /// In zh, this message translates to:
@@ -2904,6 +3114,24 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'无法连接 GitHub，请检查网络后重试。'**
   String get ui0b6ddbbb;
+
+  /// HaRu UI: 无法连接到网站
+  ///
+  /// In zh, this message translates to:
+  /// **'无法连接到网站'**
+  String get ui5262de17;
+
+  /// HaRu UI: 无法连接到网站，请检查网络。
+  ///
+  /// In zh, this message translates to:
+  /// **'无法连接到网站，请检查网络。'**
+  String get ui67fe026b;
+
+  /// HaRu UI: 日期：{p0}
+  ///
+  /// In zh, this message translates to:
+  /// **'日期：{p0}'**
+  String ui6991b83f(String p0);
 
   /// HaRu UI: 日本 IP 可能无法通过验证
   ///
@@ -2977,6 +3205,12 @@ abstract class AppLocalizations {
   /// **'暂停'**
   String get ui7b1cd931;
 
+  /// HaRu UI: 暂无诊断信息。
+  ///
+  /// In zh, this message translates to:
+  /// **'暂无诊断信息。'**
+  String get ui7167f83b;
+
   /// HaRu UI: 暂时无法检查更新，请稍后重试。
   ///
   /// In zh, this message translates to:
@@ -3025,6 +3259,48 @@ abstract class AppLocalizations {
   /// **'更换头像'**
   String get ui2d102f6b;
 
+  /// HaRu UI: 更新包下载失败，请稍后重试。
+  ///
+  /// In zh, this message translates to:
+  /// **'更新包下载失败，请稍后重试。'**
+  String get ui0b0c36f2;
+
+  /// HaRu UI: 更新包与当前系统不兼容。
+  ///
+  /// In zh, this message translates to:
+  /// **'更新包与当前系统不兼容。'**
+  String get ui1a5d4948;
+
+  /// HaRu UI: 更新包保存不完整，请重试。
+  ///
+  /// In zh, this message translates to:
+  /// **'更新包保存不完整，请重试。'**
+  String get ui59cb7d12;
+
+  /// HaRu UI: 更新包大小校验失败，请重试。
+  ///
+  /// In zh, this message translates to:
+  /// **'更新包大小校验失败，请重试。'**
+  String get ui4ebfc1da;
+
+  /// HaRu UI: 更新包已安装完成。
+  ///
+  /// In zh, this message translates to:
+  /// **'更新包已安装完成。'**
+  String get ui75071796;
+
+  /// HaRu UI: 更新包无效或已损坏，请重新下载。
+  ///
+  /// In zh, this message translates to:
+  /// **'更新包无效或已损坏，请重新下载。'**
+  String get ui7999a1cf;
+
+  /// HaRu UI: 更新包校验失败，请重试。
+  ///
+  /// In zh, this message translates to:
+  /// **'更新包校验失败，请重试。'**
+  String get ui154411ba;
+
   /// HaRu UI: 更新失败：{p0}
   ///
   /// In zh, this message translates to:
@@ -3055,11 +3331,23 @@ abstract class AppLocalizations {
   /// **'更新源：{p0}'**
   String ui55d54121(String p0);
 
+  /// HaRu UI: 更新说明
+  ///
+  /// In zh, this message translates to:
+  /// **'更新说明'**
+  String get ui19f3097b;
+
   /// HaRu UI: 更新通道
   ///
   /// In zh, this message translates to:
   /// **'更新通道'**
   String get ui1d030a86;
+
+  /// HaRu UI: 更早的关注内容仍在整理，请重试加载。
+  ///
+  /// In zh, this message translates to:
+  /// **'更早的关注内容仍在整理，请重试加载。'**
+  String get ui7e47c566;
 
   /// HaRu UI: 最低投票数
   ///
@@ -3133,6 +3421,12 @@ abstract class AppLocalizations {
   /// **'最热'**
   String get ui4124f57e;
 
+  /// HaRu UI: 最短时长（秒）
+  ///
+  /// In zh, this message translates to:
+  /// **'最短时长（秒）'**
+  String get ui7437a4c3;
+
   /// HaRu UI: 最近修改
   ///
   /// In zh, this message translates to:
@@ -3163,6 +3457,18 @@ abstract class AppLocalizations {
   /// **'最长'**
   String get ui3f66748c;
 
+  /// HaRu UI: 最长时长不能小于最短时长
+  ///
+  /// In zh, this message translates to:
+  /// **'最长时长不能小于最短时长'**
+  String get ui31829b08;
+
+  /// HaRu UI: 最长时长（秒）
+  ///
+  /// In zh, this message translates to:
+  /// **'最长时长（秒）'**
+  String get ui1965e2dd;
+
   /// HaRu UI: 最高可用
   ///
   /// In zh, this message translates to:
@@ -3187,11 +3493,65 @@ abstract class AppLocalizations {
   /// **'月份'**
   String get ui625d464f;
 
+  /// HaRu UI: 有 {p0} 个订阅暂时无法继续读取。
+  ///
+  /// In zh, this message translates to:
+  /// **'有 {p0} 个订阅暂时无法继续读取。'**
+  String ui06e923cf(String p0);
+
+  /// HaRu UI: 有 {p0} 个订阅暂时无法读取。
+  ///
+  /// In zh, this message translates to:
+  /// **'有 {p0} 个订阅暂时无法读取。'**
+  String ui24ed3263(String p0);
+
   /// HaRu UI: 服务名称
   ///
   /// In zh, this message translates to:
   /// **'服务名称'**
   String get ui7ee4b38a;
+
+  /// HaRu UI: 服务器响应异常 ({p0})
+  ///
+  /// In zh, this message translates to:
+  /// **'服务器响应异常 ({p0})'**
+  String ui46b673b1(String p0);
+
+  /// HaRu UI: 服务器返回了 HTTP {p0}。
+  ///
+  /// In zh, this message translates to:
+  /// **'服务器返回了 HTTP {p0}。'**
+  String ui21fa42fa(String p0);
+
+  /// HaRu UI: 服务器返回了缺少目标地址的重定向。
+  ///
+  /// In zh, this message translates to:
+  /// **'服务器返回了缺少目标地址的重定向。'**
+  String get ui34f469a4;
+
+  /// HaRu UI: 服务器重定向次数过多。
+  ///
+  /// In zh, this message translates to:
+  /// **'服务器重定向次数过多。'**
+  String get ui496de832;
+
+  /// HaRu UI: 未命名播放列表
+  ///
+  /// In zh, this message translates to:
+  /// **'未命名播放列表'**
+  String get ui7f356142;
+
+  /// HaRu UI: 未命名系列
+  ///
+  /// In zh, this message translates to:
+  /// **'未命名系列'**
+  String get ui441a34c3;
+
+  /// HaRu UI: 未命名视频
+  ///
+  /// In zh, this message translates to:
+  /// **'未命名视频'**
+  String get ui10bbdc2d;
 
   /// HaRu UI: 未挂载
   ///
@@ -3199,18 +3559,17 @@ abstract class AppLocalizations {
   /// **'未挂载'**
   String get ui0b0f8079;
 
-  /// HaRu UI: 未捕获异步异常：{p0}
-  /// {p1}
-  ///
-  /// In zh, this message translates to:
-  /// **'未捕获异步异常：{p0}\n{p1}'**
-  String ui5801f5b9(String p0, String p1);
-
   /// HaRu UI: 未排除任何{p0}
   ///
   /// In zh, this message translates to:
   /// **'未排除任何{p0}'**
   String ui1d2649c7(String p0);
+
+  /// HaRu UI: 未注入
+  ///
+  /// In zh, this message translates to:
+  /// **'未注入'**
+  String get ui5134b0d1;
 
   /// HaRu UI: 未登录 Hanime
   ///
@@ -3218,11 +3577,35 @@ abstract class AppLocalizations {
   /// **'未登录 Hanime'**
   String get ui6c16defb;
 
+  /// HaRu UI: 未知翻译类型
+  ///
+  /// In zh, this message translates to:
+  /// **'未知翻译类型'**
+  String get ui2219a9fe;
+
+  /// HaRu UI: 未知错误
+  ///
+  /// In zh, this message translates to:
+  /// **'未知错误'**
+  String get ui3b6c4912;
+
+  /// HaRu UI: 未获取到更新信息。
+  ///
+  /// In zh, this message translates to:
+  /// **'未获取到更新信息。'**
+  String get ui32a1bf89;
+
   /// HaRu UI: 未配置
   ///
   /// In zh, this message translates to:
   /// **'未配置'**
   String get ui73b71caa;
+
+  /// HaRu UI: 未配置 API Key
+  ///
+  /// In zh, this message translates to:
+  /// **'未配置 API Key'**
+  String get ui440ed665;
 
   /// HaRu UI: 本地分类库
   ///
@@ -3236,11 +3619,23 @@ abstract class AppLocalizations {
   /// **'本地库'**
   String get ui0760582c;
 
+  /// HaRu UI: 本地数据库读写异常，请重试
+  ///
+  /// In zh, this message translates to:
+  /// **'本地数据库读写异常，请重试'**
+  String get ui12e85520;
+
   /// HaRu UI: 本地诊断日志
   ///
   /// In zh, this message translates to:
   /// **'本地诊断日志'**
   String get ui5af2b9c7;
+
+  /// HaRu UI: 本地语言识别
+  ///
+  /// In zh, this message translates to:
+  /// **'本地语言识别'**
+  String get ui78d79e7d;
 
   /// HaRu UI: 本机
   ///
@@ -3278,12 +3673,6 @@ abstract class AppLocalizations {
   /// **'构建模式'**
   String get ui06231f4e;
 
-  /// HaRu UI: 查找艺术家页面
-  ///
-  /// In zh, this message translates to:
-  /// **'查找艺术家页面'**
-  String get ui3a3a5f44;
-
   /// HaRu UI: 查看 HaRu 与第三方 Flutter 依赖许可
   ///
   /// In zh, this message translates to:
@@ -3313,6 +3702,12 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'查看并复制不含凭据的运行环境摘要'**
   String get ui682b70e0;
+
+  /// HaRu UI: 查看更多
+  ///
+  /// In zh, this message translates to:
+  /// **'查看更多'**
+  String get ui7c04d205;
 
   /// HaRu UI: 查看诊断信息
   ///
@@ -3368,6 +3763,12 @@ abstract class AppLocalizations {
   /// **'模型列表拉取失败：{p0}'**
   String ui35ec3fa1(String p0);
 
+  /// HaRu UI: 模型列表返回格式无效
+  ///
+  /// In zh, this message translates to:
+  /// **'模型列表返回格式无效'**
+  String get ui0acd808e;
+
   /// HaRu UI: 模型名
   ///
   /// In zh, this message translates to:
@@ -3379,6 +3780,12 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'模糊视频封面'**
   String get ui1375925f;
+
+  /// HaRu UI: 欢迎回来，{p0}！已成功登录 Hanime。
+  ///
+  /// In zh, this message translates to:
+  /// **'欢迎回来，{p0}！已成功登录 Hanime。'**
+  String ui61cd3d84(String p0);
 
   /// HaRu UI: 正在下载
   ///
@@ -3392,6 +3799,12 @@ abstract class AppLocalizations {
   /// **'正在下载 · {p0}'**
   String ui210fbca4(String p0);
 
+  /// HaRu UI: 正在下载更新包
+  ///
+  /// In zh, this message translates to:
+  /// **'正在下载更新包'**
+  String get ui68d41e66;
+
   /// HaRu UI: 正在刷新视频地址…
   ///
   /// In zh, this message translates to:
@@ -3404,17 +3817,17 @@ abstract class AppLocalizations {
   /// **'正在处理'**
   String get ui57036f5e;
 
+  /// HaRu UI: 正在播放
+  ///
+  /// In zh, this message translates to:
+  /// **'正在播放'**
+  String get ui0d9565c5;
+
   /// HaRu UI: 正在播放媒体
   ///
   /// In zh, this message translates to:
   /// **'正在播放媒体'**
   String get ui1e85b6dc;
-
-  /// HaRu UI: 正在整理订阅内容 {p0}/{p1}
-  ///
-  /// In zh, this message translates to:
-  /// **'正在整理订阅内容 {p0}/{p1}'**
-  String ui0e786c06(String p0, String p1);
 
   /// HaRu UI: 正在等待验证结果…如果长时间无反应，请点重试。
   ///
@@ -3494,6 +3907,18 @@ abstract class AppLocalizations {
   /// **'此构建未配置 GitHub Releases 更新源。'**
   String get ui108cc700;
 
+  /// HaRu UI: 此类型不支持订阅。
+  ///
+  /// In zh, this message translates to:
+  /// **'此类型不支持订阅。'**
+  String get ui4ddaf211;
+
+  /// HaRu UI: 此类型暂不支持在 App 内取消订阅。
+  ///
+  /// In zh, this message translates to:
+  /// **'此类型暂不支持在 App 内取消订阅。'**
+  String get ui4e1b0f19;
+
   /// HaRu UI: 此视频未提供可直接播放的 MP4 源。
   ///
   /// In zh, this message translates to:
@@ -3511,12 +3936,6 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'此视频源仍不可用，请重试刷新视频地址。'**
   String get ui7cb7a0c5;
-
-  /// HaRu UI: 每次加载一批随机视频
-  ///
-  /// In zh, this message translates to:
-  /// **'每次加载一批随机视频'**
-  String get ui62dcc4bc;
 
   /// HaRu UI: 每次询问
   ///
@@ -3560,6 +3979,12 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'没有可用的备用清晰度，请稍后重试。'**
   String get ui29c894b2;
+
+  /// HaRu UI: 没有启用翻译服务。
+  ///
+  /// In zh, this message translates to:
+  /// **'没有启用翻译服务。'**
+  String get ui59f601fd;
 
   /// HaRu UI: 没有找到与“{p0}”匹配的{p1}。
   ///
@@ -3639,6 +4064,12 @@ abstract class AppLocalizations {
   /// **'没有符合条件的译文。'**
   String get ui1408d9d3;
 
+  /// HaRu UI: 没有返回可用模型
+  ///
+  /// In zh, this message translates to:
+  /// **'没有返回可用模型'**
+  String get ui3ca6cd4f;
+
   /// HaRu UI: 泡面番
   ///
   /// In zh, this message translates to:
@@ -3675,48 +4106,6 @@ abstract class AppLocalizations {
   /// **'测试连接'**
   String get ui06cf3f13;
 
-  /// HaRu UI: 浏览器主页面加载失败；错误码={p0}；
-  ///
-  /// In zh, this message translates to:
-  /// **'浏览器主页面加载失败；错误码={p0}；'**
-  String ui1d96670f(String p0);
-
-  /// HaRu UI: 浏览器挑战界面已消失，正在等待 cf_clearance；
-  ///
-  /// In zh, this message translates to:
-  /// **'浏览器挑战界面已消失，正在等待 cf_clearance；'**
-  String get ui33fbe6ce;
-
-  /// HaRu UI: 浏览器检测到 Cloudflare 挑战；路径={p0}；
-  ///
-  /// In zh, this message translates to:
-  /// **'浏览器检测到 Cloudflare 挑战；路径={p0}；'**
-  String ui129ae59c(String p0);
-
-  /// HaRu UI: 浏览器辅助验证完成；触发={p0}；路径={p1}；
-  ///
-  /// In zh, this message translates to:
-  /// **'浏览器辅助验证完成；触发={p0}；路径={p1}；'**
-  String ui67cd734f(String p0, String p1);
-
-  /// HaRu UI: 浏览器辅助验证弹窗已显示；路径={p0}
-  ///
-  /// In zh, this message translates to:
-  /// **'浏览器辅助验证弹窗已显示；路径={p0}'**
-  String ui2c065af1(String p0);
-
-  /// HaRu UI: 浏览器页面开始加载；路径={p0}
-  ///
-  /// In zh, this message translates to:
-  /// **'浏览器页面开始加载；路径={p0}'**
-  String ui521398c6(String p0);
-
-  /// HaRu UI: 浏览站点内容分类
-  ///
-  /// In zh, this message translates to:
-  /// **'浏览站点内容分类'**
-  String get ui2bce8045;
-
   /// HaRu UI: 浏览站点评分最高的视频
   ///
   /// In zh, this message translates to:
@@ -3740,12 +4129,6 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'清晰度'**
   String get ui28b4fe80;
-
-  /// HaRu UI: 清晰度={p0}
-  ///
-  /// In zh, this message translates to:
-  /// **'清晰度={p0}'**
-  String ui57e9c7ab(String p0);
 
   /// HaRu UI: 清空
   ///
@@ -3867,6 +4250,12 @@ abstract class AppLocalizations {
   /// **'点赞率必须配合投票数判断，避免少量投票造成虚高。'**
   String get ui1894e352;
 
+  /// HaRu UI: 点踩
+  ///
+  /// In zh, this message translates to:
+  /// **'点踩'**
+  String get ui4992052a;
+
   /// HaRu UI: 热门
   ///
   /// In zh, this message translates to:
@@ -3890,12 +4279,6 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'热门视频'**
   String get ui795ab7fb;
-
-  /// HaRu UI: 热门视频、高评分视频和艺术家排行
-  ///
-  /// In zh, this message translates to:
-  /// **'热门视频、高评分视频和艺术家排行'**
-  String get ui5137980d;
 
   /// HaRu UI: 煽动仇恨或恶意内容
   ///
@@ -3933,17 +4316,23 @@ abstract class AppLocalizations {
   /// **'用户'**
   String get ui1be4cbb9;
 
+  /// HaRu UI: 用户 ID 格式无效
+  ///
+  /// In zh, this message translates to:
+  /// **'用户 ID 格式无效'**
+  String get ui6bab46da;
+
   /// HaRu UI: 用户 ID：{p0}
   ///
   /// In zh, this message translates to:
   /// **'用户 ID：{p0}'**
   String ui2ff2035d(String p0);
 
-  /// HaRu UI: 用户手动重试刷新验证页面；路径={p0}；
+  /// HaRu UI: 用户开始了更高优先级的操作
   ///
   /// In zh, this message translates to:
-  /// **'用户手动重试刷新验证页面；路径={p0}；'**
-  String ui19930fad(String p0);
+  /// **'用户开始了更高优先级的操作'**
+  String get ui04f9f7a4;
 
   /// HaRu UI: 用户译文 {p0} 条。
   ///
@@ -4048,6 +4437,24 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'登录后，搜索历史会按账号安全保存。'**
   String get ui4bd42f4c;
+
+  /// HaRu UI: 登录失败，请检查账号、密码或验证码要求。
+  ///
+  /// In zh, this message translates to:
+  /// **'登录失败，请检查账号、密码或验证码要求。'**
+  String get ui1179dcd5;
+
+  /// HaRu UI: 登录失败，请检查账号和密码。
+  ///
+  /// In zh, this message translates to:
+  /// **'登录失败，请检查账号和密码。'**
+  String get ui5a4df1a7;
+
+  /// HaRu UI: 登录状态已过期，请重新登录。
+  ///
+  /// In zh, this message translates to:
+  /// **'登录状态已过期，请重新登录。'**
+  String get ui7d58135d;
 
   /// HaRu UI: 目标语言
   ///
@@ -4175,6 +4582,12 @@ abstract class AppLocalizations {
   /// **'站内消息'**
   String get ui68bc4e82;
 
+  /// HaRu UI: 站点服务暂时不可用，请稍后重试
+  ///
+  /// In zh, this message translates to:
+  /// **'站点服务暂时不可用，请稍后重试'**
+  String get ui1becc780;
+
   /// HaRu UI: 等不到 cookie → 重刷 → 再挑战
   ///
   /// In zh, this message translates to:
@@ -4192,12 +4605,6 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'等待重试'**
   String get ui106c1db7;
-
-  /// HaRu UI: 等待验证结果已超 10 秒，提示用户可手动重试；
-  ///
-  /// In zh, this message translates to:
-  /// **'等待验证结果已超 10 秒，提示用户可手动重试；'**
-  String get ui50c5f340;
 
   /// HaRu UI: 筛选
   ///
@@ -4265,12 +4672,6 @@ abstract class AppLocalizations {
   /// **'类型'**
   String get ui7aa38d36;
 
-  /// HaRu UI: 类型={p0}；耗时={p1}ms
-  ///
-  /// In zh, this message translates to:
-  /// **'类型={p0}；耗时={p1}ms'**
-  String ui6107c243(String p0, String p1);
-
   /// HaRu UI: 精选库 {p0} 包含重复视频。
   ///
   /// In zh, this message translates to:
@@ -4319,11 +4720,11 @@ abstract class AppLocalizations {
   /// **'精选视频条目缺少必要字段。'**
   String get ui3c28fff7;
 
-  /// HaRu UI: 系统中断|网络连接中断|connection reset|socketexception|timed?\s*out|broken pipe
+  /// HaRu UI: 系列视频
   ///
   /// In zh, this message translates to:
-  /// **'系统中断|网络连接中断|connection reset|socketexception|timed?\\s*out|broken pipe'**
-  String get ui058d6015;
+  /// **'系列视频'**
+  String get ui54ac0aa3;
 
   /// HaRu UI: 系统未授予公共下载目录写入权限。
   ///
@@ -4342,6 +4743,24 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'系统未能重新加入下载任务。'**
   String get ui111afc5c;
+
+  /// HaRu UI: 系统阻止了本次安装，请检查「安装未知应用」权限。
+  ///
+  /// In zh, this message translates to:
+  /// **'系统阻止了本次安装，请检查「安装未知应用」权限。'**
+  String get ui3dbce44e;
+
+  /// HaRu UI: 结束日期
+  ///
+  /// In zh, this message translates to:
+  /// **'结束日期'**
+  String get ui7344fe1b;
+
+  /// HaRu UI: 结束日期不能早于开始日期
+  ///
+  /// In zh, this message translates to:
+  /// **'结束日期不能早于开始日期'**
+  String get ui7df2c519;
 
   /// HaRu UI: 继续
   ///
@@ -4457,11 +4876,65 @@ abstract class AppLocalizations {
   /// **'网络播放策略'**
   String get ui5c5b8e6e;
 
+  /// HaRu UI: 网络请求超时
+  ///
+  /// In zh, this message translates to:
+  /// **'网络请求超时'**
+  String get ui2d500e9d;
+
+  /// HaRu UI: 网络请求超时，请稍后重试。
+  ///
+  /// In zh, this message translates to:
+  /// **'网络请求超时，请稍后重试。'**
+  String get ui23b94735;
+
+  /// HaRu UI: 网络请求遇到问题，请重试
+  ///
+  /// In zh, this message translates to:
+  /// **'网络请求遇到问题，请重试'**
+  String get ui3778b430;
+
   /// HaRu UI: 网络连接中断，请检查网络后重试。
   ///
   /// In zh, this message translates to:
   /// **'网络连接中断，请检查网络后重试。'**
   String get ui5d909650;
+
+  /// HaRu UI: 网络连接失败，请检查网络是否畅通
+  ///
+  /// In zh, this message translates to:
+  /// **'网络连接失败，请检查网络是否畅通'**
+  String get ui24c5d5a2;
+
+  /// HaRu UI: 网络连接异常，请检查网络
+  ///
+  /// In zh, this message translates to:
+  /// **'网络连接异常，请检查网络'**
+  String get ui5717be7d;
+
+  /// HaRu UI: 网络连接异常，请检查网络后重试
+  ///
+  /// In zh, this message translates to:
+  /// **'网络连接异常，请检查网络后重试'**
+  String get ui21d8799f;
+
+  /// HaRu UI: 网络错误
+  ///
+  /// In zh, this message translates to:
+  /// **'网络错误'**
+  String get ui121f0e14;
+
+  /// HaRu UI: 网页 / Google 账号登入
+  ///
+  /// In zh, this message translates to:
+  /// **'网页 / Google 账号登入'**
+  String get ui3ce8e370;
+
+  /// HaRu UI: 翻译不能为空
+  ///
+  /// In zh, this message translates to:
+  /// **'翻译不能为空'**
+  String get ui7fe12441;
 
   /// HaRu UI: 翻译失败：{p0}
   ///
@@ -4475,11 +4948,53 @@ abstract class AppLocalizations {
   /// **'翻译库'**
   String get ui20251330;
 
+  /// HaRu UI: 翻译库包含不支持的目标语言：{p0}
+  ///
+  /// In zh, this message translates to:
+  /// **'翻译库包含不支持的目标语言：{p0}'**
+  String ui6053d6fa(String p0);
+
+  /// HaRu UI: 翻译库包含长度异常的字段
+  ///
+  /// In zh, this message translates to:
+  /// **'翻译库包含长度异常的字段'**
+  String get ui3a3c90e9;
+
+  /// HaRu UI: 翻译库文件不能超过 10 MB
+  ///
+  /// In zh, this message translates to:
+  /// **'翻译库文件不能超过 10 MB'**
+  String get ui2cec6aea;
+
+  /// HaRu UI: 翻译库缺少 entries
+  ///
+  /// In zh, this message translates to:
+  /// **'翻译库缺少 entries'**
+  String get ui06ac6475;
+
+  /// HaRu UI: 翻译库词条数量超过 100000 条
+  ///
+  /// In zh, this message translates to:
+  /// **'翻译库词条数量超过 100000 条'**
+  String get ui04eb7dc2;
+
+  /// HaRu UI: 翻译库键字段包含非法字符
+  ///
+  /// In zh, this message translates to:
+  /// **'翻译库键字段包含非法字符'**
+  String get ui0250a335;
+
   /// HaRu UI: 翻译服务
   ///
   /// In zh, this message translates to:
   /// **'翻译服务'**
   String get ui0e144c39;
+
+  /// HaRu UI: 翻译服务尚未配置
+  ///
+  /// In zh, this message translates to:
+  /// **'翻译服务尚未配置'**
+  String get ui071ebcfb;
 
   /// HaRu UI: 翻译目标语言
   ///
@@ -4493,23 +5008,23 @@ abstract class AppLocalizations {
   /// **'翻译设置'**
   String get ui7312260a;
 
-  /// HaRu UI: 耗时={p0}ms
+  /// HaRu UI: 翻译资产不是 JSON 对象：{p0}
   ///
   /// In zh, this message translates to:
-  /// **'耗时={p0}ms'**
-  String ui56a4f7ec(String p0);
-
-  /// HaRu UI: 耗时={p0}ms；
-  ///
-  /// In zh, this message translates to:
-  /// **'耗时={p0}ms；'**
-  String ui0cfe710c(String p0);
+  /// **'翻译资产不是 JSON 对象：{p0}'**
+  String ui6f7c8396(String p0);
 
   /// HaRu UI: 自动
   ///
   /// In zh, this message translates to:
   /// **'自动'**
   String get ui42682f0b;
+
+  /// HaRu UI: 自动安装更新包需要「安装未知应用」权限。请在系统设置中允许 HaRu 安装应用后返回。
+  ///
+  /// In zh, this message translates to:
+  /// **'自动安装更新包需要「安装未知应用」权限。请在系统设置中允许 HaRu 安装应用后返回。'**
+  String get ui653fb447;
 
   /// HaRu UI: 自动或手动翻译时，每次只发送当前标题、标签或分类。服务按当前顺序依次尝试，失败后自动使用下一项。建议优先使用 AI 翻译，结果通常更自然、准确。
   ///
@@ -4523,6 +5038,30 @@ abstract class AppLocalizations {
   /// **'自动翻译'**
   String get ui4e37cc82;
 
+  /// HaRu UI: 自定义…
+  ///
+  /// In zh, this message translates to:
+  /// **'自定义…'**
+  String get ui1a28517b;
+
+  /// HaRu UI: 自定义日期
+  ///
+  /// In zh, this message translates to:
+  /// **'自定义日期'**
+  String get ui401af108;
+
+  /// HaRu UI: 自定义时长
+  ///
+  /// In zh, this message translates to:
+  /// **'自定义时长'**
+  String get ui1b64dd4b;
+
+  /// HaRu UI: 自定义筛选范围无效。
+  ///
+  /// In zh, this message translates to:
+  /// **'自定义筛选范围无效。'**
+  String get ui50983ec8;
+
   /// HaRu UI: 艺术家
   ///
   /// In zh, this message translates to:
@@ -4535,11 +5074,29 @@ abstract class AppLocalizations {
   /// **'艺术家排行榜'**
   String get ui273d81af;
 
+  /// HaRu UI: 艺术家订阅
+  ///
+  /// In zh, this message translates to:
+  /// **'艺术家订阅'**
+  String get ui2947cbbe;
+
   /// HaRu UI: 节省流量
   ///
   /// In zh, this message translates to:
   /// **'节省流量'**
   String get ui296bcd5e;
+
+  /// HaRu UI: 获取播放列表安全令牌失败，请刷新后重试。
+  ///
+  /// In zh, this message translates to:
+  /// **'获取播放列表安全令牌失败，请刷新后重试。'**
+  String get ui0559c77a;
+
+  /// HaRu UI: 萬
+  ///
+  /// In zh, this message translates to:
+  /// **'萬'**
+  String get ui3451174b;
 
   /// HaRu UI: 裏番
   ///
@@ -4547,11 +5104,29 @@ abstract class AppLocalizations {
   /// **'裏番'**
   String get ui5c249ba5;
 
+  /// HaRu UI: 觀看次數
+  ///
+  /// In zh, this message translates to:
+  /// **'觀看次數'**
+  String get ui38959118;
+
+  /// HaRu UI: 观看次数
+  ///
+  /// In zh, this message translates to:
+  /// **'观看次数'**
+  String get ui67fc978a;
+
   /// HaRu UI: 视频
   ///
   /// In zh, this message translates to:
   /// **'视频'**
   String get ui7f179fc8;
+
+  /// HaRu UI: 视频 {p0}
+  ///
+  /// In zh, this message translates to:
+  /// **'视频 {p0}'**
+  String ui248185b4(String p0);
 
   /// HaRu UI: 视频保存路径：Download/Flule34
   ///
@@ -4595,23 +5170,17 @@ abstract class AppLocalizations {
   /// **'视频直接写入所选公共目录；默认目录为 Downloads/Flule34，可从“我的 → 下载”右上角进入设置。'**
   String get ui6b6d2d3c;
 
-  /// HaRu UI: 视频详情
+  /// HaRu UI: 视频详情响应异常，请稍后重试。
   ///
   /// In zh, this message translates to:
-  /// **'视频详情'**
-  String get ui3c64ae15;
+  /// **'视频详情响应异常，请稍后重试。'**
+  String get ui0ee94f25;
 
   /// HaRu UI: 视频预览
   ///
   /// In zh, this message translates to:
   /// **'视频预览'**
   String get ui6fbc2348;
-
-  /// HaRu UI: 视频预览失败；site={p0}；video={p1}
-  ///
-  /// In zh, this message translates to:
-  /// **'视频预览失败；site={p0}；video={p1}'**
-  String ui2d82e410(String p0, String p1);
 
   /// HaRu UI: 解锁控件
   ///
@@ -4667,6 +5236,18 @@ abstract class AppLocalizations {
   /// **'设备'**
   String get ui592e7edb;
 
+  /// HaRu UI: 设备存储空间不足，无法安装更新包。
+  ///
+  /// In zh, this message translates to:
+  /// **'设备存储空间不足，无法安装更新包。'**
+  String get ui2e92dd76;
+
+  /// HaRu UI: 访问受限，可能需要安全验证
+  ///
+  /// In zh, this message translates to:
+  /// **'访问受限，可能需要安全验证'**
+  String get ui17add25c;
+
   /// HaRu UI: 评分最高
   ///
   /// In zh, this message translates to:
@@ -4678,6 +5259,12 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'评论'**
   String get ui491e642c;
+
+  /// HaRu UI: 评论内容不能为空。
+  ///
+  /// In zh, this message translates to:
+  /// **'评论内容不能为空。'**
+  String get ui22cd66c8;
 
   /// HaRu UI: 评论加载失败，点击重试
   ///
@@ -4721,6 +5308,30 @@ abstract class AppLocalizations {
   /// **'译文不能为空'**
   String get ui5e9e6941;
 
+  /// HaRu UI: 该客户端已被关闭，无法发起请求。
+  ///
+  /// In zh, this message translates to:
+  /// **'该客户端已被关闭，无法发起请求。'**
+  String get ui139f12da;
+
+  /// HaRu UI: 该版本没有可下载的安装包。
+  ///
+  /// In zh, this message translates to:
+  /// **'该版本没有可下载的安装包。'**
+  String get ui6ebae107;
+
+  /// HaRu UI: 该版本没有可下载的安装包，已打开 GitHub 发布页。
+  ///
+  /// In zh, this message translates to:
+  /// **'该版本没有可下载的安装包，已打开 GitHub 发布页。'**
+  String get ui5accb58a;
+
+  /// HaRu UI: 该类型不允许翻译
+  ///
+  /// In zh, this message translates to:
+  /// **'该类型不允许翻译'**
+  String get ui244129bf;
+
   /// HaRu UI: 语言显示模式
   ///
   /// In zh, this message translates to:
@@ -4732,6 +5343,12 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'说明'**
   String get ui16d86fec;
+
+  /// HaRu UI: 请先填写 API Key
+  ///
+  /// In zh, this message translates to:
+  /// **'请先填写 API Key'**
+  String get ui4e258c29;
 
   /// HaRu UI: 请先填写有效基址。
   ///
@@ -4745,6 +5362,18 @@ abstract class AppLocalizations {
   /// **'请先登录 Hanime'**
   String get ui19e258a9;
 
+  /// HaRu UI: 请先登录 Hanime 账号。
+  ///
+  /// In zh, this message translates to:
+  /// **'请先登录 Hanime 账号。'**
+  String get ui3ee081eb;
+
+  /// HaRu UI: 请先登录后再使用此功能。
+  ///
+  /// In zh, this message translates to:
+  /// **'请先登录后再使用此功能。'**
+  String get ui57f971fd;
+
   /// HaRu UI: 请在网页中完成验证，成功后会自动返回。
   ///
   /// In zh, this message translates to:
@@ -4757,11 +5386,53 @@ abstract class AppLocalizations {
   /// **'请完整填写名称、基址、模型和密钥。'**
   String get ui190ff633;
 
+  /// HaRu UI: 请求失败
+  ///
+  /// In zh, this message translates to:
+  /// **'请求失败'**
+  String get ui2033b3c1;
+
+  /// HaRu UI: 请求失败，请稍后重试。
+  ///
+  /// In zh, this message translates to:
+  /// **'请求失败，请稍后重试。'**
+  String get ui673534a9;
+
+  /// HaRu UI: 请求失败：{p0}
+  ///
+  /// In zh, this message translates to:
+  /// **'请求失败：{p0}'**
+  String ui64ba2be4(String p0);
+
+  /// HaRu UI: 请求已取消
+  ///
+  /// In zh, this message translates to:
+  /// **'请求已取消'**
+  String get ui0d97efea;
+
+  /// HaRu UI: 请求的内容不存在或已被删除
+  ///
+  /// In zh, this message translates to:
+  /// **'请求的内容不存在或已被删除'**
+  String get ui4bc1c631;
+
+  /// HaRu UI: 请求超时，请重试
+  ///
+  /// In zh, this message translates to:
+  /// **'请求超时，请重试'**
+  String get ui3a579d8a;
+
   /// HaRu UI: 请至少输入 2 个字符。
   ///
   /// In zh, this message translates to:
   /// **'请至少输入 2 个字符。'**
   String get ui61ca1aa4;
+
+  /// HaRu UI: 请输入 0 至 36000 的整数
+  ///
+  /// In zh, this message translates to:
+  /// **'请输入 0 至 36000 的整数'**
+  String get ui7d47ba9d;
 
   /// HaRu UI: 请输入密码。
   ///
@@ -4787,12 +5458,6 @@ abstract class AppLocalizations {
   /// **'请返回“我的”页面登录后查看账号信息。'**
   String get ui77044f29;
 
-  /// HaRu UI: 调整本机、R34V 与 Hanime 的显示顺序。
-  ///
-  /// In zh, this message translates to:
-  /// **'调整本机、R34V 与 Hanime 的显示顺序。'**
-  String get ui4af5a957;
-
   /// HaRu UI: 账号与媒体库
   ///
   /// In zh, this message translates to:
@@ -4804,6 +5469,18 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'账号中还没有播放列表。'**
   String get ui6527aff1;
+
+  /// HaRu UI: 账号和密码不能为空。
+  ///
+  /// In zh, this message translates to:
+  /// **'账号和密码不能为空。'**
+  String get ui65413ec5;
+
+  /// HaRu UI: 账号状态发生变化
+  ///
+  /// In zh, this message translates to:
+  /// **'账号状态发生变化'**
+  String get ui2d477648;
 
   /// HaRu UI: 账号资料已更新。
   ///
@@ -4834,12 +5511,6 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'跟随系统'**
   String get ui1c47ee05;
-
-  /// HaRu UI: 路径={p0}；进度={p1}；
-  ///
-  /// In zh, this message translates to:
-  /// **'路径={p0}；进度={p1}；'**
-  String ui58ccc0dc(String p0, String p1);
 
   /// HaRu UI: 跳过 {p0}，
   ///
@@ -4906,6 +5577,12 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'返回'**
   String get ui58a37252;
+
+  /// HaRu UI: 返回了空译文
+  ///
+  /// In zh, this message translates to:
+  /// **'返回了空译文'**
+  String get ui3caf8ced;
 
   /// HaRu UI: 还没有下载任务。
   ///
@@ -5009,6 +5686,12 @@ abstract class AppLocalizations {
   /// **'连接失败：{p0}'**
   String ui340178b5(String p0);
 
+  /// HaRu UI: 连接超时，请检查网络设置后重试
+  ///
+  /// In zh, this message translates to:
+  /// **'连接超时，请检查网络设置后重试'**
+  String get ui2c70d970;
+
   /// HaRu UI: 退出
   ///
   /// In zh, this message translates to:
@@ -5045,12 +5728,6 @@ abstract class AppLocalizations {
   /// **'退出登录？'**
   String get ui0c4a5e14;
 
-  /// HaRu UI: 适用于 R34V、Hanime 首页和普通视频列表，以及搜索结果和本地分类库。
-  ///
-  /// In zh, this message translates to:
-  /// **'适用于 R34V、Hanime 首页和普通视频列表，以及搜索结果和本地分类库。'**
-  String get ui2b4f5fd9;
-
   /// HaRu UI: 选择一个分类开始浏览，也可以直接在上方输入关键词搜索。
   ///
   /// In zh, this message translates to:
@@ -5081,12 +5758,6 @@ abstract class AppLocalizations {
   /// **'选择模型'**
   String get ui2bbcf0c4;
 
-  /// HaRu UI: 选择跟随系统或固定使用一种界面语言
-  ///
-  /// In zh, this message translates to:
-  /// **'选择跟随系统或固定使用一种界面语言'**
-  String get ui53e6ce38;
-
   /// HaRu UI: 通过配置的 GitHub Releases 源检查
   ///
   /// In zh, this message translates to:
@@ -5116,6 +5787,12 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'部分自动补全暂时不可用。'**
   String get ui273538ab;
+
+  /// HaRu UI: 部分订阅暂时无法读取，请稍后重试。
+  ///
+  /// In zh, this message translates to:
+  /// **'部分订阅暂时无法读取，请稍后重试。'**
+  String get ui5e31cf42;
 
   /// HaRu UI: 里番
   ///
@@ -5189,12 +5866,6 @@ abstract class AppLocalizations {
   /// **'随机'**
   String get ui06efd73d;
 
-  /// HaRu UI: 随机探索
-  ///
-  /// In zh, this message translates to:
-  /// **'随机探索'**
-  String get ui74a56f94;
-
   /// HaRu UI: 隐私与数据
   ///
   /// In zh, this message translates to:
@@ -5218,6 +5889,12 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'隐藏密码'**
   String get ui4b4e6624;
+
+  /// HaRu UI: 需要安装权限
+  ///
+  /// In zh, this message translates to:
+  /// **'需要安装权限'**
+  String get ui36eeedcb;
 
   /// HaRu UI: 需要通知权限才能可靠显示后台下载进度。
   ///
@@ -5254,6 +5931,12 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'顺序播放'**
   String get ui7f532d14;
+
+  /// HaRu UI: 预加载服务已销毁
+  ///
+  /// In zh, this message translates to:
+  /// **'预加载服务已销毁'**
+  String get ui1ebb446b;
 
   /// HaRu UI: 预发布版
   ///

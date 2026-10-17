@@ -1,13 +1,12 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_test/flutter_test.dart';
-
 import 'package:flule34/app/providers.dart';
 import 'package:flule34/core/models/translation_provider_models.dart';
 import 'package:flule34/core/services/translation_provider_repository.dart';
 import 'package:flule34/core/session/secret_store.dart';
 import 'package:flule34/features/settings/data/app_settings_store.dart';
 import 'package:flule34/features/settings/presentation/translation_provider_section.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   testWidgets('服务列表会实时反映优先级重排', (tester) async {
