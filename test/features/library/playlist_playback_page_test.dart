@@ -373,6 +373,121 @@ void main() {
     expect(api.requestedIds, ['h1', 'h2']);
     expect(api.foregroundFlags, [true, false]);
   });
+  testWidgets('长播放列表回看早期条目时会重新拉取详情，缓存不无限增长', (tester) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final originalPlatform = VideoPlayerPlatform.instance;
+    final platform = _FakeVideoPlayerPlatform();
+    VideoPlayerPlatform.instance = platform;
+    addTearDown(() async {
+      VideoPlayerPlatform.instance = originalPlatform;
+      await platform.close();
+    });
+
+    final harness = TestSessionHarness.create();
+    addTearDown(harness.dispose);
+    final api = _RecordingApi(harness.sessionStore);
+    final settingsStore = _MemorySettingsStore();
+    final settings = AppSettingsRepository(settingsStore);
+    addTearDown(settings.dispose);
+    final translationService = TranslationService.fromDictionary(
+      settingsRepository: settings,
+      dictionary: const {},
+    );
+
+    final container = ProviderContainer(
+      overrides: [
+        rule34VideoApiProvider.overrideWithValue(api),
+        appDatabaseProvider.overrideWithValue(harness.database),
+        appSettingsStoreProvider.overrideWithValue(settingsStore),
+        networkStatusServiceProvider.overrideWithValue(
+          _FakeNetworkStatusService(),
+        ),
+        screenWakeLockServiceProvider.overrideWithValue(
+          _FakeScreenWakeLockService(),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    const playlist = PlaylistItem(
+      id: '11',
+      title: '长列表',
+      path: '/playlists/11/',
+      videoCount: 10,
+    );
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          home: PlaylistPlaybackPage(
+            api: api,
+            request: const PlaylistPlaybackRequest(
+              playlist: playlist,
+              videos: [
+                VideoItem(id: 'a0', slug: 'a0', title: 'Item 0'),
+                VideoItem(id: 'a1', slug: 'a1', title: 'Item 1'),
+                VideoItem(id: 'a2', slug: 'a2', title: 'Item 2'),
+                VideoItem(id: 'a3', slug: 'a3', title: 'Item 3'),
+                VideoItem(id: 'a4', slug: 'a4', title: 'Item 4'),
+                VideoItem(id: 'a5', slug: 'a5', title: 'Item 5'),
+                VideoItem(id: 'a6', slug: 'a6', title: 'Item 6'),
+                VideoItem(id: 'a7', slug: 'a7', title: 'Item 7'),
+                VideoItem(id: 'a8', slug: 'a8', title: 'Item 8'),
+                VideoItem(id: 'a9', slug: 'a9', title: 'Item 9'),
+              ],
+              initialIndex: 0,
+              nextPage: 1,
+              hasMore: false,
+            ),
+            translationService: translationService,
+          ),
+        ),
+      ),
+    );
+    addTearDown(() async {
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
+    });
+
+    Future<void> settle() async {
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.pump(const Duration(milliseconds: 300));
+    }
+
+    await settle();
+    expect(api.requestedIds, ['a0']);
+
+    for (var step = 0; step < 9; step += 1) {
+      await tester.tap(find.byIcon(Icons.skip_next));
+      await settle();
+    }
+    expect(api.requestedIds, [
+      'a0',
+      'a1',
+      'a2',
+      'a3',
+      'a4',
+      'a5',
+      'a6',
+      'a7',
+      'a8',
+      'a9',
+    ]);
+
+    // 一路回看：紧邻的几条还在缓存里，最早的 a0 已经被挤出去，需要重新拉取。
+    for (var step = 0; step < 9; step += 1) {
+      await tester.tap(find.byIcon(Icons.skip_previous));
+      await settle();
+    }
+    expect(api.requestedIds.where((id) => id == 'a0').length, 2);
+    expect(api.requestedIds.length, lessThan(20));
+  });
 }
 
 /// 记录"到底请求了哪些详情"，用来断言不该发生的预取确实没有发生。

@@ -64,6 +64,12 @@ class _PlaylistPlaybackPageState extends State<PlaylistPlaybackPage> {
   late bool _hasMore;
   var _loadingMore = false;
   var _mode = PlaylistPlaybackMode.sequence;
+
+  /// 详情缓存只服务"当前 + 下一条 + 再下一条"的预取，播放长播放列表时
+  /// 没必要把每一集的详情都留在内存里（VideoDetails 还带着相关推荐、
+  /// 系列列表等字段）。超过上限就按插入顺序丢掉最早的、且不是正在
+  /// 使用的那几条。
+  static const _detailsCacheLimit = 6;
   final Map<String, VideoDetails> _detailsCache = {};
   VideoDetails? _details;
   Object? _detailsError;
@@ -99,13 +105,25 @@ class _PlaylistPlaybackPageState extends State<PlaylistPlaybackPage> {
     if (mounted) setState(() {});
   }
 
+  void _rememberDetails(VideoItem video, VideoDetails details) {
+    _detailsCache[video.contentKey] = details;
+    while (_detailsCache.length > _detailsCacheLimit) {
+      final keep = <String>{video.contentKey, _video.contentKey};
+      final stale = _detailsCache.keys
+          .where((key) => !keep.contains(key))
+          .firstOrNull;
+      if (stale == null) return;
+      _detailsCache.remove(stale);
+    }
+  }
+
   Future<void> _loadInitial() async {
     try {
       final details = await widget.api.loadVideoDetails(_video);
       if (!mounted) {
         return;
       }
-      _detailsCache[_video.contentKey] = details;
+      _rememberDetails(_video, details);
       setState(() {
         _details = details;
         _detailsError = null;
@@ -162,7 +180,7 @@ class _PlaylistPlaybackPageState extends State<PlaylistPlaybackPage> {
       if (!mounted || operation != _preloadOperation) {
         return;
       }
-      _detailsCache[_videos[next].contentKey] = details;
+      _rememberDetails(_videos[next], details);
       unawaited(_preloadLookAheadDetails(next, operation));
       await _playerHandle.preCache(details, aggressive: true);
     } on Object {
@@ -191,7 +209,7 @@ class _PlaylistPlaybackPageState extends State<PlaylistPlaybackPage> {
         allowForegroundVerification: false,
       );
       if (mounted && operation == _preloadOperation) {
-        _detailsCache[_videos[lookAhead].contentKey] = details;
+        _rememberDetails(_videos[lookAhead], details);
       }
     } on Object {
       // 再下一条只预取详情，失败不影响播放。
@@ -291,7 +309,7 @@ class _PlaylistPlaybackPageState extends State<PlaylistPlaybackPage> {
       if (!mounted || operation != _switchOperation) {
         return;
       }
-      _detailsCache[target.contentKey] = details;
+      _rememberDetails(target, details);
       setState(() {
         _index = value;
         _details = details;
