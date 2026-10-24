@@ -136,7 +136,15 @@ void main() {
       scrollable: find.byType(Scrollable).last,
     );
     // 发布时间筛选已由下拉改为 VideoRangeFilter（预设 + 自定义范围）。
-    await tester.tap(find.text('发布时间'));
+    // 非 compact 模式下 "发布时间" 是 InputDecorator 的 labelText，只负责绘制、
+    // 不参与命中测试；点它只会拿到 warnIfMissed 警告。要打开 PopupMenuButton，
+    // 得点它包着的 InputDecorator。
+    await tester.tap(
+      find.ancestor(
+        of: find.text('发布时间'),
+        matching: find.byType(InputDecorator),
+      ),
+    );
     await tester.pumpAndSettle();
     await tester.tap(find.text('过去 1 周').last);
     await tester.pumpAndSettle();
