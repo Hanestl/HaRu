@@ -172,22 +172,31 @@ Future<void> startAppUpdate(
     case _DownloadSucceeded(:final file):
       // PackageInstaller 会话安装完成后系统会回调结果；成功时进程通常已被
       // 系统终止，这里主要覆盖取消、签名冲突、存储不足等失败场景。
-      installer.outcomes.listen((result) {
+      // 结果流是应用级广播流，同一次安装可能回调多次：只处理第一条并立即退订。
+      // 不退订的话，每次"一键更新"都会再挂一个监听，后续安装结果会重复弹提示，
+      // 且监听闭包会一直持有旧页面的 context。
+      late final StreamSubscription<ApkInstallOutcome> outcomeSubscription;
+      outcomeSubscription = installer.outcomes.listen((result) {
+        unawaited(outcomeSubscription.cancel());
         if (!result.success && context.mounted) {
           _showMessage(context, result.message);
         }
       });
       try {
         final installResult = await installer.install(file);
-        if (installResult == ApkInstallResult.permissionRequired &&
-            context.mounted) {
-          _showMessage(context, '尚未开启安装权限，请稍后重试。');
+        if (installResult == ApkInstallResult.permissionRequired) {
+          await outcomeSubscription.cancel();
+          if (context.mounted) {
+            _showMessage(context, '尚未开启安装权限，请稍后重试。');
+          }
         }
       } on ApkInstallerException catch (error) {
+        await outcomeSubscription.cancel();
         if (context.mounted) {
           _showMessage(context, error.message);
         }
       } on Object catch (error) {
+        await outcomeSubscription.cancel();
         if (context.mounted) {
           _showMessage(context, '无法启动系统安装器：${friendlyErrorMessage(error)}');
         }
