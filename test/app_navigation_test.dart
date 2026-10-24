@@ -94,6 +94,43 @@ void main() {
     expect(find.text('关于 HaRu'), findsOneWidget);
     expect(find.text('调试日志'), findsNothing);
   });
+
+  testWidgets('跳转到未注册路由时显示本地化兜底页并可回到首页', (tester) async {
+    final harness = TestSessionHarness.create();
+    addTearDown(harness.dispose);
+    final container = ProviderContainer(
+      overrides: [
+        rule34VideoApiProvider.overrideWithValue(
+          _FakeRule34VideoApi(harness.sessionStore),
+        ),
+        appDatabaseProvider.overrideWithValue(harness.database),
+        appSettingsStoreProvider.overrideWithValue(_MemorySettingsStore()),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp.router(
+          routerConfig: container.read(appRouterProvider),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    container.read(appRouterProvider).go('/no-such-route');
+    await tester.pumpAndSettle();
+
+    // go_router 默认页是英文的 "Page Not Found"，这里必须换成词表文案。
+    expect(find.text('Page Not Found'), findsNothing);
+    expect(find.text('页面不存在'), findsOneWidget);
+    expect(find.text('请求的内容不存在或已被删除'), findsOneWidget);
+
+    await tester.tap(find.text('返回首页'));
+    await tester.pumpAndSettle();
+    expect(find.text('订阅'), findsOneWidget);
+  });
 }
 
 class _FakeRule34VideoApi extends Rule34VideoApi {

@@ -4587,6 +4587,11 @@ const uiTranslations = <String, Map<String, String>>{
     'ja': "空の訳文が返されました",
     'ko': "빈 번역문이 반환되었습니다",
   },
+  "返回首页": <String, String>{
+    'en': "Back to home",
+    'ja': "ホームに戻る",
+    'ko': "홈으로 돌아가기",
+  },
   "还没有下载任务。": <String, String>{
     'en': "There are no download tasks yet.",
     'ja': "ダウンロードタスクはまだありません。",
@@ -4861,6 +4866,11 @@ const uiTranslations = <String, Map<String, String>>{
     'en': "Volume {p0}%",
     'ja': "音量 {p0}%",
     'ko': "음량 {p0}%",
+  },
+  "页面不存在": <String, String>{
+    'en': "Page not found",
+    'ja': "ページが見つかりません",
+    'ko': "페이지를 찾을 수 없습니다",
   },
   "页面加载失败，可以点重试。": <String, String>{
     'en': "The page failed to load, please click Retry.",

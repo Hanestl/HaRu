@@ -5608,6 +5608,12 @@ abstract class AppLocalizations {
   /// **'返回了空译文'**
   String get ui3caf8ced;
 
+  /// HaRu UI: 返回首页
+  ///
+  /// In zh, this message translates to:
+  /// **'返回首页'**
+  String get ui0a98d7f2;
+
   /// HaRu UI: 还没有下载任务。
   ///
   /// In zh, this message translates to:
@@ -5937,6 +5943,12 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'音量 {p0}%'**
   String ui0727f3bc(String p0);
+
+  /// HaRu UI: 页面不存在
+  ///
+  /// In zh, this message translates to:
+  /// **'页面不存在'**
+  String get ui0fe51264;
 
   /// HaRu UI: 页面加载失败，可以点重试。
   ///

@@ -3057,6 +3057,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get ui3caf8ced => '空の訳文が返されました';
 
   @override
+  String get ui0a98d7f2 => 'ホームに戻る';
+
+  @override
   String get ui10524b4c => 'ダウンロードタスクはまだありません。';
 
   @override
@@ -3225,6 +3228,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String ui0727f3bc(String p0) {
     return '音量 $p0%';
   }
+
+  @override
+  String get ui0fe51264 => 'ページが見つかりません';
 
   @override
   String get ui7746148e => 'ページの読み込みに失敗しました。「再試行」をクリックしてください。';

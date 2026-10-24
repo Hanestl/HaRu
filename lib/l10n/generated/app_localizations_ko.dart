@@ -3060,6 +3060,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get ui3caf8ced => '빈 번역문이 반환되었습니다';
 
   @override
+  String get ui0a98d7f2 => '홈으로 돌아가기';
+
+  @override
   String get ui10524b4c => '아직 다운로드 작업이 없습니다.';
 
   @override
@@ -3228,6 +3231,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String ui0727f3bc(String p0) {
     return '음량 $p0%';
   }
+
+  @override
+  String get ui0fe51264 => '페이지를 찾을 수 없습니다';
 
   @override
   String get ui7746148e => '페이지를 로드하지 못했습니다. \'다시 시도\'를 클릭하세요.';

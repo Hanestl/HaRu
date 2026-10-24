@@ -3037,6 +3037,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get ui3caf8ced => '返回了空译文';
 
   @override
+  String get ui0a98d7f2 => '返回首页';
+
+  @override
   String get ui10524b4c => '还没有下载任务。';
 
   @override
@@ -3204,6 +3207,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String ui0727f3bc(String p0) {
     return '音量 $p0%';
   }
+
+  @override
+  String get ui0fe51264 => '页面不存在';
 
   @override
   String get ui7746148e => '页面加载失败，可以点重试。';

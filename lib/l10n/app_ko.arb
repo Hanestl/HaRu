@@ -4402,6 +4402,10 @@
   "@ui3caf8ced": {
     "description": "HaRu UI: 返回了空译文"
   },
+  "ui0a98d7f2": "홈으로 돌아가기",
+  "@ui0a98d7f2": {
+    "description": "HaRu UI: 返回首页"
+  },
   "ui10524b4c": "아직 다운로드 작업이 없습니다.",
   "@ui10524b4c": {
     "description": "HaRu UI: 还没有下载任务。"
@@ -4631,6 +4635,10 @@
         "type": "String"
       }
     }
+  },
+  "ui0fe51264": "페이지를 찾을 수 없습니다",
+  "@ui0fe51264": {
+    "description": "HaRu UI: 页面不存在"
   },
   "ui7746148e": "페이지를 로드하지 못했습니다. ''다시 시도''를 클릭하세요.",
   "@ui7746148e": {

@@ -32,6 +32,7 @@ import '../../features/shell/app_shell.dart';
 import '../../features/video/video_detail_page.dart';
 import '../../shared/scroll_to_top_overlay.dart';
 import '../providers.dart';
+import 'route_error_page.dart';
 import 'route_names.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
@@ -62,6 +63,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     navigatorKey: _rootNavigatorKey,
     initialLocation: _initialLocation(initialDestination),
     observers: [appRouteObserver],
+    errorBuilder: buildRouteErrorPage,
     routes: [
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {

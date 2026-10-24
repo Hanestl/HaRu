@@ -187,12 +187,18 @@ class AppErrorView extends StatelessWidget {
     this.message,
     this.onRetry,
     this.icon,
+    this.retryLabel,
     this.padding = const EdgeInsets.all(24),
   });
 
   final Object? error;
   final String? message;
   final VoidCallback? onRetry;
+
+  /// 重试按钮的文案，为空时使用通用的「重试」。
+  ///
+  /// 用于「按钮做的不是重试」的场合，例如路由兜底页里按钮实际是回到首页。
+  final String? retryLabel;
   final IconData? icon;
   final EdgeInsetsGeometry padding;
 
@@ -227,7 +233,7 @@ class AppErrorView extends StatelessWidget {
               FilledButton.tonalIcon(
                 onPressed: onRetry,
                 icon: const Icon(Icons.refresh, size: 18),
-                label: AppText(context.uiText('重试')),
+                label: AppText(retryLabel ?? '重试'),
               ),
             ],
           ],

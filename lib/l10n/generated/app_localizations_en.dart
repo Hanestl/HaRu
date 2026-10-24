@@ -3183,6 +3183,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ui3caf8ced => 'Returned an empty translation';
 
   @override
+  String get ui0a98d7f2 => 'Back to home';
+
+  @override
   String get ui10524b4c => 'There are no download tasks yet.';
 
   @override
@@ -3357,6 +3360,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String ui0727f3bc(String p0) {
     return 'Volume $p0%';
   }
+
+  @override
+  String get ui0fe51264 => 'Page not found';
 
   @override
   String get ui7746148e => 'The page failed to load, please click Retry.';

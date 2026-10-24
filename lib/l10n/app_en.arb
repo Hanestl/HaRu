@@ -4402,6 +4402,10 @@
   "@ui3caf8ced": {
     "description": "HaRu UI: 返回了空译文"
   },
+  "ui0a98d7f2": "Back to home",
+  "@ui0a98d7f2": {
+    "description": "HaRu UI: 返回首页"
+  },
   "ui10524b4c": "There are no download tasks yet.",
   "@ui10524b4c": {
     "description": "HaRu UI: 还没有下载任务。"
@@ -4631,6 +4635,10 @@
         "type": "String"
       }
     }
+  },
+  "ui0fe51264": "Page not found",
+  "@ui0fe51264": {
+    "description": "HaRu UI: 页面不存在"
   },
   "ui7746148e": "The page failed to load, please click Retry.",
   "@ui7746148e": {

@@ -6419,6 +6419,13 @@
     "key": "ui3caf8ced"
   },
   {
+    "source": "返回首页",
+    "en": "Back to home",
+    "ja": "ホームに戻る",
+    "ko": "홈으로 돌아가기",
+    "key": "ui0a98d7f2"
+  },
+  {
     "key": "ui10524b4c",
     "source": "还没有下载任务。",
     "en": "There are no download tasks yet.",
@@ -6802,6 +6809,13 @@
     "en": "Volume {p0}%",
     "ja": "音量 {p0}%",
     "ko": "음량 {p0}%"
+  },
+  {
+    "source": "页面不存在",
+    "en": "Page not found",
+    "ja": "ページが見つかりません",
+    "ko": "페이지를 찾을 수 없습니다",
+    "key": "ui0fe51264"
   },
   {
     "source": "页面加载失败，可以点重试。",
