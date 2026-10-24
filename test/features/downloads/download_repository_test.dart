@@ -880,7 +880,10 @@ final class _FakeRule34VideoApi extends Rule34VideoApi {
   Future<String?> sessionCookieHeader() async => 'PHPSESSID=test-cookie';
 
   @override
-  Future<VideoDetails> loadVideoDetails(VideoItem video) async {
+  Future<VideoDetails> loadVideoDetails(
+    VideoItem video, {
+    bool allowForegroundVerification = true,
+  }) async {
     detailLoads += 1;
     return VideoDetails(
       video: video,

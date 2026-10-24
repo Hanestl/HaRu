@@ -7,12 +7,263 @@ import 'package:flule34/core/api/hanime1_parser.dart';
 import 'package:flule34/core/api/rule34video_api.dart';
 import 'package:flule34/core/models/hanime_library_models.dart';
 import 'package:flule34/core/models/hanime_search_models.dart';
+import 'package:flule34/core/models/video_models.dart';
 import 'package:flule34/core/services/hanime_cloudflare_coordinator.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../helpers/test_session_harness.dart';
 
 void main() {
+  test('后台请求之间保留最小间隔', () async {
+    final harness = TestSessionHarness.create();
+    addTearDown(harness.dispose);
+    final clock = Stopwatch()..start();
+    final starts = <Duration>[];
+    const interval = Duration(milliseconds: 60);
+    final api = Hanime1Api(
+      sessionStore: harness.sessionStore,
+      backgroundRequestInterval: interval,
+      httpClientAdapter: _TestAdapter((options) {
+        starts.add(clock.elapsed);
+        return ResponseBody.fromString(
+          '<div id="home-rows-wrapper"></div>',
+          200,
+        );
+      }),
+    );
+    addTearDown(api.close);
+    await api.searchVideos('first', 1, allowForegroundVerification: false);
+    final second = api.searchVideos(
+      'second',
+      1,
+      allowForegroundVerification: false,
+    );
+    await second;
+    expect(starts, hasLength(2));
+    expect(starts.last - starts.first, greaterThanOrEqualTo(interval));
+  });
+
+  test('在途后台请求取消后队列会继续，预先取消的请求不会入队', () async {
+    final harness = TestSessionHarness.create();
+    addTearDown(harness.dispose);
+    final started = Completer<void>();
+    final response = Completer<ResponseBody>();
+    final calls = <String>[];
+    final api = Hanime1Api(
+      sessionStore: harness.sessionStore,
+      backgroundRequestInterval: Duration.zero,
+      httpClientAdapter: _TestAdapter((options) {
+        final query = options.queryParameters['query'] as String;
+        calls.add(query);
+        if (query == 'active') {
+          started.complete();
+          return response.future;
+        }
+        return ResponseBody.fromString(
+          '<div id="home-rows-wrapper"></div>',
+          200,
+        );
+      }),
+    );
+    addTearDown(api.close);
+    final token = CancelToken();
+    final active = expectLater(
+      api.searchVideos(
+        'active',
+        1,
+        cancelToken: token,
+        allowForegroundVerification: false,
+      ),
+      throwsA(isA<RequestCancelledException>()),
+    );
+    await started.future;
+    final next = api.searchVideos(
+      'next',
+      1,
+      allowForegroundVerification: false,
+    );
+    token.cancel();
+    await active;
+    await next.timeout(const Duration(seconds: 1));
+    await expectLater(
+      api.searchVideos(
+        'already-cancelled',
+        1,
+        cancelToken: token,
+        allowForegroundVerification: false,
+      ),
+      throwsA(isA<RequestCancelledException>()),
+    );
+    expect(calls, ['active', 'next']);
+    response.complete(ResponseBody.fromString('', 200));
+  });
+
+  test('后台首页、频道与详情共用串行队列，前台不等待后台', () async {
+    final harness = TestSessionHarness.create();
+    addTearDown(harness.dispose);
+    final firstStarted = Completer<void>();
+    final firstResponse = Completer<ResponseBody>();
+    final calls = <String>[];
+    final api = Hanime1Api(
+      sessionStore: harness.sessionStore,
+      backgroundRequestInterval: Duration.zero,
+      httpClientAdapter: _TestAdapter((options) {
+        final key =
+            options.queryParameters['query']?.toString() ?? options.path;
+        calls.add(key);
+        if (key == 'background') {
+          firstStarted.complete();
+          return firstResponse.future;
+        }
+        return ResponseBody.fromString(
+          options.path == '/watch'
+              ? '<video id="player"><source src="https://cdn.example/a.mp4"></video>'
+              : '<div id="home-rows-wrapper"></div>',
+          200,
+        );
+      }),
+    );
+    addTearDown(api.close);
+
+    final first = api.searchVideos(
+      'background',
+      1,
+      allowForegroundVerification: false,
+    );
+    await firstStarted.future;
+    final home = api.loadHomeSections(allowForegroundVerification: false);
+    final details = api.loadVideoDetails(
+      const VideoItem(
+        id: 'queue-test',
+        title: 'Queue',
+        slug: 'queue',
+        siteId: 'hanime1',
+      ),
+      allowForegroundVerification: false,
+    );
+    await api.searchVideos('foreground', 1);
+    expect(calls, ['background', 'foreground']);
+
+    firstResponse.complete(
+      ResponseBody.fromString('<div id="home-rows-wrapper"></div>', 200),
+    );
+    await Future.wait<Object>([first, home, details]);
+    expect(calls, ['background', 'foreground', '/', '/watch']);
+  });
+
+  test('后台请求失败后仍会推进下一项，且不启用前台验证', () async {
+    final harness = TestSessionHarness.create();
+    addTearDown(harness.dispose);
+    final flags = <bool>[];
+    final calls = <String>[];
+    final api = Hanime1Api(
+      sessionStore: harness.sessionStore,
+      backgroundRequestInterval: Duration.zero,
+      browserPageHandler: (_, foreground) async {
+        flags.add(foreground);
+        return null;
+      },
+      httpClientAdapter: _TestAdapter((options) {
+        final query = options.queryParameters['query'] as String;
+        calls.add(query);
+        return ResponseBody.fromString(
+          '<div id="home-rows-wrapper"></div>',
+          query == 'blocked' ? 403 : 200,
+        );
+      }),
+    );
+    addTearDown(api.close);
+
+    final failed = expectLater(
+      api.searchVideos('blocked', 1, allowForegroundVerification: false),
+      throwsA(isA<HanimeCloudflareException>()),
+    );
+    final next = api.searchVideos(
+      'next',
+      1,
+      allowForegroundVerification: false,
+    );
+    await failed;
+    expect(await next, isEmpty);
+    expect(calls, ['blocked', 'next']);
+    expect(flags, [false]);
+  });
+
+  test('排队中的后台请求取消后立即结束，且不发送网络请求', () async {
+    final harness = TestSessionHarness.create();
+    addTearDown(harness.dispose);
+    final started = Completer<void>();
+    final response = Completer<ResponseBody>();
+    final calls = <String>[];
+    final api = Hanime1Api(
+      sessionStore: harness.sessionStore,
+      backgroundRequestInterval: Duration.zero,
+      httpClientAdapter: _TestAdapter((options) {
+        calls.add(options.queryParameters['query'] as String);
+        started.complete();
+        return response.future;
+      }),
+    );
+    addTearDown(api.close);
+    final first = api.searchVideos(
+      'active',
+      1,
+      allowForegroundVerification: false,
+    );
+    await started.future;
+    final token = CancelToken();
+    final cancelled = expectLater(
+      api.searchVideos(
+        'queued',
+        1,
+        cancelToken: token,
+        allowForegroundVerification: false,
+      ),
+      throwsA(isA<RequestCancelledException>()),
+    );
+    token.cancel();
+    await cancelled.timeout(const Duration(seconds: 1));
+    expect(calls, ['active']);
+    response.complete(
+      ResponseBody.fromString('<div id="home-rows-wrapper"></div>', 200),
+    );
+    await first;
+  });
+
+  test('关闭 API 会结束在途和排队后台请求，关闭后不再发请求', () async {
+    final harness = TestSessionHarness.create();
+    addTearDown(harness.dispose);
+    final started = Completer<void>();
+    final response = Completer<ResponseBody>();
+    final calls = <String>[];
+    final api = Hanime1Api(
+      sessionStore: harness.sessionStore,
+      httpClientAdapter: _TestAdapter((options) {
+        calls.add(options.queryParameters['query'] as String);
+        started.complete();
+        return response.future;
+      }),
+    );
+    addTearDown(api.close);
+    final active = expectLater(
+      api.searchVideos('active', 1, allowForegroundVerification: false),
+      throwsA(isA<RequestCancelledException>()),
+    );
+    await started.future;
+    final queued = expectLater(
+      api.searchVideos('queued', 1, allowForegroundVerification: false),
+      throwsA(isA<RequestCancelledException>()),
+    );
+    api.close();
+    await Future.wait([active, queued]);
+    await expectLater(
+      api.searchVideos('after-close', 1),
+      throwsA(isA<RequestCancelledException>()),
+    );
+    response.complete(ResponseBody.fromString('', 200));
+    expect(calls, ['active']);
+  });
+
   test('浏览器 Cookie 按第一个等号切分并固定到 Hanime 域名', () {
     final cookies = parseBrowserCookieHeader(
       'cf_clearance=part-one==part-two; session=value; invalid',
@@ -140,6 +391,60 @@ void main() {
     expect(requests, 2);
   });
 
+  test('频道刷新得到合法空结果时不再复用旧的非空缓存', () async {
+    final harness = TestSessionHarness.create();
+    addTearDown(harness.dispose);
+    var requests = 0;
+    final api = Hanime1Api(
+      sessionStore: harness.sessionStore,
+      httpClientAdapter: _TestAdapter((options) {
+        if (options.uri.path != '/search') {
+          return ResponseBody.fromString('', 200);
+        }
+        requests += 1;
+        if (requests == 1) {
+          return ResponseBody.fromString('''
+            <div class="horizontal-card">
+              <a href="/watch?v=old-1">
+                <div class="title">Old 1</div>
+              </a>
+            </div>
+          ''', 200);
+        }
+        // 第二轮是站点正常返回的空列表：没有卡片，也没有挑战特征。
+        return ResponseBody.fromString(
+          '<div id="home-rows-wrapper"></div>',
+          200,
+        );
+      }),
+    );
+    addTearDown(api.close);
+    const filters = HanimeSearchFilters(sort: '最新上市');
+
+    final initial = await api.loadHomeChannel(
+      'latest-release',
+      1,
+      filters: filters,
+    );
+    final refreshed = await api.loadHomeChannel(
+      'latest-release',
+      1,
+      filters: filters,
+      force: true,
+    );
+    final afterEmptyRefresh = await api.loadHomeChannel(
+      'latest-release',
+      1,
+      filters: filters,
+    );
+
+    expect(initial.single.id, 'old-1');
+    expect(refreshed, isEmpty);
+    // 合法空态必须覆盖旧数据：否则用户会一直看到已被站点清空的旧列表。
+    expect(afterEmptyRefresh, isEmpty);
+    expect(requests, 2);
+  });
+
   test('相同 URL 的并发请求共用同一次浏览器取页', () async {
     final coordinator = HanimeCloudflareCoordinator();
     addTearDown(coordinator.dispose);
@@ -155,108 +460,255 @@ void main() {
     expect(coordinator.activeRequest, isNull);
   });
 
-  test('后台预热请求不会申请前台人工验证', () async {
+  test('后台预热请求不会排队也不会弹前台验证', () async {
     final coordinator = HanimeCloudflareCoordinator();
     addTearDown(coordinator.dispose);
-    final future = coordinator.requestPage(
-      Uri.parse('https://hanime1.me/'),
-      false,
+
+    expect(
+      await coordinator.requestPage(Uri.parse('https://hanime1.me/'), false),
+      isNull,
     );
-    final request = coordinator.activeRequest!;
-
-    coordinator.requestForeground(requestId: request.id);
-
-    expect(request.allowForegroundVerification, isFalse);
-    expect(coordinator.requiresForeground, isFalse);
     expect(coordinator.activeRequest, isNull);
-    expect(await future, isNull);
+    expect(coordinator.requiresForeground, isFalse);
   });
 
-  test('不同 URL 的浏览器取页请求按顺序执行', () async {
-    final coordinator = HanimeCloudflareCoordinator();
+  test('第一个请求失败时已排队的同 host 请求被丢弃且不会连闪', () async {
+    final clock = _MutableClock();
+    final coordinator = HanimeCloudflareCoordinator(clock: clock.now);
     addTearDown(coordinator.dispose);
-    final first = coordinator.requestPage(Uri.parse('https://hanime1.me/'));
+
+    final first = coordinator.requestPage(
+      Uri.parse('https://hanime1.me/watch?v=1'),
+    );
     final second = coordinator.requestPage(
       Uri.parse('https://hanime1.me/watch?v=2'),
     );
-
-    final firstRequest = coordinator.activeRequest!;
-    expect(firstRequest.targetUri.path, '/');
-    coordinator.complete(requestId: firstRequest.id, html: '<html>home</html>');
-    expect(await first, '<html>home</html>');
-
-    final secondRequest = coordinator.activeRequest!;
-    expect(secondRequest.targetUri.queryParameters['v'], '2');
-    coordinator.complete(
-      requestId: secondRequest.id,
-      html: '<html>detail</html>',
+    final third = coordinator.requestPage(
+      Uri.parse('https://hanime1.me/watch?v=3'),
     );
-    expect(await second, '<html>detail</html>');
+
+    final request = coordinator.activeRequest!;
+    expect(request.targetUri.queryParameters['v'], '1');
+
+    // 失败（没有正文）：同一轮请求风暴里排队的同 host 请求必须一起结束，
+    // 否则它们会逐个弹卡片，就是 issue 里的"连闪"。
+    coordinator.complete(requestId: request.id);
+
+    expect(await first, isNull);
+    expect(await second, isNull);
+    expect(await third, isNull);
     expect(coordinator.activeRequest, isNull);
+    expect(coordinator.isCoolingDown(Uri.parse('https://hanime1.me/')), isTrue);
+
+    // 冷却期内新请求直接放弃，不会再闪一次。
+    expect(
+      await coordinator.requestPage(Uri.parse('https://hanime1.me/watch?v=4')),
+      isNull,
+    );
+    expect(coordinator.activeRequest, isNull);
+
+    // 冷却结束后同一个 URL 仍能重新申请：去重映射必须被清干净。
+    clock.advance(
+      HanimeCloudflareCoordinator.verificationCooldown +
+          const Duration(seconds: 1),
+    );
+    final retry = coordinator.requestPage(
+      Uri.parse('https://hanime1.me/watch?v=2'),
+    );
+    final retryRequest = coordinator.activeRequest!;
+    expect(retryRequest.targetUri.queryParameters['v'], '2');
+    coordinator.complete(requestId: retryRequest.id, html: '<html>ok</html>');
+    expect(await retry, '<html>ok</html>');
   });
 
-  test('浏览器辅助访问仅在当前请求需要交互时转到前台', () async {
+  test('验证成功后同一 host 的其它 URL 不被冷却拦住', () async {
     final coordinator = HanimeCloudflareCoordinator();
     addTearDown(coordinator.dispose);
-    final pending = coordinator.requestPage(Uri.parse('https://hanime1.me/'));
-    final request = coordinator.activeRequest!;
 
-    expect(coordinator.requiresForeground, isFalse);
-    coordinator.requestForeground(requestId: request.id + 1);
-    expect(coordinator.requiresForeground, isFalse);
-
-    coordinator.requestForeground(requestId: request.id);
-    expect(coordinator.requiresForeground, isTrue);
-
-    coordinator.complete(requestId: request.id, html: '<html>ready</html>');
-    expect(await pending, '<html>ready</html>');
-    expect(coordinator.requiresForeground, isFalse);
-  });
-
-  test('经历 Cloudflare 挑战后必须取得 clearance 才能完成', () {
-    final common = (
-      isTargetHost: true,
-      isChallenge: false,
-      hasDocument: true,
-      progress: 100,
-      readyState: 'complete',
+    final home = coordinator.requestPage(Uri.parse('https://hanime1.me/'));
+    coordinator.complete(
+      requestId: coordinator.activeRequest!.id,
+      html: '<html>home</html>',
+    );
+    expect(await home, '<html>home</html>');
+    expect(
+      coordinator.isCoolingDown(Uri.parse('https://hanime1.me/')),
+      isFalse,
     );
 
+    // 刚验证成功就点开视频，必须能各自取自己的正文。
+    final detail = coordinator.requestPage(
+      Uri.parse('https://hanime1.me/watch?v=9'),
+    );
+    final detailRequest = coordinator.activeRequest!;
+    expect(detailRequest.targetUri.queryParameters['v'], '9');
+    coordinator.complete(
+      requestId: detailRequest.id,
+      html: '<html>detail</html>',
+    );
+    expect(await detail, '<html>detail</html>');
+  });
+
+  test('不同 host 的排队请求不会被同 host 失败清理误伤', () async {
+    final coordinator = HanimeCloudflareCoordinator();
+    addTearDown(coordinator.dispose);
+
+    final hanime = coordinator.requestPage(
+      Uri.parse('https://hanime1.me/watch?v=1'),
+    );
+    final other = coordinator.requestPage(
+      Uri.parse('https://rule34video.com/watch?v=2'),
+    );
+
+    final first = coordinator.activeRequest!;
+    expect(first.targetUri.host, 'hanime1.me');
+    coordinator.complete(requestId: first.id);
+
+    expect(await hanime, isNull);
+    expect(
+      coordinator.remainingCooldown(Uri.parse('https://hanime1.me/')),
+      isNotNull,
+    );
+    expect(
+      coordinator.remainingCooldown(Uri.parse('https://rule34video.com/')),
+      isNull,
+    );
+
+    final second = coordinator.activeRequest!;
+    expect(second.targetUri.host, 'rule34video.com');
+    coordinator.complete(requestId: second.id, html: '<html>other</html>');
+    expect(await other, '<html>other</html>');
+  });
+
+  test('用户取消不写冷却，但同 host 排队请求一起结束', () async {
+    final coordinator = HanimeCloudflareCoordinator();
+    addTearDown(coordinator.dispose);
+
+    final first = coordinator.requestPage(
+      Uri.parse('https://hanime1.me/watch?v=1'),
+    );
+    final queued = coordinator.requestPage(
+      Uri.parse('https://hanime1.me/watch?v=2'),
+    );
+
+    coordinator.complete(
+      requestId: coordinator.activeRequest!.id,
+      outcome: HanimeBrowserVerificationOutcome.cancelled,
+    );
+
+    expect(await first, isNull);
+    expect(await queued, isNull);
+    expect(coordinator.activeRequest, isNull);
+    expect(
+      coordinator.isCoolingDown(Uri.parse('https://hanime1.me/')),
+      isFalse,
+    );
+
+    // 用户关掉卡片后主动再点一次，必须还能弹出验证。
+    final retry = coordinator.requestPage(
+      Uri.parse('https://hanime1.me/watch?v=1'),
+    );
+    expect(coordinator.activeRequest, isNotNull);
+    coordinator.complete(
+      requestId: coordinator.activeRequest!.id,
+      html: '<html>ok</html>',
+    );
+    expect(await retry, '<html>ok</html>');
+  });
+
+  test('不同 URL 的验证结果不会互相串用', () async {
+    final coordinator = HanimeCloudflareCoordinator();
+    addTearDown(coordinator.dispose);
+    final uriA = Uri.parse('https://hanime1.me/watch?v=A');
+    final uriB = Uri.parse('https://hanime1.me/watch?v=B');
+    final first = coordinator.requestPage(uriA);
+    final second = coordinator.requestPage(uriB);
+    final a = coordinator.activeRequest!;
+    expect(a.targetUri, uriA);
+
+    coordinator.complete(
+      requestId: a.id,
+      html: '<html><body>A</body></html>',
+      outcome: HanimeBrowserVerificationOutcome.success,
+    );
+    final b = coordinator.activeRequest!;
+    expect(b.targetUri, uriB);
+    // A 的正文已经交出去了，B 还在等自己的正文。
+    expect(await first, '<html><body>A</body></html>');
+    coordinator.complete(
+      requestId: b.id,
+      html: '<html><body>B</body></html>',
+      outcome: HanimeBrowserVerificationOutcome.success,
+    );
+
+    expect(await second, '<html><body>B</body></html>');
+  });
+
+  test('dispose 时排队中的验证请求不会永久挂起', () async {
+    final coordinator = HanimeCloudflareCoordinator();
+    final first = coordinator.requestPage(
+      Uri.parse('https://hanime1.me/watch?v=1'),
+    );
+    final second = coordinator.requestPage(
+      Uri.parse('https://hanime1.me/watch?v=2'),
+    );
+    expect(coordinator.activeRequest?.targetUri.queryParameters['v'], '1');
+
+    coordinator.dispose();
+
+    expect(await first, isNull);
+    expect(await second, isNull);
+  });
+
+  test('必须完成导航且拿到目标文档才算验证完成', () {
     expect(
       canCompleteHanimeBrowserPage(
-        isTargetHost: common.isTargetHost,
-        isChallenge: common.isChallenge,
-        hasDocument: common.hasDocument,
-        progress: common.progress,
-        readyState: common.readyState,
-        observedChallenge: true,
-        hasClearance: false,
+        isTargetHost: true,
+        isChallenge: false,
+        navigationFinished: true,
+        hasTargetDocument: true,
+      ),
+      isTrue,
+    );
+    // 关键回归：WebView 刚创建时停在空白页（或上一页的旧文档），此时不能
+    // 判完成，否则巡检首拍就把弹窗关掉，页面根本没机会加载。
+    expect(
+      canCompleteHanimeBrowserPage(
+        isTargetHost: true,
+        isChallenge: false,
+        navigationFinished: false,
+        hasTargetDocument: true,
+      ),
+      isFalse,
+    );
+    // 旧的 cf_clearance、有标题的普通错误页都不再算数：必须由调用方给出
+    // 通过真实 DOM 结构 + 目标 URI 身份校验过的目标文档。
+    expect(
+      canCompleteHanimeBrowserPage(
+        isTargetHost: true,
+        isChallenge: false,
+        navigationFinished: true,
+        hasTargetDocument: false,
       ),
       isFalse,
     );
     expect(
       canCompleteHanimeBrowserPage(
-        isTargetHost: common.isTargetHost,
-        isChallenge: common.isChallenge,
-        hasDocument: common.hasDocument,
-        progress: common.progress,
-        readyState: common.readyState,
-        observedChallenge: true,
-        hasClearance: true,
+        isTargetHost: true,
+        isChallenge: true,
+        navigationFinished: true,
+        hasTargetDocument: true,
       ),
-      isTrue,
+      isFalse,
     );
     expect(
       canCompleteHanimeBrowserPage(
-        isTargetHost: common.isTargetHost,
-        isChallenge: common.isChallenge,
-        hasDocument: common.hasDocument,
-        progress: common.progress,
-        readyState: common.readyState,
-        observedChallenge: false,
-        hasClearance: false,
+        isTargetHost: false,
+        isChallenge: false,
+        navigationFinished: true,
+        hasTargetDocument: true,
       ),
-      isTrue,
+      isFalse,
     );
   });
 
@@ -276,13 +728,7 @@ void main() {
       }),
       browserPageHandler: (targetUri, _) async {
         browserTarget = targetUri;
-        return '''
-          <div class="horizontal-card">
-            <a href="https://hanime1.me/watch?v=407610">
-              <div class="title">Example</div>
-            </a>
-          </div>
-        ''';
+        return _hanimeSearchHtml(query: 'example', videoIds: const ['407610']);
       },
     );
     addTearDown(api.close);
@@ -308,21 +754,15 @@ void main() {
             403,
           );
         }
-        return ResponseBody.fromString('''
-          <div class="horizontal-card">
-            <a href="https://hanime1.me/watch?v=407612">
-              <div class="title">Cronet recovered</div>
-            </a>
-          </div>
-        ''', 200);
+        return ResponseBody.fromString(
+          _hanimeSearchHtml(query: 'recovered', videoIds: const ['407612']),
+          200,
+        );
       }),
-      browserPageHandler: (_, _) async => '''
-        <div class="horizontal-card">
-          <a href="https://hanime1.me/watch?v=browser-copy">
-            <div class="title">Browser copy</div>
-          </a>
-        </div>
-      ''',
+      browserPageHandler: (_, _) async => _hanimeSearchHtml(
+        query: 'recovered',
+        videoIds: const ['browser-copy'],
+      ),
     );
     addTearDown(api.close);
 
@@ -330,6 +770,46 @@ void main() {
 
     expect(requests, 2);
     expect(videos.single.id, '407612');
+  });
+
+  test('原生重试返回 200 登录页时不覆盖已验证的浏览器正文', () async {
+    final harness = TestSessionHarness.create();
+    addTearDown(harness.dispose);
+    var requests = 0;
+    final api = Hanime1Api(
+      sessionStore: harness.sessionStore,
+      httpClientAdapter: _TestAdapter((options) {
+        requests += 1;
+        if (requests == 1) {
+          return ResponseBody.fromString(
+            '<html><title>Attention Required! | Cloudflare</title></html>',
+            403,
+          );
+        }
+        // 跟随重定向后拿到 200，但正文是被踢回登录页的 HTML。
+        return ResponseBody.fromString(
+          '<html><head>'
+          '<link rel="canonical" href="https://hanime1.me/login">'
+          '<title>登入 - Hanime1.me</title></head>'
+          '<body><form method="post" action="/login">'
+          '<input name="email" type="email">'
+          '<input name="password" type="password">'
+          '</form></body></html>',
+          200,
+        );
+      }),
+      browserPageHandler: (_, _) async => _hanimeSearchHtml(
+        query: 'recovered',
+        videoIds: const ['browser-copy'],
+      ),
+    );
+    addTearDown(api.close);
+
+    final videos = await api.searchVideos('recovered', 1);
+
+    // 登录页不能当搜索正文：必须回退到已经校验过身份的浏览器正文。
+    expect(requests, 2);
+    expect(videos.single.id, 'browser-copy');
   });
 
   test('取消浏览器辅助访问时保留 Cloudflare 异常且不重试', () async {
@@ -375,7 +855,7 @@ void main() {
     );
   });
 
-  test('连接超时后自动采用浏览器返回的正文', () async {
+  test('连接超时不再弹浏览器验证，直接按网络错误上抛', () async {
     final harness = TestSessionHarness.create();
     addTearDown(harness.dispose);
     var requests = 0;
@@ -392,13 +872,47 @@ void main() {
       }),
       browserPageHandler: (targetUri, _) async {
         browserTarget = targetUri;
-        return '''
-          <div class="horizontal-card">
-            <a href="https://hanime1.me/watch?v=407611">
-              <div class="title">Recovered</div>
-            </a>
-          </div>
-        ''';
+        return '<div class="horizontal-card"></div>';
+      },
+    );
+    addTearDown(api.close);
+
+    await expectLater(
+      api.searchVideos('timeout', 1),
+      throwsA(isA<ApiException>()),
+    );
+    expect(requests, 1);
+    expect(browserTarget, isNull);
+  });
+
+  test('连接被重置时采用浏览器返回的业务正文', () async {
+    final harness = TestSessionHarness.create();
+    addTearDown(harness.dispose);
+    var requests = 0;
+    Uri? browserTarget;
+    final api = Hanime1Api(
+      sessionStore: harness.sessionStore,
+      httpClientAdapter: _TestAdapter((options) {
+        requests += 1;
+        if (requests == 1) {
+          throw DioException(
+            requestOptions: options,
+            type: DioExceptionType.connectionError,
+            message: 'connection reset',
+          );
+        }
+        // 重试仍被拦截：此时才轮到浏览器兜底正文被采用。
+        return ResponseBody.fromString(
+          '<html><title>Attention Required! | Cloudflare</title></html>',
+          403,
+        );
+      }),
+      browserPageHandler: (targetUri, _) async {
+        browserTarget = targetUri;
+        return _hanimeSearchHtml(
+          query: 'recovered',
+          videoIds: const ['407611'],
+        );
       },
     );
     addTearDown(api.close);
@@ -409,6 +923,25 @@ void main() {
     expect(browserTarget?.path, '/search');
     expect(browserTarget?.queryParameters['query'], 'recovered');
     expect(videos.single.id, '407611');
+  });
+
+  test('浏览器兜底正文不是业务页面时按 Cloudflare 受限上抛', () async {
+    final harness = TestSessionHarness.create();
+    addTearDown(harness.dispose);
+    final api = Hanime1Api(
+      sessionStore: harness.sessionStore,
+      httpClientAdapter: _TestAdapter(
+        (_) => ResponseBody.fromString('blocked', 403),
+      ),
+      browserPageHandler: (_, _) async =>
+          '<html><body>Access denied. Please try again later.</body></html>',
+    );
+    addTearDown(api.close);
+
+    await expectLater(
+      api.searchVideos('example', 1),
+      throwsA(isA<HanimeCloudflareException>()),
+    );
   });
 
   test('浏览器网络错误页不会被当成有效正文', () async {
@@ -885,6 +1418,45 @@ void main() {
     expect(page.artists.single.name, 'Artist One');
     expect(page.videos.single.id, 'sub-1');
   });
+}
+
+/// 可变时钟：让冷却测试不必真的 sleep 30 秒。
+class _MutableClock {
+  DateTime current = DateTime(2026, 10, 24, 12);
+
+  DateTime now() => current;
+
+  void advance(Duration duration) => current = current.add(duration);
+}
+
+/// 构造一份"能被身份校验接受"的 Hanime 搜索页文档。
+///
+/// 必须有 canonical 身份、搜索页容器和真实渲染出来的卡片：只堆几个业务类名
+/// 的字符串（`_adoptBrowserBody` 以前的做法）会被 `inspectBrowserDocument`
+/// 判成缺少业务结构或身份不一致。
+String _hanimeSearchHtml({
+  required String query,
+  int page = 1,
+  List<String> videoIds = const ['407610'],
+  String? identity,
+}) {
+  final canonical =
+      identity ??
+      'https://hanime1.me/search?query=${Uri.encodeQueryComponent(query)}'
+          '&page=$page';
+  final cards = videoIds
+      .map(
+        (id) =>
+            '<div class="horizontal-card">'
+            '<a href="https://hanime1.me/watch?v=$id">'
+            '<div class="title">Video $id</div></a></div>',
+      )
+      .join();
+  return '<html><head><title>搜尋 - Hanime1.me</title>'
+      '<link rel="canonical" href="$canonical"></head><body>'
+      '<div id="home-rows-wrapper" class="search-rows-wrapper">'
+      '<div class="home-rows-videos-wrapper">$cards</div>'
+      '</div></body></html>';
 }
 
 final class _TestAdapter implements HttpClientAdapter {

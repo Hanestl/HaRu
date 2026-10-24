@@ -400,4 +400,202 @@ void main() {
     expect(items.single.title, '[示例] 深夜探访 [中文字幕]');
     expect(items.single.thumbnailUrl, 'https://img.example/thumb.jpg');
   });
+  group('浏览器文档身份判定', () {
+    String fixture(String name) =>
+        File('test/fixtures/$name').readAsStringSync();
+
+    HanimeDocumentInspection inspectSearch(String identity, String target) =>
+        HanimePageParser.inspectBrowserDocument(
+          source:
+              '<link rel="canonical" href="$identity">'
+              '<div id="home-rows-wrapper"></div>',
+          targetUri: Uri.parse(target),
+        );
+
+    test('多选标签和品牌必须逐项一致，不能只比较最后一个值', () {
+      for (final name in ['tags', 'brands']) {
+        final inspection = inspectSearch(
+          'https://hanime1.me/search?$name[]=wrong&$name[]=shared',
+          'https://hanime1.me/search?$name[]=right&$name[]=shared',
+        );
+        expect(inspection.status, HanimeDocumentStatus.otherTarget);
+      }
+    });
+
+    test('多选筛选忽略顺序和重复项，兼容全部数字索引', () {
+      final inspection = inspectSearch(
+        'https://hanime1.me/search?tags[1]=b&tags[0]=a&tags[9]=a'
+            '&brands[12]=brand-b&brands[0]=brand-a',
+        'https://hanime1.me/search?page=1&tags[]=a&tags[]=b'
+            '&brands[]=brand-a&brands[]=brand-b',
+      );
+      expect(inspection.status, HanimeDocumentStatus.target);
+    });
+
+    test('多选参数不同位置的差异与缺项均不能冒充目标', () {
+      for (final query in [
+        'tags[]=a&tags[]=wrong',
+        'tags[]=wrong&tags[]=b',
+        'tags[]=b',
+        'tags[0]=a&tags[1]=b&tags[2]=extra',
+      ]) {
+        expect(
+          inspectSearch(
+            'https://hanime1.me/search?$query',
+            'https://hanime1.me/search?tags[]=a&tags[]=b',
+          ).status,
+          HanimeDocumentStatus.otherTarget,
+        );
+      }
+    });
+
+    test('搜索文本中的参数分隔符不会与真正的筛选参数碰撞', () {
+      final inspection = inspectSearch(
+        'https://hanime1.me/search?query=x%26sort%3Dy',
+        'https://hanime1.me/search?query=x&sort=y',
+      );
+      expect(inspection.status, HanimeDocumentStatus.otherTarget);
+    });
+
+    test('真实详情页快照能被识别为目标文档（含 Wayback 前缀归一化）', () {
+      final inspection = HanimePageParser.inspectBrowserDocument(
+        source: fixture('hanime_watch_snapshot.html'),
+        targetUri: Uri.parse('https://hanime1.me/watch?v=404990'),
+      );
+
+      expect(inspection.status, HanimeDocumentStatus.target);
+      expect(inspection.kind, HanimeDocumentKind.watch);
+      expect(inspection.identityUri?.host, 'hanime1.me');
+      expect(inspection.identityUri?.queryParameters['v'], '404990');
+    });
+
+    test('同一个详情页不能冒充另一个视频', () {
+      final inspection = HanimePageParser.inspectBrowserDocument(
+        source: fixture('hanime_watch_snapshot.html'),
+        targetUri: Uri.parse('https://hanime1.me/watch?v=404991'),
+      );
+
+      expect(inspection.isTarget, isFalse);
+      expect(inspection.status, HanimeDocumentStatus.otherTarget);
+    });
+
+    test('真实频道页快照按 query 身份匹配，页码不同就不算命中', () {
+      final source = fixture('hanime_genre_snapshot.html');
+      final matched = HanimePageParser.inspectBrowserDocument(
+        source: source,
+        targetUri: Uri.parse('https://hanime1.me/search?genre=裏番'),
+      );
+      expect(matched.status, HanimeDocumentStatus.target);
+      expect(matched.kind, HanimeDocumentKind.search);
+
+      final otherPage = HanimePageParser.inspectBrowserDocument(
+        source: source,
+        targetUri: Uri.parse('https://hanime1.me/search?genre=裏番&page=2'),
+      );
+      expect(otherPage.isTarget, isFalse);
+      expect(otherPage.status, HanimeDocumentStatus.otherTarget);
+    });
+
+    test('普通错误页即使带业务类名文本也不算目标文档', () {
+      const source =
+          '<html><title>Access denied</title><body>'
+          '<a id="user-modal-trigger" href="/login">Login</a>'
+          '<p>Please try later.</p></body></html>';
+
+      final inspection = HanimePageParser.inspectBrowserDocument(
+        source: source,
+        targetUri: Uri.parse('https://hanime1.me/search?query=example&page=1'),
+      );
+
+      expect(inspection.isTarget, isFalse);
+    });
+
+    test('类名只出现在脚本或注释里不算业务结构', () {
+      const source =
+          '<html><head><title>Hanime1.me</title>'
+          '<link rel="canonical" '
+          'href="https://hanime1.me/search?query=example&page=1"></head>'
+          '<body><script>const selector = "horizontal-card";</script>'
+          '<!-- <div class="home-rows-videos-wrapper"></div> -->'
+          '</body></html>';
+
+      final inspection = HanimePageParser.inspectBrowserDocument(
+        source: source,
+        targetUri: Uri.parse('https://hanime1.me/search?query=example&page=1'),
+      );
+
+      expect(inspection.isTarget, isFalse);
+    });
+
+    test('隐藏模板里的业务容器不算渲染出来的业务结构', () {
+      const source =
+          '<html><head><title>Hanime1.me</title>'
+          '<link rel="canonical" '
+          'href="https://hanime1.me/search?query=example&page=1"></head>'
+          '<body><div style="display: none">'
+          '<div class="home-rows-videos-wrapper"></div></div></body></html>';
+
+      final inspection = HanimePageParser.inspectBrowserDocument(
+        source: source,
+        targetUri: Uri.parse('https://hanime1.me/search?query=example&page=1'),
+      );
+
+      expect(inspection.isTarget, isFalse);
+    });
+
+    test('搜索页合法空态仍然算目标文档', () {
+      const source =
+          '<html><head><title>搜尋 - Hanime1.me</title>'
+          '<link rel="canonical" '
+          'href="https://hanime1.me/search?query=nomatch&page=1"></head>'
+          '<body><div id="home-rows-wrapper" class="search-rows-wrapper">'
+          '<div class="home-rows-videos-wrapper"></div>'
+          '</div></body></html>';
+
+      final inspection = HanimePageParser.inspectBrowserDocument(
+        source: source,
+        targetUri: Uri.parse('https://hanime1.me/search?query=nomatch&page=1'),
+      );
+
+      expect(inspection.status, HanimeDocumentStatus.target);
+      expect(inspection.hasBusinessContent, isTrue);
+    });
+
+    test('被重定向到登录页时报告需要登录而不是成功', () {
+      const source =
+          '<html><head><title>登入 - Hanime1.me</title>'
+          '<link rel="canonical" href="https://hanime1.me/login"></head>'
+          '<body><form><input name="email"><input name="password">'
+          '</form></body></html>';
+
+      final inspection = HanimePageParser.inspectBrowserDocument(
+        source: source,
+        targetUri: Uri.parse('https://hanime1.me/watch?v=1'),
+      );
+
+      expect(inspection.isTarget, isFalse);
+      expect(inspection.requiresLogin, isTrue);
+    });
+
+    test('Cloudflare 挑战页单独归类', () {
+      final inspection = HanimePageParser.inspectBrowserDocument(
+        source:
+            '<html><title>Just a moment...</title>'
+            '<body>Checking your browser</body></html>',
+        targetUri: Uri.parse('https://hanime1.me/'),
+      );
+
+      expect(inspection.status, HanimeDocumentStatus.challenge);
+    });
+
+    test('空正文不产生任何完成信号', () {
+      final inspection = HanimePageParser.inspectBrowserDocument(
+        source: '   ',
+        targetUri: Uri.parse('https://hanime1.me/'),
+      );
+
+      expect(inspection.isTarget, isFalse);
+      expect(inspection.status, HanimeDocumentStatus.unknown);
+    });
+  });
 }

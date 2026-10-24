@@ -4,6 +4,7 @@ import 'dart:collection';
 import 'package:dio/dio.dart';
 
 import '../../features/settings/data/app_settings_repository.dart';
+import '../api/hanime1_parser.dart';
 import '../api/rule34video_api.dart';
 import '../logging/app_log_service.dart';
 import '../models/content_source.dart';
@@ -65,10 +66,8 @@ final class PredictivePrefetchService {
 
   void scheduleStartup() {
     _syncSessionQueue();
-    // 启动即无条件预热 Hanime 首页：被 Cloudflare 拦截时直接走浏览器
-    // 验证弹窗（前台），验证完成即缓存首页，用户切到 Hanime 时秒现。
-    // 插队到队首并立即执行，避免被登录相关的 rule34video 预取或
-    // 用户前台操作推迟（实机日志实证曾因此推迟到用户点登录才验证）。
+    // 尽力预热 Hanime 首页；被拦截时安静放弃，留给用户前台操作验证。
+    // 插到登录态预取之前，但仍须遵守前台优先和后台请求串行调度。
     _enqueue(
       _PrefetchJob(
         key: PredictivePrefetchKey.hanimeHome,
@@ -131,6 +130,8 @@ final class PredictivePrefetchService {
             page,
             filters: filters,
             cancelToken: token,
+            // 预取属于后台行为，不允许弹出前台验证卡片。
+            allowForegroundVerification: false,
           );
         },
       ),
@@ -291,6 +292,17 @@ final class PredictivePrefetchService {
               unawaited(
                 AppLogService.instance.info(
                   '预加载任务已取消；任务=${job.key}',
+                  component: 'prefetch',
+                ),
+              );
+              return;
+            }
+            if (error is HanimeCloudflareException) {
+              // 后台预取不允许弹前台验证，被拦截属于预期结果，不该记成错误。
+              unawaited(
+                AppLogService.instance.info(
+                  '预加载任务被 Cloudflare 拦截，稍后由前台操作重新验证；'
+                  '任务=${job.key}',
                   component: 'prefetch',
                 ),
               );

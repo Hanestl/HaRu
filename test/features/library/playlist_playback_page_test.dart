@@ -21,7 +21,10 @@ class _FakeApi extends Rule34VideoApi {
   _FakeApi(SessionStore sessionStore) : super(sessionStore: sessionStore);
 
   @override
-  Future<VideoDetails> loadVideoDetails(VideoItem video) async {
+  Future<VideoDetails> loadVideoDetails(
+    VideoItem video, {
+    bool allowForegroundVerification = true,
+  }) async {
     return VideoDetails(
       video: video,
       sources: const [
@@ -183,6 +186,227 @@ void main() {
     expect(find.text('CoolCreator'), findsOneWidget);
     expect(find.byIcon(Icons.verified), findsOneWidget);
   });
+  testWidgets('R34V 播放列表只加载当前条目，不预取后续条目的认证详情', (tester) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final originalPlatform = VideoPlayerPlatform.instance;
+    final platform = _FakeVideoPlayerPlatform();
+    VideoPlayerPlatform.instance = platform;
+    addTearDown(() async {
+      VideoPlayerPlatform.instance = originalPlatform;
+      await platform.close();
+    });
+
+    final harness = TestSessionHarness.create();
+    addTearDown(harness.dispose);
+    final api = _RecordingApi(harness.sessionStore);
+    final settingsStore = _MemorySettingsStore();
+    final settings = AppSettingsRepository(settingsStore);
+    addTearDown(settings.dispose);
+    final translationService = TranslationService.fromDictionary(
+      settingsRepository: settings,
+      dictionary: const {},
+    );
+
+    final container = ProviderContainer(
+      overrides: [
+        rule34VideoApiProvider.overrideWithValue(api),
+        appDatabaseProvider.overrideWithValue(harness.database),
+        appSettingsStoreProvider.overrideWithValue(settingsStore),
+        networkStatusServiceProvider.overrideWithValue(
+          _FakeNetworkStatusService(),
+        ),
+        screenWakeLockServiceProvider.overrideWithValue(
+          _FakeScreenWakeLockService(),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    const playlist = PlaylistItem(
+      id: '9',
+      title: '混合列表',
+      path: '/playlists/9/',
+      videoCount: 3,
+    );
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          home: PlaylistPlaybackPage(
+            api: api,
+            request: const PlaylistPlaybackRequest(
+              playlist: playlist,
+              videos: [
+                VideoItem(
+                  id: 'a1',
+                  slug: 'a1',
+                  title: 'First',
+                  siteId: 'hanime1',
+                ),
+                VideoItem(id: 'b2', slug: 'b2', title: 'Second'),
+                VideoItem(id: 'c3', slug: 'c3', title: 'Third'),
+              ],
+              initialIndex: 0,
+              nextPage: 1,
+              hasMore: false,
+            ),
+            translationService: translationService,
+          ),
+        ),
+      ),
+    );
+    addTearDown(() async {
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
+    });
+
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.pump(const Duration(milliseconds: 300));
+
+    // 只请求当前条目；rule34video 的认证详情 GET 会被服务端记进观看历史，
+    // 后台预取必须一条都不发。
+    expect(api.requestedIds, ['a1']);
+
+    // 用户真正切到下一条时才允许请求。
+    await tester.tap(find.byIcon(Icons.skip_next));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(api.requestedIds, ['a1', 'b2']);
+  });
+
+  testWidgets('播放列表后台预取下一条 Hanime 视频时不允许拉起前台验证', (tester) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final originalPlatform = VideoPlayerPlatform.instance;
+    final platform = _FakeVideoPlayerPlatform();
+    VideoPlayerPlatform.instance = platform;
+    addTearDown(() async {
+      VideoPlayerPlatform.instance = originalPlatform;
+      await platform.close();
+    });
+
+    final harness = TestSessionHarness.create();
+    addTearDown(harness.dispose);
+    final api = _RecordingApi(harness.sessionStore);
+    final settingsStore = _MemorySettingsStore();
+    final settings = AppSettingsRepository(settingsStore);
+    addTearDown(settings.dispose);
+    final translationService = TranslationService.fromDictionary(
+      settingsRepository: settings,
+      dictionary: const {},
+    );
+
+    final container = ProviderContainer(
+      overrides: [
+        rule34VideoApiProvider.overrideWithValue(api),
+        appDatabaseProvider.overrideWithValue(harness.database),
+        appSettingsStoreProvider.overrideWithValue(settingsStore),
+        networkStatusServiceProvider.overrideWithValue(
+          _FakeNetworkStatusService(),
+        ),
+        screenWakeLockServiceProvider.overrideWithValue(
+          _FakeScreenWakeLockService(),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    const playlist = PlaylistItem(
+      id: '11',
+      title: 'Hanime 列表',
+      path: '/playlists/11/',
+      videoCount: 2,
+    );
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          home: PlaylistPlaybackPage(
+            api: api,
+            request: const PlaylistPlaybackRequest(
+              playlist: playlist,
+              videos: [
+                VideoItem(
+                  id: 'h1',
+                  slug: 'h1',
+                  title: 'First',
+                  siteId: 'hanime1',
+                ),
+                VideoItem(
+                  id: 'h2',
+                  slug: 'h2',
+                  title: 'Second',
+                  siteId: 'hanime1',
+                ),
+              ],
+              initialIndex: 0,
+              nextPage: 1,
+              hasMore: false,
+            ),
+            translationService: translationService,
+          ),
+        ),
+      ),
+    );
+    addTearDown(() async {
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
+    });
+
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.pump(const Duration(milliseconds: 300));
+
+    // 当前条目是用户主动打开（允许前台验证），下一条是后台预取（不允许）。
+    expect(api.requestedIds, ['h1', 'h2']);
+    expect(api.foregroundFlags, [true, false]);
+  });
+}
+
+/// 记录"到底请求了哪些详情"，用来断言不该发生的预取确实没有发生。
+final class _RecordingApi extends Rule34VideoApi {
+  _RecordingApi(SessionStore sessionStore) : super(sessionStore: sessionStore);
+
+  final List<String> requestedIds = [];
+  final List<bool> foregroundFlags = [];
+
+  @override
+  Future<VideoDetails> loadVideoDetails(
+    VideoItem video, {
+    bool allowForegroundVerification = true,
+  }) async {
+    requestedIds.add(video.id);
+    foregroundFlags.add(allowForegroundVerification);
+    return VideoDetails(
+      video: video,
+      sources: const [
+        VideoSource(
+          label: '720p',
+          url: 'https://example.com/video.mp4',
+          isHd: true,
+        ),
+      ],
+      categories: const [],
+      tags: const [],
+      models: const [],
+      isFavorite: false,
+    );
+  }
+
+  @override
+  Future<void> reportWatchHistory(VideoItem video) async {}
 }
 
 final class _FakeVideoPlayerPlatform extends VideoPlayerPlatform {

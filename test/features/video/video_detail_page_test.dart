@@ -928,7 +928,7 @@ class _NetworkAutoRetryApi extends Rule34VideoApi {
   @override
   Future<VideoDetails> loadVideoDetails(
     VideoItem video, {
-    bool force = false,
+    bool allowForegroundVerification = true,
   }) async {
     detailLoads += 1;
     if (detailLoads <= failureCount) {
@@ -946,7 +946,7 @@ class _NetworkAutoRetryApi extends Rule34VideoApi {
 
   @override
   Future<VideoDetails> refreshVideoDetails(VideoItem video) =>
-      loadVideoDetails(video, force: true);
+      loadVideoDetails(video);
 
   @override
   void close() {}
@@ -961,7 +961,7 @@ class _RelatedFakeVideoApi extends Rule34VideoApi {
   @override
   Future<VideoDetails> loadVideoDetails(
     VideoItem video, {
-    bool force = false,
+    bool allowForegroundVerification = true,
   }) async {
     return VideoDetails(
       video: _video,
@@ -976,7 +976,7 @@ class _RelatedFakeVideoApi extends Rule34VideoApi {
 
   @override
   Future<VideoDetails> refreshVideoDetails(VideoItem video) =>
-      loadVideoDetails(video, force: true);
+      loadVideoDetails(video);
 
   @override
   Future<List<SubscriptionItem>> loadSubscriptions({
@@ -1036,7 +1036,10 @@ class _FakeVideoApi extends Rule34VideoApi {
   int detailLoads = 0;
 
   @override
-  Future<VideoDetails> loadVideoDetails(VideoItem video) async {
+  Future<VideoDetails> loadVideoDetails(
+    VideoItem video, {
+    bool allowForegroundVerification = true,
+  }) async {
     detailLoads += 1;
     return _details;
   }
@@ -1056,7 +1059,10 @@ class _RetryVideoApi extends Rule34VideoApi {
   int detailLoads = 0;
 
   @override
-  Future<VideoDetails> loadVideoDetails(VideoItem video) async {
+  Future<VideoDetails> loadVideoDetails(
+    VideoItem video, {
+    bool allowForegroundVerification = true,
+  }) async {
     detailLoads += 1;
     if (detailLoads == 1) {
       throw const ApiException('详情暂时不可用');
@@ -1080,25 +1086,27 @@ class _LongMetadataApi extends Rule34VideoApi {
     : super(sessionStore: sessionStore);
 
   @override
-  Future<VideoDetails> loadVideoDetails(VideoItem video) async =>
-      const VideoDetails(
-        video: _video,
-        sources: [],
-        categories: [],
-        tags: [],
-        models: [],
-        metadataItems: [
-          VideoMetadataItem(
-            id: 'long-tag',
-            title: 'very-long-bilingual-tag-that-must-wrap-on-a-phone-screen',
-            path: '/tags/long-tag/',
-            kind: DiscoveryKind.tag,
-            upScore: 0,
-            downScore: 0,
-          ),
-        ],
-        isFavorite: false,
-      );
+  Future<VideoDetails> loadVideoDetails(
+    VideoItem video, {
+    bool allowForegroundVerification = true,
+  }) async => const VideoDetails(
+    video: _video,
+    sources: [],
+    categories: [],
+    tags: [],
+    models: [],
+    metadataItems: [
+      VideoMetadataItem(
+        id: 'long-tag',
+        title: 'very-long-bilingual-tag-that-must-wrap-on-a-phone-screen',
+        path: '/tags/long-tag/',
+        kind: DiscoveryKind.tag,
+        upScore: 0,
+        downScore: 0,
+      ),
+    ],
+    isFavorite: false,
+  );
 
   @override
   void close() {}
@@ -1284,7 +1292,7 @@ final class _BlockingDetailApi extends Rule34VideoApi {
   @override
   Future<VideoDetails> loadVideoDetails(
     VideoItem video, {
-    bool force = false,
+    bool allowForegroundVerification = true,
   }) => blockingFuture;
 
   @override
@@ -1304,7 +1312,10 @@ final class _DeferredFailureDetailApi extends Rule34VideoApi {
   int detailLoads = 0;
 
   @override
-  Future<VideoDetails> loadVideoDetails(VideoItem video, {bool force = false}) {
+  Future<VideoDetails> loadVideoDetails(
+    VideoItem video, {
+    bool allowForegroundVerification = true,
+  }) {
     detailLoads += 1;
     if (detailLoads == 1) {
       return firstDeferredFuture;
@@ -1323,7 +1334,7 @@ final class _DeferredFailureDetailApi extends Rule34VideoApi {
 
   @override
   Future<VideoDetails> refreshVideoDetails(VideoItem video) =>
-      loadVideoDetails(video, force: true);
+      loadVideoDetails(video);
 
   @override
   void close() {}
@@ -1336,7 +1347,10 @@ final class _MultiVideoDeferredApi extends Rule34VideoApi {
   final Map<String, Future<VideoDetails>> futures;
 
   @override
-  Future<VideoDetails> loadVideoDetails(VideoItem video, {bool force = false}) {
+  Future<VideoDetails> loadVideoDetails(
+    VideoItem video, {
+    bool allowForegroundVerification = true,
+  }) {
     return futures[video.id] ??
         Future.value(
           VideoDetails(
@@ -1352,7 +1366,7 @@ final class _MultiVideoDeferredApi extends Rule34VideoApi {
 
   @override
   Future<VideoDetails> refreshVideoDetails(VideoItem video) =>
-      loadVideoDetails(video, force: true);
+      loadVideoDetails(video);
 
   @override
   void close() {}

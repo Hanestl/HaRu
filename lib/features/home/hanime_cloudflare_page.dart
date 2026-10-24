@@ -44,6 +44,12 @@ final class _HanimeCloudflarePageState extends State<HanimeCloudflarePage> {
   // 重新触发 Cloudflare 挑战，造成"等不到 cookie → 重刷 → 再挑战"死循环）。
   static const _waitingHintAfter = Duration(seconds: 10);
 
+  /// 完整 HTML 的探测节流间隔。
+  ///
+  /// 文档身份校验必须基于完整 DOM（要排除脚本/注释里的类名），而整页正文
+  /// 可能有几百 KB，因此不能跟着 500ms 巡检走。
+  static const _probeInterval = Duration(milliseconds: 800);
+
   late final WebViewController _controller;
   late final Stopwatch _elapsed;
   Timer? _inspectionTimer;
@@ -51,12 +57,32 @@ final class _HanimeCloudflarePageState extends State<HanimeCloudflarePage> {
   var _inspectionRunning = false;
   var _completed = false;
   var _challengeLogged = false;
-  var _waitingForClearanceLogged = false;
+  var _challengeClearedLogged = false;
+  var _mainFrameFailureLogged = false;
+  var _documentMismatchLogged = false;
   var _waitingHintLogged = false;
   var _interactionHintLogged = false;
-  Duration? _clearanceWaitStartedAt;
+  Duration? _documentWaitStartedAt;
+  Duration? _lastProbeAt;
   var _progress = 0;
   var _navigationGeneration = 0;
+
+  /// 本次导航是否真的走到了 onPageFinished。
+  ///
+  /// 这是"验证已完成"的硬前提：WebView 刚创建时停在空白页，其
+  /// `document.readyState` 同样是 `complete`，而 CookieManager 里还留着上一次
+  /// 会话的 `cf_clearance`。若只看 cookie 或进度，巡检定时器 500ms 首拍就会
+  /// 判定"验证完成"，弹窗立刻自己关掉——这就是"闪出后不等加载就消失"。
+  var _navigationFinished = false;
+
+  /// 主文档加载失败（onWebResourceError 且 isForMainFrame）。
+  ///
+  /// 错误页同样会触发 onPageFinished，若不单独记录，失败页会被当成"导航已完成"
+  /// 继续参与完成判定。
+  var _mainFrameLoadFailed = false;
+
+  /// 当前文档与请求目标不一致时只记一次日志，避免 500ms 巡检刷屏。
+  var _targetMissLogged = false;
   var _statusText = '正在通过浏览器连接 Hanime…';
 
   @override
@@ -84,6 +110,19 @@ final class _HanimeCloudflarePageState extends State<HanimeCloudflarePage> {
           onPageStarted: (url) {
             if (!mounted || _completed) return;
             _navigationGeneration += 1;
+            _navigationFinished = false;
+            // 新导航开始：上一页的所有判定与提示状态都必须失效，否则上一页的
+            // "已看到挑战""已失败""已不一致"会串到这一页。
+            _mainFrameLoadFailed = false;
+            _challengeLogged = false;
+            _challengeClearedLogged = false;
+            _mainFrameFailureLogged = false;
+            _targetMissLogged = false;
+            _documentMismatchLogged = false;
+            _interactionHintLogged = false;
+            _waitingHintLogged = false;
+            _documentWaitStartedAt = null;
+            _lastProbeAt = null;
             _currentUri = Uri.tryParse(url);
             unawaited(
               AppLogService.instance.info(
@@ -98,6 +137,9 @@ final class _HanimeCloudflarePageState extends State<HanimeCloudflarePage> {
           },
           onPageFinished: (url) {
             _currentUri = Uri.tryParse(url);
+            // onPageFinished 对错误页、空白页同样会回调，因此这里只记录
+            // "本次导航已结束"，不再无条件把进度置 100 当成验证完成信号。
+            _navigationFinished = true;
             if (mounted && !_completed) {
               setState(() => _progress = 100);
             }
@@ -105,6 +147,9 @@ final class _HanimeCloudflarePageState extends State<HanimeCloudflarePage> {
           },
           onWebResourceError: (error) {
             if (error.isForMainFrame != true || _completed) return;
+            // 主文档失败必须进入明确状态：错误页也有标题、也会走 onPageFinished，
+            // 只写日志会让"页面加载失败"继续被当成"验证进行中/已完成"。
+            _mainFrameLoadFailed = true;
             unawaited(
               AppLogService.instance.warning(
                 '浏览器主页面加载失败；错误码=${error.errorCode}；'
@@ -151,99 +196,130 @@ final class _HanimeCloudflarePageState extends State<HanimeCloudflarePage> {
       final isChallenge = HanimePageParser.isChallenge(
         '<title>${snapshot.title}</title><body>${snapshot.bodyText}</body>',
       );
-      final hasClearance = _hasCookie(cookie, 'cf_clearance');
 
-      if (isChallenge && !_challengeLogged) {
-        _challengeLogged = true;
-        unawaited(
-          AppLogService.instance.info(
-            '浏览器检测到 Cloudflare 挑战；路径=${_browserLogPath(completedUri)}；'
-            '进度=$_progress；交互=${snapshot.hasVisibleInteraction ? '是' : '否'}',
-            component: 'hanime_browser',
-          ),
-        );
+      // 1) 挑战页：只提示用户完成交互，绝不参与完成判定。
+      if (isChallenge) {
+        _challengeClearedLogged = false;
+        if (!_challengeLogged) {
+          _challengeLogged = true;
+          unawaited(
+            AppLogService.instance.info(
+              '浏览器检测到 Cloudflare 挑战；路径=${_browserLogPath(completedUri)}；'
+              '进度=$_progress；交互=${snapshot.hasVisibleInteraction ? '是' : '否'}',
+              component: 'hanime_browser',
+            ),
+          );
+        }
+        if (snapshot.hasVisibleInteraction && !_interactionHintLogged) {
+          _interactionHintLogged = true;
+          if (mounted) {
+            setState(() => _statusText = '请在网页中完成验证，成功后会自动返回。');
+          }
+        }
+        return;
       }
-
-      final canComplete = canCompleteHanimeBrowserPage(
-        isTargetHost: isTargetHost,
-        isChallenge: isChallenge,
-        hasDocument: snapshot.hasDocument,
-        progress: _progress,
-        readyState: snapshot.readyState,
-        observedChallenge: _challengeLogged,
-        hasClearance: hasClearance,
-      );
-      if (_challengeLogged &&
-          !isChallenge &&
-          !hasClearance &&
-          snapshot.hasDocument &&
-          _progress >= 90 &&
-          !_waitingForClearanceLogged) {
-        _waitingForClearanceLogged = true;
-        _clearanceWaitStartedAt = _elapsed.elapsed;
+      if (_challengeLogged && !_challengeClearedLogged) {
+        _challengeClearedLogged = true;
         unawaited(
           AppLogService.instance.info(
-            '浏览器挑战界面已消失，正在等待 cf_clearance；'
+            '浏览器挑战界面已消失，等待目标文档加载完成；'
             '路径=${_browserLogPath(completedUri)}；进度=$_progress；'
             '耗时=${_elapsed.elapsedMilliseconds}ms',
             component: 'hanime_browser',
           ),
         );
       }
-      final clearanceWaitStartedAt = _clearanceWaitStartedAt;
-      if (!hasClearance &&
-          clearanceWaitStartedAt != null &&
-          _elapsed.elapsed - clearanceWaitStartedAt >= _waitingHintAfter &&
-          !_waitingHintLogged) {
-        _waitingHintLogged = true;
-        unawaited(
-          AppLogService.instance.info(
-            '等待验证结果已超 10 秒，提示用户可手动重试；'
-            '耗时=${_elapsed.elapsedMilliseconds}ms',
-            component: 'hanime_browser',
-          ),
-        );
-        if (mounted) {
-          setState(() => _statusText = '正在等待验证结果…如果长时间无反应，请点重试。');
+
+      // 2) 主文档加载失败：错误页同样有标题、同样会回调 onPageFinished，
+      //    必须当成明确失败，不能继续被当作"验证进行中"。
+      if (_mainFrameLoadFailed) {
+        if (!_mainFrameFailureLogged) {
+          _mainFrameFailureLogged = true;
+          unawaited(
+            AppLogService.instance.warning(
+              '浏览器主文档加载失败，等待用户重试；'
+              '路径=${_browserLogPath(completedUri)}；'
+              '耗时=${_elapsed.elapsedMilliseconds}ms',
+              component: 'hanime_browser',
+            ),
+          );
         }
-      }
-      if (isChallenge &&
-          snapshot.hasVisibleInteraction &&
-          !_interactionHintLogged) {
-        _interactionHintLogged = true;
-        if (mounted) {
-          setState(() => _statusText = '请在网页中完成验证，成功后会自动返回。');
-        }
-      }
-      if (canComplete) {
-        final result = await _controller.runJavaScriptReturningResult(
-          'document.documentElement.outerHTML',
-        );
-        final html = _decodeJavaScriptString(result);
-        if (!mounted ||
-            _completed ||
-            generation != _navigationGeneration ||
-            html.trim().isEmpty ||
-            HanimePageParser.isChallenge(html)) {
-          return;
-        }
-        await _importCookies(completedUri ?? widget.targetUri, cookie: cookie);
-        if (!mounted || _completed || generation != _navigationGeneration) {
-          return;
-        }
-        _completed = true;
-        _inspectionTimer?.cancel();
-        unawaited(
-          AppLogService.instance.info(
-            '浏览器辅助验证完成；触发=$trigger；路径=${_browserLogPath(completedUri)}；'
-            '耗时=${_elapsed.elapsedMilliseconds}ms；'
-            'Cookie 名称=${cookieHeaderNamesForLog(cookie)}',
-            component: 'hanime_browser',
-          ),
-        );
-        widget.onPageReady(html);
         return;
       }
+
+      // 3) 导航尚未结束：此刻读到的 DOM 属于上一页或过渡页，判定不可信。
+      if (!_navigationFinished) return;
+
+      _documentWaitStartedAt ??= _elapsed.elapsed;
+      _logWaitingHintIfNeeded();
+
+      // 4) 目标 host 必须一致：WebView 可能被重定向到挑战域或其它站点。
+      if (!isTargetHost) {
+        if (!_targetMissLogged) {
+          _targetMissLogged = true;
+          unawaited(
+            AppLogService.instance.warning(
+              '浏览器当前文档不属于 Hanime，无法作为目标正文；'
+              '路径=${_browserLogPath(completedUri)}',
+              component: 'hanime_browser',
+            ),
+          );
+        }
+        return;
+      }
+
+      // 5) 前置条件都满足后，才取完整 HTML 做文档身份与结构校验。
+      //    完整 HTML 体积可达数百 KB，因此按 [_probeInterval]（800ms）节流，
+      //    避免 500ms 巡检反复搬运整页正文。
+      final probe = await _probeDocument(generation);
+      if (probe == null) return;
+      if (!mounted || _completed || generation != _navigationGeneration) {
+        return;
+      }
+      final inspection = probe.inspection;
+      if (!inspection.isTarget) {
+        if (!_documentMismatchLogged) {
+          _documentMismatchLogged = true;
+          unawaited(
+            AppLogService.instance.warning(
+              '浏览器文档与请求目标不一致，暂不采用；'
+              '路径=${_browserLogPath(completedUri)}；'
+              '状态=${inspection.status.name}；类型=${inspection.kind.name}；'
+              '原因=${inspection.reason}',
+              component: 'hanime_browser',
+            ),
+          );
+        }
+        if (inspection.requiresLogin && mounted) {
+          setState(() => _statusText = 'Hanime 登录状态已失效，请在网页中重新登录后再试。');
+        }
+        return;
+      }
+
+      final canComplete = canCompleteHanimeBrowserPage(
+        isTargetHost: isTargetHost,
+        isChallenge: false,
+        navigationFinished: _navigationFinished,
+        hasTargetDocument: inspection.isTarget,
+      );
+      if (!canComplete) return;
+
+      await _importCookies(completedUri ?? widget.targetUri, cookie: cookie);
+      if (!mounted || _completed || generation != _navigationGeneration) {
+        return;
+      }
+      _completed = true;
+      _inspectionTimer?.cancel();
+      unawaited(
+        AppLogService.instance.info(
+          '浏览器辅助验证完成；触发=$trigger；路径=${_browserLogPath(completedUri)}；'
+          '耗时=${_elapsed.elapsedMilliseconds}ms；'
+          'Cookie 名称=${cookieHeaderNamesForLog(cookie)}',
+          component: 'hanime_browser',
+        ),
+      );
+      widget.onPageReady(probe.html);
+      return;
     } on Object catch (error, stackTrace) {
       unawaited(
         AppLogService.instance.error(
@@ -257,6 +333,48 @@ final class _HanimeCloudflarePageState extends State<HanimeCloudflarePage> {
       }
     } finally {
       _inspectionRunning = false;
+    }
+  }
+
+  /// 取完整 HTML 并做文档身份校验；距上次探测不足 [_probeInterval] 时返回 null。
+  Future<_DocumentProbe?> _probeDocument(int generation) async {
+    final lastProbeAt = _lastProbeAt;
+    if (lastProbeAt != null &&
+        _elapsed.elapsed - lastProbeAt < _probeInterval) {
+      return null;
+    }
+    _lastProbeAt = _elapsed.elapsed;
+    final result = await _controller.runJavaScriptReturningResult(
+      'document.documentElement.outerHTML',
+    );
+    final html = _decodeJavaScriptString(result);
+    if (!mounted || _completed || generation != _navigationGeneration) {
+      return null;
+    }
+    if (html.trim().isEmpty) return null;
+    return _DocumentProbe(
+      html: html,
+      inspection: HanimePageParser.inspectBrowserDocument(
+        source: html,
+        targetUri: widget.targetUri,
+      ),
+    );
+  }
+
+  void _logWaitingHintIfNeeded() {
+    final startedAt = _documentWaitStartedAt;
+    if (_waitingHintLogged || startedAt == null) return;
+    if (_elapsed.elapsed - startedAt < _waitingHintAfter) return;
+    _waitingHintLogged = true;
+    unawaited(
+      AppLogService.instance.info(
+        '等待目标文档加载已超 10 秒，提示用户可手动重试；'
+        '耗时=${_elapsed.elapsedMilliseconds}ms',
+        component: 'hanime_browser',
+      ),
+    );
+    if (mounted) {
+      setState(() => _statusText = '正在等待 Hanime 页面加载…如果长时间无反应，请点重试。');
     }
   }
 
@@ -278,6 +396,9 @@ final class _HanimeCloudflarePageState extends State<HanimeCloudflarePage> {
         const interactive = selectors.some((selector) =>
           Array.from(document.querySelectorAll(selector)).some(visible)
         );
+        // 这里只取"轻量快照"用于提示文案与挑战识别；文档身份与业务结构
+        // 一律交给 HanimePageParser.inspectBrowserDocument 在完整 DOM 上判断
+        // （字符串 contains 会被脚本里的类名、注释、隐藏模板骗过）。
         return JSON.stringify({
           title: document.title || '',
           bodyText: (document.body?.innerText || '').slice(0, 4000),
@@ -309,9 +430,9 @@ final class _HanimeCloudflarePageState extends State<HanimeCloudflarePage> {
         component: 'hanime_browser',
       ),
     );
-    _clearanceWaitStartedAt = _elapsed.elapsed;
-    _waitingForClearanceLogged = false;
+    _documentWaitStartedAt = _elapsed.elapsed;
     _waitingHintLogged = false;
+    _lastProbeAt = null;
     unawaited(_controller.reload());
   }
 
@@ -472,6 +593,11 @@ final class _HanimeCloudflarePageState extends State<HanimeCloudflarePage> {
   }
 }
 
+/// 轻量页面快照：只用于识别挑战、判断有没有可见交互、给提示文案用。
+///
+/// 文档身份与业务结构不在这里判断——字符串层面的"有标题/有正文"无法区分
+/// 业务页和错误页，必须交给 [HanimePageParser.inspectBrowserDocument] 在
+/// 完整 DOM 上做结构校验。
 final class _BrowserPageSnapshot {
   const _BrowserPageSnapshot({
     this.title = '',
@@ -484,22 +610,15 @@ final class _BrowserPageSnapshot {
   final String bodyText;
   final String readyState;
   final bool hasVisibleInteraction;
-
-  bool get hasDocument =>
-      title.trim().isNotEmpty ||
-      bodyText.trim().isNotEmpty ||
-      readyState == 'interactive' ||
-      readyState == 'complete';
 }
 
-bool _hasCookie(String header, String name) {
-  for (final part in header.split(';')) {
-    final separator = part.indexOf('=');
-    final candidate = (separator < 0 ? part : part.substring(0, separator))
-        .trim();
-    if (candidate == name) return true;
-  }
-  return false;
+/// 一次完整 DOM 探测的结果：正文与其身份校验结论必须成对传递，
+/// 避免"校验的是 A 文档、交出去的是 B 文档"。
+final class _DocumentProbe {
+  const _DocumentProbe({required this.html, required this.inspection});
+
+  final String html;
+  final HanimeDocumentInspection inspection;
 }
 
 String _decodeJavaScriptString(Object value) {

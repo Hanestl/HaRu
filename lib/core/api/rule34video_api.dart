@@ -254,22 +254,30 @@ class Rule34VideoApi {
     return loadFeed(kind, page, filters: filters, force: force);
   }
 
-  Future<List<HanimeHomeSection>> loadHanimeHomeSections({bool force = false}) {
-    return hanime1Api.loadHomeSections(force: force);
+  Future<List<HanimeHomeSection>> loadHanimeHomeSections({
+    bool force = false,
+    bool allowForegroundVerification = true,
+  }) {
+    return hanime1Api.loadHomeSections(
+      force: force,
+      allowForegroundVerification: allowForegroundVerification,
+    );
   }
 
   Future<void> prewarmHanimeHome() async {
     try {
-      // app 启动即预热 hanime 首页：被 Cloudflare 拦截时直接走浏览器
-      // 验证弹窗（前台），验证完成即缓存首页，用户切到 hanime 时秒现。
-      await hanime1Api.loadHomeSections();
+      // app 启动即预热 hanime 首页。这里**不允许**前台验证：冷启动时用户还
+      // 没进入 Hanime，弹出验证卡片既没有上下文，也会和真正的用户操作抢
+      // 队列；被拦截就安静放弃，等用户真正进入 Hanime 页再验证。
+      await hanime1Api.loadHomeSections(allowForegroundVerification: false);
       await AppLogService.instance.info(
         'Hanime 首页启动预热完成。',
         component: 'hanime_prefetch',
       );
     } on HanimeCloudflareException {
+      // 预热不允许前台验证，被 Cloudflare 拦截时不会弹卡片，安静放弃即可。
       await AppLogService.instance.info(
-        'Hanime 首页启动预热被取消（用户关闭验证弹窗），已推迟到进入 Hanime 时重试。',
+        'Hanime 首页启动预热被拦截，已推迟到进入 Hanime 时再验证。',
         component: 'hanime_prefetch',
       );
     }
@@ -532,23 +540,52 @@ class Rule34VideoApi {
     }
   }
 
-  Future<VideoDetails> loadVideoDetails(VideoItem video) {
-    return _loadVideoDetails(video);
+  /// [allowForegroundVerification] 表示这次加载是否由用户明确操作触发。
+  /// 后台预测/列表后续条目传 false：Hanime 侧不允许为它弹前台验证卡片，
+  /// 而 rule34video 侧连请求都不发（见 [prefetchVideoDetails]）。
+  Future<VideoDetails> loadVideoDetails(
+    VideoItem video, {
+    bool allowForegroundVerification = true,
+  }) {
+    return _loadVideoDetails(
+      video,
+      allowForegroundVerification: allowForegroundVerification,
+    );
   }
 
+  /// 后台预测预取。非 Hanime 站点直接跳过：rule34video 的详情接口需要登录
+  /// Cookie，服务端会把这次 GET 记进该账号的观看历史（实测样本 4689363 只做
+  /// 一次认证详情 GET、从未播放，约 3 分钟后仍出现在 /my/history/），后台替
+  /// 用户"预看"等于污染历史，不能做。
   Future<void> prefetchVideoDetails(
     VideoItem video, {
     required CancelToken cancelToken,
   }) async {
-    await _loadVideoDetails(video, cancelToken: cancelToken);
+    if (video.site != ContentSite.hanime1) {
+      unawaited(
+        AppLogService.instance.info(
+          '视频详情后台预取已跳过；站点=${video.siteId}；视频=${video.id}；'
+          '原因=认证详情请求会写入观看历史',
+          component: 'video_cache',
+        ),
+      );
+      return;
+    }
+    await _loadVideoDetails(
+      video,
+      cancelToken: cancelToken,
+      allowForegroundVerification: false,
+    );
   }
 
   Future<VideoDetails> _loadVideoDetails(
     VideoItem video, {
     CancelToken? cancelToken,
+    required bool allowForegroundVerification,
   }) {
     _pruneVideoDetailsCache();
     final key = _videoDetailsCacheKey(video);
+    final requestKey = '$key#fg=$allowForegroundVerification';
     final cached = _videoDetailsCache[key];
     if (cached != null &&
         DateTime.now().difference(cached.createdAt) < _videoDetailsCacheTtl) {
@@ -560,11 +597,12 @@ class Rule34VideoApi {
       );
       return Future.value(_applyKnownFavorite(cached.details));
     }
-    final pending = _videoDetailsRequests[key];
+    final pending = _videoDetailsRequests[requestKey];
     if (pending != null) {
       unawaited(
         AppLogService.instance.info(
-          '视频详情复用在途请求；站点=${video.siteId}；视频=${video.id}',
+          '视频详情复用在途请求；站点=${video.siteId}；视频=${video.id}；'
+          '前台=$allowForegroundVerification',
           component: 'video_cache',
         ),
       );
@@ -572,35 +610,52 @@ class Rule34VideoApi {
     }
     unawaited(
       AppLogService.instance.info(
-        '视频详情开始请求；站点=${video.siteId}；视频=${video.id}',
+        '视频详情开始请求；站点=${video.siteId}；视频=${video.id}；'
+        '前台=$allowForegroundVerification',
         component: 'video_cache',
       ),
     );
     late final Future<VideoDetails> request;
-    request = _fetchVideoDetails(video, cancelToken: cancelToken)
-        .then((details) {
-          if (identical(_videoDetailsRequests[key], request)) {
-            _videoDetailsCache[key] = _VideoDetailsCacheEntry(
-              details: details,
-              createdAt: DateTime.now(),
-            );
-            _pruneVideoDetailsCache();
-          }
-          return details;
-        })
-        .whenComplete(() {
-          if (identical(_videoDetailsRequests[key], request)) {
-            _videoDetailsRequests.remove(key);
-          }
-        });
-    _videoDetailsRequests[key] = request;
+    request =
+        _fetchVideoDetails(
+              video,
+              cancelToken: cancelToken,
+              allowForegroundVerification: allowForegroundVerification,
+            )
+            .then((details) {
+              if (identical(_videoDetailsRequests[requestKey], request)) {
+                _videoDetailsCache[key] = _VideoDetailsCacheEntry(
+                  details: details,
+                  createdAt: DateTime.now(),
+                );
+                _pruneVideoDetailsCache();
+              }
+              return details;
+            })
+            .whenComplete(() {
+              if (identical(_videoDetailsRequests[requestKey], request)) {
+                _videoDetailsRequests.remove(requestKey);
+              }
+            });
+    _videoDetailsRequests[requestKey] = request;
     return request;
+  }
+
+  /// 清掉某个视频的全部在途详情请求（前台/后台两个 key 都要清）。
+  void _dropVideoDetailsRequests(String cacheKey) {
+    final prefix = '$cacheKey#fg=';
+    final keys = _videoDetailsRequests.keys
+        .where((candidate) => candidate.startsWith(prefix))
+        .toList(growable: false);
+    for (final candidate in keys) {
+      _videoDetailsRequests.remove(candidate);
+    }
   }
 
   Future<VideoDetails> refreshVideoDetails(VideoItem video) {
     final key = _videoDetailsCacheKey(video);
     _videoDetailsCache.remove(key);
-    _videoDetailsRequests.remove(key);
+    _dropVideoDetailsRequests(key);
     unawaited(
       AppLogService.instance.info(
         '视频详情强制刷新；站点=${video.siteId}；视频=${video.id}',
@@ -613,9 +668,14 @@ class Rule34VideoApi {
   Future<VideoDetails> _fetchVideoDetails(
     VideoItem video, {
     CancelToken? cancelToken,
+    required bool allowForegroundVerification,
   }) async {
     if (video.site == ContentSite.hanime1) {
-      return hanime1Api.loadVideoDetails(video, cancelToken: cancelToken);
+      return hanime1Api.loadVideoDetails(
+        video,
+        cancelToken: cancelToken,
+        allowForegroundVerification: allowForegroundVerification,
+      );
     }
     String body;
     var usedPublicRequest = false;
@@ -911,8 +971,12 @@ class Rule34VideoApi {
         details: update(entry.details),
         createdAt: entry.createdAt,
       );
-      final staleRequest = _videoDetailsRequests.remove(key);
-      if (staleRequest != null) {
+      final staleRequests = _videoDetailsRequests.entries
+          .where((entry) => entry.key.startsWith('$key#fg='))
+          .map((entry) => entry.value)
+          .toList(growable: false);
+      _dropVideoDetailsRequests(key);
+      for (final staleRequest in staleRequests) {
         unawaited(
           staleRequest.then<void>((_) {}, onError: (Object _, StackTrace _) {}),
         );
@@ -1150,8 +1214,11 @@ class Rule34VideoApi {
 
   /// 向 Rule34Video 上报观看历史打点。
   ///
-  /// 该站服务端仅在收到播放器的 stats.php 打点（VideoPlay 事件）后，
-  /// 才会将该视频写入当前账号的观看历史（`/my/history/`）。
+  /// 注意：本打点**不是**写入观看历史的必要条件。服务端在收到带登录
+  /// Cookie 的详情页 GET 时就会把该视频记入 `/my/history/`，即使从未播放
+  /// （2026-10 实测：仅请求一次 `/view/<id>/`、不加载媒体也不打点，约 3 分钟
+  /// 后该视频出现在历史里）。因此后台预取必须跳过这类认证详情请求，
+  /// 详见 [prefetchVideoDetails] 与播放列表页的预取守卫。
   Future<void> reportWatchHistory(VideoItem video) async {
     if (video.site != ContentSite.rule34video || !sessionStore.isLoggedIn) {
       return;
@@ -1189,12 +1256,35 @@ class Rule34VideoApi {
         component: 'r34v_history',
       ),
     );
-    final path = page > 1 ? '/my/history/$page/' : '/my/history/';
+    // 站点的账号历史不使用 /my/history/<page>/ 这种路径分页：实测该路径
+    // 在第 2 页起返回 404，历史因此只能看到第一页。真正的分页是 KVS 的
+    // 异步区块接口，翻页参数是 from_my_history_videos。
+    const path = '/my/history/';
+    final query = page > 1
+        ? <String, String>{
+            'mode': 'async',
+            'function': 'get_block',
+            'block_id': 'list_videos_my_watch_history',
+            'from_my_history_videos': '$page',
+          }
+        : null;
     return _cachedVideoPage(
       key: _videoPageCacheKey('history', page),
       force: force,
-      loader: () =>
-          _paginatedVideoList(path, page: page, cancelToken: cancelToken),
+      loader: () => _paginatedVideoList(
+        path,
+        page: page,
+        query: query,
+        cancelToken: cancelToken,
+        // 历史页正文里还有「推荐」等区块，只取历史列表本身。
+        parse: (body) => parseHtmlOffThread(
+          body,
+          () => SiteParser.videoListInBlock(
+            body,
+            'list_videos_my_watch_history_items',
+          ),
+        ),
+      ),
     );
   }
 
@@ -2087,15 +2177,6 @@ class Rule34VideoApi {
     subscriptionActivity.invalidate();
   }
 
-  Future<List<VideoItem>> _videoList(
-    String path, {
-    Map<String, String>? query,
-    CancelToken? cancelToken,
-  }) async {
-    final body = await _get(path, query: query, cancelToken: cancelToken);
-    return _parseVideoList(body);
-  }
-
   static Future<List<Rule34VideoComment>> _parseComments(String body) {
     return parseHtmlOffThread(body, () => SiteParser.videoComments(body));
   }
@@ -2119,6 +2200,7 @@ class Rule34VideoApi {
     required int page,
     Map<String, String>? query,
     CancelToken? cancelToken,
+    Future<List<VideoItem>> Function(String body)? parse,
   }) async {
     final rangeParameters = <String, String>{
       for (final name in const [
@@ -2138,11 +2220,10 @@ class Rule34VideoApi {
       ),
     );
     try {
-      final items = await _videoList(
-        path,
-        query: query,
-        cancelToken: cancelToken,
-      );
+      final body = await _get(path, query: query, cancelToken: cancelToken);
+      final items = parse == null
+          ? await _parseVideoList(body)
+          : await parse(body);
       unawaited(
         AppLogService.instance.info(
           'response scope=$scope page=$page count=${items.length} ranges=$rangeParameters',

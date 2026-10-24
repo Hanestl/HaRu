@@ -13,6 +13,50 @@ import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  testWidgets('频道隐藏后在途首屏返回不再自动连拉后续页', (tester) async {
+    final settings = AppSettingsRepository(_MemorySettingsStore());
+    addTearDown(settings.dispose);
+    await settings.load();
+    final container = ProviderContainer(
+      overrides: [
+        appSettingsRepositoryProvider.overrideWithValue(settings),
+        translationServiceProvider.overrideWith(_memoryTranslationService),
+      ],
+    );
+    addTearDown(container.dispose);
+    final response = Completer<List<VideoItem>>();
+    final pages = <int>[];
+    var active = true;
+    late StateSetter update;
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          home: Scaffold(
+            body: StatefulBuilder(
+              builder: (context, setState) {
+                update = setState;
+                return VideoFeed(
+                  active: active,
+                  loadPage: (page) {
+                    pages.add(page);
+                    return response.future;
+                  },
+                );
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+    expect(pages, [1]);
+    update(() => active = false);
+    await tester.pump();
+    response.complete(const [VideoItem(id: '1', title: '首屏', slug: 'first')]);
+    await tester.pumpAndSettle();
+    expect(pages, [1]);
+  });
+
   testWidgets('下一页加载失败时在列表底部提供原位重试', (tester) async {
     final settings = AppSettingsRepository(_MemorySettingsStore());
     addTearDown(settings.dispose);

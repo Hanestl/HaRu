@@ -28,7 +28,10 @@ class HanimeHomePage extends ConsumerStatefulWidget {
 }
 
 class _HanimeHomePageState extends ConsumerState<HanimeHomePage> {
+  static const _channelDebounce = Duration(milliseconds: 300);
   var _channel = 1;
+  var _activeChannel = 1;
+  Timer? _channelLoadTimer;
   Map<String, List<VideoItem>> _homeSeeds = const {};
 
   static const _channels = <_HanimeChannel>[
@@ -133,6 +136,12 @@ class _HanimeHomePageState extends ConsumerState<HanimeHomePage> {
     }
   }
 
+  @override
+  void dispose() {
+    _channelLoadTimer?.cancel();
+    super.dispose();
+  }
+
   void _applyHomeSections(List<HanimeHomeSection> sections) {
     if (sections.isEmpty) return;
     _homeSeeds = {
@@ -179,7 +188,7 @@ class _HanimeHomePageState extends ConsumerState<HanimeHomePage> {
               index: _channel,
               children: [
                 for (var index = 0; index < _channels.length; index++)
-                  _buildFeed(prefetch, index, active: index == _channel),
+                  _buildFeed(prefetch, index, active: index == _activeChannel),
               ],
             ),
           ),
@@ -190,7 +199,13 @@ class _HanimeHomePageState extends ConsumerState<HanimeHomePage> {
 
   void _selectChannel(int index) {
     if (index == _channel) return;
-    setState(() => _channel = index);
+    _channelLoadTimer?.cancel();
+    // 标签立即响应；网络加载与相邻频道预取只跟随停留满 300ms 的最后选择。
+    setState(() {
+      _channel = index;
+      _activeChannel = -1;
+    });
+    ref.read(predictivePrefetchServiceProvider).prioritizeForeground();
     final channel = _channels[index];
     unawaited(
       AppLogService.instance.info(
@@ -198,7 +213,11 @@ class _HanimeHomePageState extends ConsumerState<HanimeHomePage> {
         component: 'hanime_home_navigation',
       ),
     );
-    _scheduleAdjacentChannels();
+    _channelLoadTimer = Timer(_channelDebounce, () {
+      if (!mounted) return;
+      setState(() => _activeChannel = index);
+      _scheduleAdjacentChannels();
+    });
   }
 
   void _scheduleAdjacentChannels() {

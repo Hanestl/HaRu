@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:flule34/core/api/hanime1_api.dart';
+import 'package:flule34/core/api/hanime1_parser.dart';
 import 'package:flule34/core/api/rule34video_api.dart';
 import 'package:flule34/core/models/video_models.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -176,6 +177,117 @@ void main() {
 
     await api.refreshVideoDetails(video);
     expect(requests, 2);
+  });
+
+  test('后台详情预取被 Cloudflare 拦截时不会拉起前台验证卡片', () async {
+    final harness = TestSessionHarness.create();
+    addTearDown(harness.dispose);
+    await harness.sessionStore.load();
+    final browserCalls = <bool>[];
+    final hanimeApi = Hanime1Api(
+      sessionStore: harness.sessionStore,
+      httpClientAdapter: _TestAdapter((options) {
+        return ResponseBody.fromString(
+          '<html><head><title>Just a moment...</title></head>'
+          '<body><div id="challenge-running"></div></body></html>',
+          403,
+          headers: {
+            Headers.contentTypeHeader: ['text/html; charset=utf-8'],
+          },
+        );
+      }),
+      browserPageHandler: (targetUri, allowForegroundVerification) async {
+        browserCalls.add(allowForegroundVerification);
+        return null;
+      },
+    );
+    final api = Rule34VideoApi(
+      sessionStore: harness.sessionStore,
+      hanimeApi: hanimeApi,
+    );
+    addTearDown(api.close);
+    const video = VideoItem(
+      id: 'bg-id',
+      title: 'Background detail',
+      slug: 'bg-id',
+      siteId: 'hanime1',
+    );
+
+    await expectLater(
+      api.prefetchVideoDetails(video, cancelToken: CancelToken()),
+      throwsA(isA<HanimeCloudflareException>()),
+    );
+
+    // 后台链路必须全程传 false：协调器据此直接返回 null，Gate 不显示卡片。
+    expect(browserCalls, isNotEmpty);
+    expect(browserCalls.every((value) => value == false), isTrue);
+  });
+
+  test('前台打开后台正在预取的同一视频时另发一次可弹卡片的请求', () async {
+    final harness = TestSessionHarness.create();
+    addTearDown(harness.dispose);
+    await harness.sessionStore.load();
+    final backgroundGate = Completer<ResponseBody>();
+    var requests = 0;
+    final browserCalls = <bool>[];
+    ResponseBody challenge() {
+      return ResponseBody.fromString(
+        '<html><head><title>Just a moment...</title></head>'
+        '<body><div id="challenge-running"></div></body></html>',
+        403,
+        headers: {
+          Headers.contentTypeHeader: ['text/html; charset=utf-8'],
+        },
+      );
+    }
+
+    final hanimeApi = Hanime1Api(
+      sessionStore: harness.sessionStore,
+      httpClientAdapter: _TestAdapter((options) {
+        requests += 1;
+        if (requests == 1) {
+          return backgroundGate.future;
+        }
+        return challenge();
+      }),
+      browserPageHandler: (targetUri, allowForegroundVerification) async {
+        browserCalls.add(allowForegroundVerification);
+        return null;
+      },
+    );
+    final api = Rule34VideoApi(
+      sessionStore: harness.sessionStore,
+      hanimeApi: hanimeApi,
+    );
+    addTearDown(api.close);
+    const video = VideoItem(
+      id: 'fg-id',
+      title: 'Foreground detail',
+      slug: 'fg-id',
+      siteId: 'hanime1',
+    );
+
+    final background = api.prefetchVideoDetails(
+      video,
+      cancelToken: CancelToken(),
+    );
+    final backgroundExpectation = expectLater(
+      background,
+      throwsA(isA<HanimeCloudflareException>()),
+    );
+    await Future<void>.delayed(Duration.zero);
+
+    // 用户随后主动打开同一视频：不能复用后台那个"注定拿不到验证入口"的在途请求。
+    await expectLater(
+      api.loadVideoDetails(video),
+      throwsA(isA<HanimeCloudflareException>()),
+    );
+    expect(requests, 2);
+    expect(browserCalls, [true]);
+
+    backgroundGate.complete(challenge());
+    await backgroundExpectation;
+    expect(browserCalls, [true, false]);
   });
 
   test('登录会逐跳保存 Cookie 并以页面 userId 建立身份', () async {
@@ -899,11 +1011,18 @@ void main() {
     await api.loadSubscriptionVideos(subscription, 2);
 
     expect(requests.map((request) => request.uri.path), [
-      '/my/history/3/',
+      '/my/history/',
       '/my/subscriptions/',
       '/my/subscriptions/',
       '/models/example-artist/',
     ]);
+    // 历史分页不是路径分页：/my/history/3/ 实测返回 404，必须走异步区块接口。
+    expect(requests[0].uri.queryParameters, {
+      'mode': 'async',
+      'function': 'get_block',
+      'block_id': 'list_videos_my_watch_history',
+      'from_my_history_videos': '3',
+    });
     final nextSubscriptionsRequest = requests[2].uri.queryParameters;
     expect(nextSubscriptionsRequest, {
       'mode': 'async',

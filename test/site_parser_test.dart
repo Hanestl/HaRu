@@ -793,4 +793,50 @@ void main() {
     expect(subscriptions.single.path, '/models/erovirus/');
     expect(subscriptions.single.kind, SubscriptionKind.model);
   });
+
+  test('账号历史只取历史区块，不把推荐视频算成历史', () {
+    const source = '''
+      <div class="ma-list" id="list_videos_my_watch_history_items">
+        <div class="item thumb video_4100001">
+          <a class="th js-open-popup"
+             href="https://rule34video.com/video/4100001/watched/"
+             title="Watched video"></a>
+          <div class="thumb_title">Watched video</div>
+        </div>
+      </div>
+      <div class="ma-list" id="list_videos_related_items">
+        <div class="item thumb video_4200002">
+          <a class="th js-open-popup"
+             href="https://rule34video.com/video/4200002/recommended/"
+             title="Recommended video"></a>
+          <div class="thumb_title">Recommended video</div>
+        </div>
+      </div>
+    ''';
+
+    final videos = SiteParser.videoListInBlock(
+      source,
+      'list_videos_my_watch_history_items',
+    );
+
+    expect(videos.map((video) => video.id), ['4100001']);
+  });
+
+  test('历史区块缺失时退回整页解析，避免静默变成空列表', () {
+    const source = '''
+      <div class="item thumb video_4300003">
+        <a class="th js-open-popup"
+           href="https://rule34video.com/video/4300003/legacy/"
+           title="Legacy video"></a>
+        <div class="thumb_title">Legacy video</div>
+      </div>
+    ''';
+
+    final videos = SiteParser.videoListInBlock(
+      source,
+      'list_videos_my_watch_history_items',
+    );
+
+    expect(videos.map((video) => video.id), ['4300003']);
+  });
 }

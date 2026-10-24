@@ -115,6 +115,7 @@ class _VideoFeedState extends ConsumerState<VideoFeed>
   }
 
   void _onScroll() {
+    if (!widget.active) return;
     if (_scrollController.position.extentAfter < 800) {
       _load(reset: false);
     }
@@ -188,7 +189,10 @@ class _VideoFeedState extends ConsumerState<VideoFeed>
         });
         widget.onItemsLoaded?.call(List.unmodifiable(_videos));
         attempts += 1;
-      } while (_hasMore && attempts < 3 && _visibleVideos().length < 8);
+      } while (widget.active &&
+          _hasMore &&
+          attempts < 3 &&
+          _visibleVideos().length < 8);
     } catch (error) {
       if (!mounted) {
         return;

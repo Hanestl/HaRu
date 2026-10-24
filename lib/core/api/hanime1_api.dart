@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:collection';
 import 'dart:io' show Cookie, Platform;
 
 import 'package:dio/dio.dart';
@@ -25,6 +26,16 @@ final class Hanime1Api {
   static const _homeChannelCacheTtl = Duration(minutes: 30);
   static const _homeChannelCacheLimit = 64;
 
+  /// "可信空结果"的缓存时长。
+  ///
+  /// 空结果有两种来源：站点确实没有内容，和被拦截/重定向后解析出的空壳。
+  /// 后者在 [_get] 里已被目标身份校验挡住（会抛 HanimeCloudflareException），
+  /// 所以能正常返回的空列表是可信的，应当写进缓存——否则旧的 30 分钟非空
+  /// 缓存会在下一次读取时复活，用户看到的列表和刚刚那次刷新结果不一致。
+  /// 用较短的 TTL 兼顾"站点恢复后尽快显示内容"。
+  static const _emptyResultCacheTtl = Duration(minutes: 2);
+  static const _emptyResultFreshTtl = Duration(seconds: 30);
+
   static const browserUserAgent =
       'Mozilla/5.0 (Linux; Android 13; Mobile) AppleWebKit/537.36 '
       '(KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36';
@@ -33,7 +44,8 @@ final class Hanime1Api {
     required this.sessionStore,
     this.browserPageHandler,
     HttpClientAdapter? httpClientAdapter,
-  }) {
+    this.backgroundRequestInterval = const Duration(milliseconds: 300),
+  }) : assert(!backgroundRequestInterval.isNegative) {
     _dio = Dio(
       BaseOptions(
         baseUrl: ContentSite.hanime1.baseUrl,
@@ -66,6 +78,13 @@ final class Hanime1Api {
   }
 
   final SessionStore sessionStore;
+
+  /// 后台请求完成后至少间隔一小段时间再启动下一个；前台请求不进入此队列。
+  final Duration backgroundRequestInterval;
+  final Queue<_HanimeBackgroundRequest> _backgroundRequests = Queue();
+  _HanimeBackgroundRequest? _activeBackgroundRequest;
+  Timer? _backgroundRequestTimer;
+  var _closed = false;
   final Future<String?> Function(
     Uri targetUri,
     bool allowForegroundVerification,
@@ -74,7 +93,10 @@ final class Hanime1Api {
   late final Dio _dio;
   late final String _transportLabel;
   final Map<String, _HanimeHomeCacheEntry> _homeCache = {};
-  Future<List<HanimeHomeSection>>? _homeRequest;
+
+  /// 按"是否允许前台验证"分开合并首页请求：后台预热发起的请求永远不弹
+  /// 卡片，前台用户请求复用它只会拿到空结果，而且看不到任何验证入口。
+  final Map<bool, Future<List<HanimeHomeSection>>> _homeRequests = {};
   final Map<String, _HanimeHomeChannelCacheEntry> _homeChannelCache = {};
   final Map<String, Future<List<VideoItem>>> _homeChannelRequests = {};
   _HanimeProfileCacheEntry? _profileCache;
@@ -87,9 +109,12 @@ final class Hanime1Api {
     bool allowForegroundVerification = true,
   }) async {
     final cached = _homeCache['home'];
+    final cachedTtl = cached != null && cached.sections.isEmpty
+        ? _emptyResultCacheTtl
+        : _homeCacheTtl;
     if (!force &&
         cached != null &&
-        DateTime.now().difference(cached.createdAt) < _homeCacheTtl) {
+        DateTime.now().difference(cached.createdAt) < cachedTtl) {
       unawaited(
         AppLogService.instance.info(
           'Hanime 首页分区命中缓存；分区=${cached.sections.length}',
@@ -98,24 +123,30 @@ final class Hanime1Api {
       );
       return cached.sections;
     }
-    if (!force && _homeRequest != null) return _homeRequest!;
+    final pending = _homeRequests[allowForegroundVerification];
+    if (!force && pending != null) return pending;
     final request =
         _get(
           '/',
           allowForegroundVerification: allowForegroundVerification,
         ).then((body) async {
           final sections = await _parseHomeSections(body);
+          // 与频道缓存同样的取舍：被拦截/身份不符的正文在 [_get] 里已经抛
+          // 异常，能走到这里说明这是一份可信的首页文档，空分区也应当写入
+          // （否则旧的 30 分钟缓存会在下一次读取时复活）。
           _homeCache['home'] = _HanimeHomeCacheEntry(
             sections: sections,
             createdAt: DateTime.now(),
           );
           return sections;
         });
-    _homeRequest = request;
+    _homeRequests[allowForegroundVerification] = request;
     try {
       return await request;
     } finally {
-      if (identical(_homeRequest, request)) _homeRequest = null;
+      if (identical(_homeRequests[allowForegroundVerification], request)) {
+        _homeRequests.remove(allowForegroundVerification);
+      }
     }
   }
 
@@ -128,14 +159,23 @@ final class Hanime1Api {
     required HanimeSearchFilters filters,
     bool force = false,
     CancelToken? cancelToken,
+    bool allowForegroundVerification = true,
   }) async {
     final cacheKey = '$channelKey:$page';
     if (!force) {
       final cached = _homeChannelCache[cacheKey];
       if (cached != null) {
         final age = DateTime.now().difference(cached.createdAt);
-        if (age < _homeChannelCacheTtl) {
-          final stale = age >= _homeChannelFreshTtl;
+        // 空结果用更短的保留期与新鲜期：它可能是站点真的空了，也可能是
+        // 刚刚恢复前的一次空响应，尽快重新确认比长时间沿用更安全。
+        final ttl = cached.items.isEmpty
+            ? _emptyResultCacheTtl
+            : _homeChannelCacheTtl;
+        final freshTtl = cached.items.isEmpty
+            ? _emptyResultFreshTtl
+            : _homeChannelFreshTtl;
+        if (age < ttl) {
+          final stale = age >= freshTtl;
           unawaited(
             AppLogService.instance.info(
               'Hanime 首页频道命中缓存；频道=$channelKey；页码=$page；'
@@ -144,7 +184,8 @@ final class Hanime1Api {
               component: 'hanime_home_cache',
             ),
           );
-          if (stale && !_homeChannelRequests.containsKey(cacheKey)) {
+          if (stale &&
+              !_homeChannelRequests.containsKey('$cacheKey#fg=false')) {
             unawaited(
               _requestHomeChannel(
                 cacheKey,
@@ -152,6 +193,9 @@ final class Hanime1Api {
                 page,
                 filters,
                 cancelToken: cancelToken,
+                // 后台刷新永远不弹前台验证卡片：用户此刻可能正在别的页面，
+                // 卡片闪出来既无上下文也救不回请求。
+                allowForegroundVerification: false,
               ).catchError((Object error, StackTrace stackTrace) {
                 unawaited(
                   AppLogService.instance.error(
@@ -174,6 +218,7 @@ final class Hanime1Api {
       page,
       filters,
       cancelToken: cancelToken,
+      allowForegroundVerification: allowForegroundVerification,
     );
   }
 
@@ -183,8 +228,12 @@ final class Hanime1Api {
     int page,
     HanimeSearchFilters filters, {
     CancelToken? cancelToken,
+    required bool allowForegroundVerification,
   }) async {
-    final pending = _homeChannelRequests[cacheKey];
+    // 按"是否允许前台验证"分开合并：后台刷新发起的请求永远不弹卡片，如果让
+    // 前台用户请求复用它，用户就会拿到一个注定失败的空结果，卡片也不会出现。
+    final requestKey = '$cacheKey#fg=$allowForegroundVerification';
+    final pending = _homeChannelRequests[requestKey];
     if (pending != null) {
       unawaited(
         AppLogService.instance.info(
@@ -195,31 +244,43 @@ final class Hanime1Api {
       return pending;
     }
     final request =
-        searchVideos('', page, filters: filters, cancelToken: cancelToken).then(
-          (items) {
-            _homeChannelCache.remove(cacheKey);
-            _homeChannelCache[cacheKey] = _HanimeHomeChannelCacheEntry(
-              items: List.unmodifiable(items),
-              createdAt: DateTime.now(),
-            );
-            while (_homeChannelCache.length > _homeChannelCacheLimit) {
-              _homeChannelCache.remove(_homeChannelCache.keys.first);
-            }
-            unawaited(
-              AppLogService.instance.info(
-                'Hanime 首页频道已缓存；频道=$channelKey；页码=$page；条数=${items.length}',
-                component: 'hanime_home_cache',
-              ),
-            );
-            return items;
-          },
-        );
-    _homeChannelRequests[cacheKey] = request;
+        searchVideos(
+          '',
+          page,
+          filters: filters,
+          cancelToken: cancelToken,
+          allowForegroundVerification: allowForegroundVerification,
+        ).then((items) {
+          // 空结果同样写缓存，但用更短的 TTL（见 [_emptyResultCacheTtl]）。
+          // 之前"空结果跳过写入"会让上一次的非空缓存继续生效：用户刷新后
+          // 看到的仍是旧列表，与刚刚这次响应不一致；而真正被拦截/身份不符
+          // 的情况在 [_get] 里已经抛异常，走不到这里，不会污染缓存。
+          _homeChannelCache.remove(cacheKey);
+          _homeChannelCache[cacheKey] = _HanimeHomeChannelCacheEntry(
+            items: List.unmodifiable(items),
+            createdAt: DateTime.now(),
+          );
+          while (_homeChannelCache.length > _homeChannelCacheLimit) {
+            _homeChannelCache.remove(_homeChannelCache.keys.first);
+          }
+          unawaited(
+            AppLogService.instance.info(
+              items.isEmpty
+                  ? 'Hanime 首页频道已缓存空结果；频道=$channelKey；页码=$page；'
+                        '保留秒=${_emptyResultCacheTtl.inSeconds}'
+                  : 'Hanime 首页频道已缓存；频道=$channelKey；页码=$page；'
+                        '条数=${items.length}',
+              component: 'hanime_home_cache',
+            ),
+          );
+          return items;
+        });
+    _homeChannelRequests[requestKey] = request;
     try {
       return await request;
     } finally {
-      if (identical(_homeChannelRequests[cacheKey], request)) {
-        _homeChannelRequests.remove(cacheKey);
+      if (identical(_homeChannelRequests[requestKey], request)) {
+        _homeChannelRequests.remove(requestKey);
       }
     }
   }
@@ -255,6 +316,7 @@ final class Hanime1Api {
     int page, {
     HanimeSearchFilters filters = const HanimeSearchFilters(),
     CancelToken? cancelToken,
+    bool allowForegroundVerification = true,
   }) async {
     final normalized = query.trim();
     if (normalized.isEmpty && filters.isEmpty) return const [];
@@ -269,6 +331,7 @@ final class Hanime1Api {
       '/search',
       query: queryParameters,
       cancelToken: cancelToken,
+      allowForegroundVerification: allowForegroundVerification,
     );
     final items = await _parseVideoList(body);
     await AppLogService.instance.info(
@@ -321,11 +384,13 @@ final class Hanime1Api {
   Future<VideoDetails> loadVideoDetails(
     VideoItem video, {
     CancelToken? cancelToken,
+    bool allowForegroundVerification = true,
   }) async {
     final body = await _get(
       '/watch',
       query: {'v': video.id},
       cancelToken: cancelToken,
+      allowForegroundVerification: allowForegroundVerification,
     );
     final details = await _parseVideoDetails(body, video);
     if (details.sources.isEmpty) {
@@ -1301,9 +1366,99 @@ final class Hanime1Api {
     );
   }
 
-  void close() => _dio.close(force: true);
+  void close() {
+    if (_closed) return;
+    _closed = true;
+    _backgroundRequestTimer?.cancel();
+    final active = _activeBackgroundRequest;
+    if (active != null) _cancelBackgroundRequest(active);
+    for (final request in _backgroundRequests) {
+      _cancelBackgroundRequest(request);
+    }
+    _backgroundRequests.clear();
+    _dio.close(force: true);
+  }
 
   Future<String> _get(
+    String path, {
+    Map<String, dynamic>? query,
+    CancelToken? cancelToken,
+    bool allowBrowserFallback = true,
+    bool allowForegroundVerification = true,
+  }) {
+    if (_closed || (cancelToken?.isCancelled ?? false)) {
+      return Future.error(const RequestCancelledException());
+    }
+    if (allowForegroundVerification) {
+      return _getNow(
+        path,
+        query: query,
+        cancelToken: cancelToken,
+        allowBrowserFallback: allowBrowserFallback,
+      );
+    }
+    final token = CancelToken();
+    final request = _HanimeBackgroundRequest(
+      token: token,
+      operation: () => _getNow(
+        path,
+        query: query,
+        cancelToken: token,
+        allowBrowserFallback: allowBrowserFallback,
+        allowForegroundVerification: false,
+      ),
+    );
+    _backgroundRequests.add(request);
+    if (cancelToken != null) {
+      unawaited(
+        cancelToken.whenCancel.then((_) {
+          if (request.completer.isCompleted) return;
+          _backgroundRequests.remove(request);
+          _cancelBackgroundRequest(request);
+        }),
+      );
+    }
+    _startNextBackgroundRequest();
+    return request.completer.future;
+  }
+
+  void _cancelBackgroundRequest(_HanimeBackgroundRequest request) {
+    request.token.cancel('后台请求已取消');
+    if (!request.completer.isCompleted) {
+      request.completer.completeError(const RequestCancelledException());
+    }
+  }
+
+  void _startNextBackgroundRequest() {
+    if (_closed ||
+        _activeBackgroundRequest != null ||
+        _backgroundRequestTimer != null ||
+        _backgroundRequests.isEmpty) {
+      return;
+    }
+    final request = _backgroundRequests.removeFirst();
+    _activeBackgroundRequest = request;
+    unawaited(() async {
+      try {
+        final body = await request.operation();
+        if (!request.completer.isCompleted) request.completer.complete(body);
+      } on Object catch (error, stackTrace) {
+        if (!request.completer.isCompleted) {
+          request.completer.completeError(error, stackTrace);
+        }
+      } finally {
+        _activeBackgroundRequest = null;
+        if (!_closed) {
+          _backgroundRequestTimer = Timer(backgroundRequestInterval, () {
+            _backgroundRequestTimer = null;
+            _startNextBackgroundRequest();
+          });
+        }
+      }
+    }());
+  }
+
+  Future<String> _getNow(
     String path, {
     Map<String, dynamic>? query,
     CancelToken? cancelToken,
@@ -1335,6 +1490,8 @@ final class Hanime1Api {
             query: query,
             cancelToken: cancelToken,
             browserBody: browserBody,
+            statusCode: response.statusCode,
+            targetUri: response.requestOptions.uri,
           );
         }
         throw HanimeCloudflareException(statusCode: response.statusCode);
@@ -1372,6 +1529,8 @@ final class Hanime1Api {
             query: query,
             cancelToken: cancelToken,
             browserBody: browserBody,
+            statusCode: error.response?.statusCode,
+            targetUri: error.requestOptions.uri,
           );
         }
       }
@@ -1390,6 +1549,8 @@ final class Hanime1Api {
     required Map<String, dynamic>? query,
     required CancelToken? cancelToken,
     required String browserBody,
+    required int? statusCode,
+    required Uri targetUri,
   }) async {
     final stopwatch = Stopwatch()..start();
     try {
@@ -1402,20 +1563,36 @@ final class Hanime1Api {
       if (response.statusCode != null &&
           response.statusCode! < 400 &&
           !HanimePageParser.isChallenge(body)) {
-        await AppLogService.instance.info(
-          '浏览器验证后原请求重试成功；路径=${_logPath(path)}；'
-          '状态=${response.statusCode}；耗时=${stopwatch.elapsedMilliseconds}ms；'
-          '传输=$_transportLabel',
+        // 原生重试成功也要验一遍身份：跟随重定向后拿到的 200 可能是登录页、
+        // 站点维护页或别的视频详情页，直接当成本次请求的正文会污染上层缓存。
+        final inspection = HanimePageParser.inspectBrowserDocument(
+          source: body,
+          targetUri: targetUri,
+        );
+        if (inspection.isTarget) {
+          await AppLogService.instance.info(
+            '浏览器验证后原请求重试成功；路径=${_logPath(path)}；'
+            '状态=${response.statusCode}；耗时=${stopwatch.elapsedMilliseconds}ms；'
+            '传输=$_transportLabel',
+            component: 'hanime_network',
+          );
+          return body;
+        }
+        await AppLogService.instance.warning(
+          '浏览器验证后原请求返回了非目标文档；路径=${_logPath(path)}；'
+          '状态=${response.statusCode ?? 0}；'
+          '文档状态=${inspection.status.name}；文档类型=${inspection.kind.name}；'
+          '原因=${inspection.reason}',
           component: 'hanime_network',
         );
-        return body;
+      } else {
+        await AppLogService.instance.warning(
+          '浏览器验证后原请求仍被拦截；路径=${_logPath(path)}；'
+          '状态=${response.statusCode ?? 0}；'
+          '请求 Cookie 名称：${cookieHeaderNamesForLog(response.requestOptions.headers['Cookie'])}',
+          component: 'hanime_network',
+        );
       }
-      await AppLogService.instance.warning(
-        '浏览器验证后原请求仍被拦截；路径=${_logPath(path)}；'
-        '状态=${response.statusCode ?? 0}；'
-        '请求 Cookie 名称：${cookieHeaderNamesForLog(response.requestOptions.headers['Cookie'])}',
-        component: 'hanime_network',
-      );
     } on DioException catch (error) {
       if (CancelToken.isCancel(error)) {
         throw const RequestCancelledException();
@@ -1428,9 +1605,57 @@ final class Hanime1Api {
         '请求 Cookie 名称：${cookieHeaderNamesForLog(error.requestOptions.headers['Cookie'])}',
         component: 'hanime_network',
       );
+      return _adoptBrowserBody(
+        browserBody,
+        path: path,
+        statusCode: statusCode,
+        targetUri: targetUri,
+      );
+    }
+    return _adoptBrowserBody(
+      browserBody,
+      path: path,
+      statusCode: statusCode,
+      targetUri: targetUri,
+    );
+  }
+
+  /// 浏览器兜底正文是否可以当作本次请求的响应返回。
+  ///
+  /// 原生重试已经失败，说明这次"验证"并没有让 Cloudflare 放行。此前这里直接
+  /// `return browserBody`，把浏览器里的那份 HTML 当成成功响应交给上层：
+  /// 它常常是 403 文本页、登录页或上一次导航残留的文档，解析出 0 条结果后
+  /// 还会被写进 30 分钟频道缓存（日志里 18 次"结果=0"与空白频道都源于此）。
+  ///
+  /// 判据不能是字符串 contains（脚本里的类名、注释、隐藏模板都能骗过它），
+  /// 必须是完整 DOM 结构 + 目标身份：正文里的 canonical/og:url 与请求 URI
+  /// 一致、且该页面类型该有的业务容器存在。
+  Future<String> _adoptBrowserBody(
+    String browserBody, {
+    required String path,
+    required int? statusCode,
+    required Uri targetUri,
+  }) async {
+    final inspection = HanimePageParser.inspectBrowserDocument(
+      source: browserBody,
+      targetUri: targetUri,
+    );
+    if (inspection.isTarget) {
+      await AppLogService.instance.info(
+        '浏览器兜底正文被采用；路径=${_logPath(path)}；'
+        '状态=${statusCode ?? 0}；类型=${inspection.kind.name}；'
+        '长度=${browserBody.length}',
+        component: 'hanime_network',
+      );
       return browserBody;
     }
-    return browserBody;
+    await AppLogService.instance.warning(
+      '浏览器兜底正文与请求目标不一致，不予采用；路径=${_logPath(path)}；'
+      '状态=${statusCode ?? 0}；文档状态=${inspection.status.name}；'
+      '文档类型=${inspection.kind.name}；原因=${inspection.reason}',
+      component: 'hanime_network',
+    );
+    throw HanimeCloudflareException(statusCode: statusCode);
   }
 
   Future<String?> _browserBody(
@@ -1458,18 +1683,25 @@ final class Hanime1Api {
         lower.contains('webpage not available');
   }
 
+  /// 哪些 Dio 异常值得弹一次浏览器辅助验证。
+  ///
+  /// 只有 `connectionError`（连接被重置/握手失败，常见于 Cloudflare 直接断开
+  /// Cronet 连接）才可能是"被拦截"的表现。超时（connection/send/receive）与
+  /// `unknown` 属于普通网络抖动，把它们也当成拦截会让一次弱网就闪出验证
+  /// 卡片，用户点掉后请求还是失败——这正是"无规律闪出"的来源之一。
   bool _supportsBrowserFallback(DioException error) {
-    return switch (error.type) {
-      DioExceptionType.connectionTimeout ||
-      DioExceptionType.sendTimeout ||
-      DioExceptionType.receiveTimeout ||
-      DioExceptionType.connectionError ||
-      DioExceptionType.unknown => true,
-      _ => false,
-    };
+    return error.type == DioExceptionType.connectionError;
   }
 
   String _logPath(String path) => redactSensitiveText(path.split('?').first);
+}
+
+final class _HanimeBackgroundRequest {
+  _HanimeBackgroundRequest({required this.token, required this.operation});
+
+  final CancelToken token;
+  final Future<String> Function() operation;
+  final Completer<String> completer = Completer<String>();
 }
 
 final class _HanimeHomeCacheEntry {

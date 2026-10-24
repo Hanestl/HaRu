@@ -462,7 +462,10 @@ final class _DelayedRule34VideoApi extends Rule34VideoApi {
   Future<bool> favoriteStatus(VideoItem video) => favorite.future;
 
   @override
-  Future<VideoDetails> loadVideoDetails(VideoItem video) => details.future;
+  Future<VideoDetails> loadVideoDetails(
+    VideoItem video, {
+    bool allowForegroundVerification = true,
+  }) => details.future;
 
   @override
   void close() {}

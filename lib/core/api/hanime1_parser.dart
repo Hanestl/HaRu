@@ -18,6 +18,64 @@ final class HanimeCloudflareException implements Exception {
   String toString() => 'Hanime 页面受到 Cloudflare 限制，浏览器辅助访问未完成。';
 }
 
+/// 浏览器当前文档相对本次请求目标的关系。
+enum HanimeDocumentStatus {
+  /// 就是本次请求的目标文档。
+  target,
+
+  /// 仍是 Cloudflare 挑战页。
+  challenge,
+
+  /// 同域名下的另一个目标（另一个视频、另一个查询、上一页残留）。
+  otherTarget,
+
+  /// 被重定向到登录页。
+  login,
+
+  /// 无法识别、缺业务结构或无法解析。
+  unknown,
+}
+
+/// Hanime 的页面类型。
+enum HanimeDocumentKind {
+  home,
+  search,
+  watch,
+  playlist,
+  user,
+  login,
+  subscriptions,
+  comments,
+  unknown,
+}
+
+/// 一次浏览器文档检查的结果。
+final class HanimeDocumentInspection {
+  const HanimeDocumentInspection({
+    required this.status,
+    required this.kind,
+    required this.hasBusinessContent,
+    this.identityUri,
+    this.reason = '',
+  });
+
+  final HanimeDocumentStatus status;
+  final HanimeDocumentKind kind;
+  final bool hasBusinessContent;
+
+  /// 文档自己声明的站点 URL（canonical / og:url），缺失为 null。
+  final Uri? identityUri;
+
+  /// 判定理由，仅用于日志与测试断言。
+  final String reason;
+
+  /// 该文档能否作为本次请求的响应正文。
+  bool get isTarget => status == HanimeDocumentStatus.target;
+
+  /// 是否需要用户登录（不能当成业务正文）。
+  bool get requiresLogin => status == HanimeDocumentStatus.login;
+}
+
 final class HanimePageParser {
   const HanimePageParser._();
 
@@ -45,6 +103,338 @@ final class HanimePageParser {
         text.contains('verify you are human') ||
         text.contains('you have been blocked') ||
         document.querySelector('input[name="cf-turnstile-response"]') != null;
+  }
+
+  /// 浏览器当前文档与本次请求目标之间的关系。
+  ///
+  /// 只按字符串 `contains` 判断"像 Hanime 页面"是不够的：错误页里带一句业务类名、
+  /// 脚本里出现 `const selector = 'horizontal-card'`、或者停在另一个视频的详情页，
+  /// 都能骗过字符串判定，把错误的正文交给解析器（日志里的 0 条结果与串号就来自这里）。
+  /// 这里改成真实 DOM 判定：文档身份取 `link[rel=canonical]` / `meta[property=og:url]`，
+  /// 页面类型按结构识别，再与本次请求的目标 URI 逐项比对。
+  static HanimeDocumentInspection inspectBrowserDocument({
+    required String source,
+    required Uri targetUri,
+  }) {
+    if (source.trim().isEmpty) {
+      return const HanimeDocumentInspection(
+        status: HanimeDocumentStatus.unknown,
+        kind: HanimeDocumentKind.unknown,
+        hasBusinessContent: false,
+        reason: '正文为空',
+      );
+    }
+    if (isChallenge(source)) {
+      return const HanimeDocumentInspection(
+        status: HanimeDocumentStatus.challenge,
+        kind: HanimeDocumentKind.unknown,
+        hasBusinessContent: false,
+        reason: 'Cloudflare 挑战页',
+      );
+    }
+    final dom.Document document;
+    try {
+      document = html_parser.parse(source);
+    } on Object {
+      return const HanimeDocumentInspection(
+        status: HanimeDocumentStatus.unknown,
+        kind: HanimeDocumentKind.unknown,
+        hasBusinessContent: false,
+        reason: 'HTML 无法解析',
+      );
+    }
+    final identity = _canonicalHanimeUri(document);
+    final kind = _documentKind(document, identity);
+    final hasBusinessContent = _hasBusinessStructure(document, kind);
+    if (kind == HanimeDocumentKind.unknown) {
+      return HanimeDocumentInspection(
+        status: HanimeDocumentStatus.unknown,
+        kind: kind,
+        identityUri: identity,
+        hasBusinessContent: false,
+        reason: '无法识别页面类型',
+      );
+    }
+    if (!hasBusinessContent) {
+      return HanimeDocumentInspection(
+        status: HanimeDocumentStatus.unknown,
+        kind: kind,
+        identityUri: identity,
+        hasBusinessContent: false,
+        reason: '缺少业务结构',
+      );
+    }
+    final targetKind = _kindForTarget(targetUri);
+    if (kind == HanimeDocumentKind.login &&
+        targetKind != HanimeDocumentKind.login) {
+      return HanimeDocumentInspection(
+        status: HanimeDocumentStatus.login,
+        kind: kind,
+        identityUri: identity,
+        hasBusinessContent: true,
+        reason: '被重定向到登录页',
+      );
+    }
+    if (!_matchesTarget(identity, targetUri, kind)) {
+      return HanimeDocumentInspection(
+        status: HanimeDocumentStatus.otherTarget,
+        kind: kind,
+        identityUri: identity,
+        hasBusinessContent: true,
+        reason: '文档身份与请求目标不一致',
+      );
+    }
+    return HanimeDocumentInspection(
+      status: HanimeDocumentStatus.target,
+      kind: kind,
+      identityUri: identity,
+      hasBusinessContent: true,
+      reason: '目标文档',
+    );
+  }
+
+  /// 文档自己声明的站点 URL（canonical 优先，og:url 兜底）。
+  static Uri? _canonicalHanimeUri(dom.Document document) {
+    final candidates = <String?>[
+      document.querySelector('link[rel="canonical"]')?.attributes['href'],
+      document.querySelector('meta[property="og:url"]')?.attributes['content'],
+    ];
+    for (final candidate in candidates) {
+      final uri = _normalizeHanimeUri(candidate);
+      if (uri != null) return uri;
+    }
+    return null;
+  }
+
+  /// 把（可能带存档前缀的）URL 规范成站点自身的 URL。
+  ///
+  /// 测试夹具来自 Wayback，canonical 会写成
+  /// `http://web.archive.org/web/<ts>/https://hanime1.me/watch?v=404990`，
+  /// 因此这里取最后一个 `http` 起始位置，只保留 hanime1.me 自身那一段。
+  static Uri? _normalizeHanimeUri(String? raw) {
+    if (raw == null) return null;
+    var value = raw.trim();
+    if (value.isEmpty) return null;
+    final marker = value.indexOf('hanime1.me');
+    if (marker < 0) return null;
+    final schemeStart = value.lastIndexOf('http', marker);
+    if (schemeStart >= 0) value = value.substring(schemeStart);
+    final uri = Uri.tryParse(value);
+    if (uri == null) return null;
+    final host = uri.host.toLowerCase();
+    if (host != 'hanime1.me' && !host.endsWith('.hanime1.me')) return null;
+    return uri;
+  }
+
+  /// 页面类型：优先用文档自己声明的 canonical 路径，缺失时退回结构判定。
+  static HanimeDocumentKind _documentKind(
+    dom.Document document,
+    Uri? identity,
+  ) {
+    final path = identity?.path ?? '';
+    final fromPath = _kindForPath(path);
+    if (fromPath != HanimeDocumentKind.unknown) return fromPath;
+    if (_hasEmailPasswordForm(document)) return HanimeDocumentKind.login;
+    if (document.querySelector('video#player') != null ||
+        document.querySelector('#shareBtn-title') != null) {
+      return HanimeDocumentKind.watch;
+    }
+    if (document.querySelector('#home-rows-wrapper') != null) {
+      return HanimeDocumentKind.search;
+    }
+    if (_hasBusinessStructure(document, HanimeDocumentKind.home)) {
+      return HanimeDocumentKind.home;
+    }
+    return HanimeDocumentKind.unknown;
+  }
+
+  static HanimeDocumentKind _kindForTarget(Uri targetUri) =>
+      _kindForPath(targetUri.path);
+
+  static HanimeDocumentKind _kindForPath(String path) {
+    if (path.startsWith('/user/')) return HanimeDocumentKind.user;
+    switch (path) {
+      case '':
+      case '/':
+        return HanimeDocumentKind.home;
+      case '/login':
+        return HanimeDocumentKind.login;
+      case '/search':
+        return HanimeDocumentKind.search;
+      case '/watch':
+        return HanimeDocumentKind.watch;
+      case '/playlist':
+        return HanimeDocumentKind.playlist;
+      case '/subscriptions':
+        return HanimeDocumentKind.subscriptions;
+      case '/loadReplies':
+        return HanimeDocumentKind.comments;
+    }
+    if (path.contains('comment')) return HanimeDocumentKind.comments;
+    return HanimeDocumentKind.unknown;
+  }
+
+  /// 页面是否渲染出了该类页面应有的业务结构。
+  ///
+  /// 这里判的是"容器在不在"，不是"卡片有几张"：搜索无结果、频道为空都是合法
+  /// 空态，容器仍然存在；而 403 文本页、错误页、空白壳连容器都没有。
+  static bool _hasBusinessStructure(
+    dom.Document document,
+    HanimeDocumentKind kind,
+  ) {
+    switch (kind) {
+      case HanimeDocumentKind.home:
+      case HanimeDocumentKind.search:
+        return _anyRenderable(document, const [
+          '.home-rows-videos-wrapper',
+          '#home-rows-wrapper',
+        ]);
+      case HanimeDocumentKind.watch:
+        return _anyRenderable(document, const [
+          'video#player',
+          '#shareBtn-title',
+          '.video-description-panel',
+          '#video-playlist-wrapper',
+        ]);
+      case HanimeDocumentKind.playlist:
+        return _anyRenderable(document, const [
+          '#playlist-scroll',
+          '.playlist-videos-wrapper',
+          '.hover-video-playlist',
+          '#video-playlist-wrapper',
+        ]);
+      case HanimeDocumentKind.user:
+        return _anyRenderable(document, const [
+          '#user-modal-name',
+          '.user-tab-item-wrapper',
+          '.content-padding-new',
+        ]);
+      case HanimeDocumentKind.login:
+        return _hasEmailPasswordForm(document);
+      case HanimeDocumentKind.subscriptions:
+        return _anyRenderable(document, const [
+          '.subscriptions-nav',
+          '.subscriptions-artist-card',
+        ]);
+      case HanimeDocumentKind.comments:
+        return _anyRenderable(document, const [
+          '#comment-like-form-wrapper',
+          '[id^="reply-start-"]',
+        ]);
+      case HanimeDocumentKind.unknown:
+        return false;
+    }
+  }
+
+  static bool _hasEmailPasswordForm(dom.Document document) =>
+      document.querySelector('input[name="email"]') != null &&
+      document.querySelector('input[name="password"]') != null;
+
+  static bool _anyRenderable(dom.Document document, List<String> selectors) {
+    for (final selector in selectors) {
+      for (final element in document.querySelectorAll(selector)) {
+        if (_isRenderable(element)) return true;
+      }
+    }
+    return false;
+  }
+
+  /// 排除藏在 `<template>`、`hidden`、`display:none` 里的模板结构。
+  static bool _isRenderable(dom.Element element) {
+    dom.Element? current = element;
+    while (current != null) {
+      if (current.localName == 'template') return false;
+      if (current.attributes.containsKey('hidden')) return false;
+      final style = (current.attributes['style'] ?? '')
+          .replaceAll(' ', '')
+          .toLowerCase();
+      if (style.contains('display:none') ||
+          style.contains('visibility:hidden')) {
+        return false;
+      }
+      current = current.parent;
+    }
+    return true;
+  }
+
+  /// 文档身份是否就是本次请求的目标。
+  ///
+  /// 详情页比 `v`、播放列表比 `list`、搜索页比整组查询参数（含页码）；首页只比
+  /// 路径。身份缺失（没有 canonical/og:url）一律不算命中——那正是"页面还在加载"
+  /// 或"被中间层改写"的形态。
+  static bool _matchesTarget(
+    Uri? identity,
+    Uri targetUri,
+    HanimeDocumentKind kind,
+  ) {
+    if (identity == null) return false;
+    final identityPath = identity.path.isEmpty ? '/' : identity.path;
+    final targetPath = targetUri.path.isEmpty ? '/' : targetUri.path;
+    if (identityPath != targetPath) return false;
+    switch (kind) {
+      case HanimeDocumentKind.watch:
+        final target = _param(targetUri, 'v');
+        return target != null &&
+            target.isNotEmpty &&
+            _param(identity, 'v') == target;
+      case HanimeDocumentKind.playlist:
+        final target = _param(targetUri, 'list');
+        return target != null &&
+            target.isNotEmpty &&
+            _param(identity, 'list') == target;
+      case HanimeDocumentKind.search:
+        return _searchSignature(identity) == _searchSignature(targetUri);
+      case HanimeDocumentKind.home:
+      case HanimeDocumentKind.user:
+      case HanimeDocumentKind.login:
+      case HanimeDocumentKind.subscriptions:
+      case HanimeDocumentKind.comments:
+      case HanimeDocumentKind.unknown:
+        return true;
+    }
+  }
+
+  static String? _param(Uri uri, String name) {
+    final value = uri.queryParameters[name]?.trim();
+    return value == null || value.isEmpty ? null : value;
+  }
+
+  static String _searchSignature(Uri uri) {
+    const keys = <String>[
+      'query',
+      'page',
+      'genre',
+      'sort',
+      'date',
+      'duration',
+      'broad',
+    ];
+    final signature = <String, Object>{};
+    for (final key in keys) {
+      final value = _param(uri, key) ?? (key == 'page' ? '1' : null);
+      if (value == null) continue;
+      signature[key] = value;
+    }
+    // PHP 数组参数可能以重复 tags[] 或 tags[0]/tags[1] 形式出现。
+    // 筛选是集合：比较全部值，忽略顺序与重复项，不能只取某一个值。
+    for (final name in const ['tags', 'brands']) {
+      final values = <String>{};
+      final indexedKey = RegExp(
+        '^$name'
+        r'\[\d*\]$',
+      );
+      for (final entry in uri.queryParametersAll.entries) {
+        if (!indexedKey.hasMatch(entry.key)) continue;
+        values.addAll(
+          entry.value
+              .map((value) => value.trim())
+              .where((value) => value.isNotEmpty),
+        );
+      }
+      signature[name] = values.toList()..sort();
+    }
+    // JSON 保留键值边界，避免 query 中的 '&page=' 与真正的参数碰撞。
+    return jsonEncode(signature);
   }
 
   static final _csrfMetaRegex = RegExp(

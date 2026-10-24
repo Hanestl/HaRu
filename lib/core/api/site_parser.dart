@@ -22,6 +22,20 @@ class SiteParser {
     r'([0-9]+(?:\.[0-9]+)?)\s*([KMB])?',
   );
 
+  /// 只在指定 id 的区块内提取视频卡片。
+  ///
+  /// 账号历史这类页面的正文里混着「推荐」「你可能喜欢」等其它区块，
+  /// 整页解析会把推荐视频当成历史条目。区块不存在时退回整页解析，
+  /// 避免模板变化后静默返回空列表。
+  static List<VideoItem> videoListInBlock(String source, String blockId) {
+    final document = html_parser.parse(source);
+    final block = document.querySelector('#$blockId');
+    if (block == null) {
+      return videoList(source);
+    }
+    return videoList(block.outerHtml);
+  }
+
   static List<VideoItem> videoList(String source) {
     final document = html_parser.parse(source);
     final result = <String, VideoItem>{};

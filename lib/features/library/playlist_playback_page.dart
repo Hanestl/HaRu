@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../app/router/route_names.dart';
 import '../../core/api/rule34video_api.dart';
 import '../../core/logging/app_log_service.dart';
+import '../../core/models/content_source.dart';
 import '../../core/models/video_models.dart';
 import '../../core/services/translation_service.dart';
 import '../../shared/error_view.dart';
@@ -127,6 +128,13 @@ class _PlaylistPlaybackPageState extends State<PlaylistPlaybackPage> {
     }
   }
 
+  /// 后台详情预取是否允许。rule34video 的详情接口需要登录 Cookie，服务端会把
+  /// 这次 GET 记进该账号的观看历史，所以只有真正轮到播放时才去请求；
+  /// Hanime 侧详情是公开页，预取只会命中 Cloudflare 校验（已按后台策略处理）。
+  bool _canPrefetchDetails(VideoItem video) {
+    return video.site == ContentSite.hanime1;
+  }
+
   Future<void> _preloadNext() async {
     final operation = ++_preloadOperation;
     try {
@@ -143,7 +151,14 @@ class _PlaylistPlaybackPageState extends State<PlaylistPlaybackPage> {
         await _playerHandle.stopPreCache();
         return;
       }
-      final details = await widget.api.loadVideoDetails(_videos[next]);
+      if (!_canPrefetchDetails(_videos[next])) {
+        // 下一条还轮不到播放，后台替用户"预看"会让该条目进入站点观看历史。
+        return;
+      }
+      final details = await widget.api.loadVideoDetails(
+        _videos[next],
+        allowForegroundVerification: false,
+      );
       if (!mounted || operation != _preloadOperation) {
         return;
       }
@@ -167,8 +182,14 @@ class _PlaylistPlaybackPageState extends State<PlaylistPlaybackPage> {
         _detailsCache.containsKey(_videos[lookAhead].contentKey)) {
       return;
     }
+    if (!_canPrefetchDetails(_videos[lookAhead])) {
+      return;
+    }
     try {
-      final details = await widget.api.loadVideoDetails(_videos[lookAhead]);
+      final details = await widget.api.loadVideoDetails(
+        _videos[lookAhead],
+        allowForegroundVerification: false,
+      );
       if (mounted && operation == _preloadOperation) {
         _detailsCache[_videos[lookAhead].contentKey] = details;
       }
