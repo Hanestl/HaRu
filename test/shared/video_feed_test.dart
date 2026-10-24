@@ -7,6 +7,7 @@ import 'package:flule34/features/settings/data/app_settings_repository.dart';
 import 'package:flule34/features/settings/data/app_settings_store.dart';
 import 'package:flule34/features/settings/domain/app_settings.dart';
 import 'package:flule34/shared/video_feed.dart';
+import 'package:flule34/shared/video_list_filters.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
@@ -206,6 +207,111 @@ void main() {
 
     expect(find.text('旧内容'), findsNothing);
     expect(find.text('新内容'), findsOneWidget);
+  });
+
+  testWidgets('加载期间连续改服务端排序会合并成一次补跑，并用最新条件', (tester) async {
+    final settings = AppSettingsRepository(_MemorySettingsStore());
+    addTearDown(settings.dispose);
+    await settings.load();
+    final container = ProviderContainer(
+      overrides: [
+        appSettingsRepositoryProvider.overrideWithValue(settings),
+        translationServiceProvider.overrideWith(_memoryTranslationService),
+      ],
+    );
+    addTearDown(container.dispose);
+    final sorts = <VideoListSort>[];
+    final pending = Completer<List<VideoItem>>();
+    var hangNext = false;
+
+    Future<List<VideoItem>> load(int page, VideoListFilters filters) {
+      if (page != 1) {
+        return Future.value(const <VideoItem>[]);
+      }
+      sorts.add(filters.sort);
+      if (hangNext) {
+        hangNext = false;
+        return pending.future;
+      }
+      return Future.value([
+        VideoItem(
+          id: filters.sort.name,
+          title: '内容-${filters.sort.name}',
+          slug: filters.sort.name,
+        ),
+      ]);
+    }
+
+    // 刷新在途时 RefreshIndicator 一直在动，不能用 pumpAndSettle。
+    Future<void> settleUi() async {
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pump(const Duration(milliseconds: 400));
+    }
+
+    Future<void> changeSort(String label) async {
+      await tester.tap(find.byTooltip('筛选'));
+      await settleUi();
+      await tester.tap(find.byType(DropdownButtonFormField<VideoListSort>));
+      await settleUi();
+      await tester.tap(find.text(label).last);
+      await settleUi();
+      await tester.tap(find.text('应用'));
+      await settleUi();
+    }
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          home: Scaffold(
+            body: VideoFeed(
+              showSearchAndFilters: true,
+              loadPage: (page) => load(page, const VideoListFilters()),
+              loadFilteredPage: load,
+              serverSideSorts: const {
+                VideoListSort.sourceOrder,
+                VideoListSort.popular,
+                VideoListSort.oldest,
+              },
+              filterOptions: const VideoListFilterOptions(
+                sorts: [
+                  VideoListSort.sourceOrder,
+                  VideoListSort.popular,
+                  VideoListSort.oldest,
+                ],
+                showDuration: false,
+                showMinRating: false,
+                showMinVotes: false,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(sorts, [VideoListSort.sourceOrder]);
+
+    // 下拉刷新进入在途状态，随后连续两次改服务端排序：两次都应排队。
+    hangNext = true;
+    await tester.drag(find.byType(CustomScrollView), const Offset(0, 400));
+    await tester.pump();
+    await changeSort('最热');
+    await changeSort('最早');
+    expect(sorts, [VideoListSort.sourceOrder, VideoListSort.sourceOrder]);
+
+    pending.complete(const [
+      VideoItem(id: 'old', title: '内容-sourceOrder', slug: 'old'),
+    ]);
+    await tester.pumpAndSettle();
+
+    // 合并成一次补跑，并采用最后选中的排序。
+    expect(sorts, [
+      VideoListSort.sourceOrder,
+      VideoListSort.sourceOrder,
+      VideoListSort.oldest,
+    ]);
+    expect(find.text('内容-oldest'), findsOneWidget);
   });
 
   testWidgets('全局视频布局设置会让通用视频流切换为两列', (tester) async {

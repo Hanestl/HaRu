@@ -73,6 +73,8 @@ class _VideoFeedState extends ConsumerState<VideoFeed>
   String _query = '';
   VideoListFilters _filters = const VideoListFilters();
   Completer<void>? _loadCompleter;
+  var _pendingReset = false;
+  var _pendingForceRefresh = false;
   late final AppSettingsRepository _settingsRepository;
 
   @override
@@ -121,23 +123,73 @@ class _VideoFeedState extends ConsumerState<VideoFeed>
     }
   }
 
-  Future<void> _load({required bool reset, bool forceRefresh = false}) async {
-    if (_loading) {
-      if (reset) {
-        await _loadCompleter?.future;
-        if (mounted) {
-          return _load(reset: true, forceRefresh: forceRefresh);
-        }
-      }
-      return;
-    }
+  /// 合并排队中的刷新请求。
+  ///
+  /// 拉取期间到达的 reset 请求不再各自发起一轮加载，而是记成待办，由当前
+  /// 这一轮在收尾时补跑一次；forceRefresh 取逻辑或，避免排队请求把强制刷新
+  /// 降级成普通刷新。所有排队调用方 await 的是同一条 future，因此
+  /// RefreshIndicator 之类不会在真实刷新结束前提前收起。
+  Future<void> _load({required bool reset, bool forceRefresh = false}) {
     if (!reset && !_hasMore) {
-      return;
+      return Future<void>.value();
     }
+    if (_loading) {
+      if (!reset) {
+        return Future<void>.value();
+      }
+      _pendingReset = true;
+      _pendingForceRefresh = _pendingForceRefresh || forceRefresh;
+      return _loadCompleter?.future ?? Future<void>.value();
+    }
+    return _runLoad(reset: reset, forceRefresh: forceRefresh);
+  }
+
+  /// 单飞执行：整个合并周期内 _loading 始终为 true，_loadCompleter 也只指向
+  /// 这一个 completer，中途到达的请求只能排队，不会与当前加载并发改写
+  /// _page / _videos。
+  Future<void> _runLoad({
+    required bool reset,
+    required bool forceRefresh,
+  }) async {
     final completer = Completer<void>();
     _loadCompleter = completer;
     setState(() {
       _loading = true;
+      _error = null;
+    });
+    try {
+      var nextReset = reset;
+      var nextForceRefresh = forceRefresh;
+      while (true) {
+        await _loadPage(reset: nextReset, forceRefresh: nextForceRefresh);
+        if (!mounted || !_pendingReset) {
+          break;
+        }
+        nextReset = true;
+        nextForceRefresh = _pendingForceRefresh;
+        _pendingReset = false;
+        _pendingForceRefresh = false;
+      }
+    } finally {
+      _pendingReset = false;
+      _pendingForceRefresh = false;
+      if (mounted) {
+        setState(() => _loading = false);
+      }
+      if (!completer.isCompleted) {
+        completer.complete();
+      }
+      if (identical(_loadCompleter, completer)) {
+        _loadCompleter = null;
+      }
+    }
+  }
+
+  Future<void> _loadPage({
+    required bool reset,
+    bool forceRefresh = false,
+  }) async {
+    setState(() {
       _error = null;
       if (reset) {
         _page = 1;
@@ -204,16 +256,6 @@ class _VideoFeedState extends ConsumerState<VideoFeed>
         ),
       );
       setState(() => _error = friendlyErrorMessage(error));
-    } finally {
-      if (mounted) {
-        setState(() => _loading = false);
-      }
-      if (!completer.isCompleted) {
-        completer.complete();
-      }
-      if (identical(_loadCompleter, completer)) {
-        _loadCompleter = null;
-      }
     }
   }
 
