@@ -176,6 +176,8 @@ class _UploaderPageState extends State<UploaderPage> {
         return;
       }
       await _loadSubscriptionStatus();
+      // 登录页与订阅状态请求都可能让本页在等待期间被弹出。
+      if (!mounted) return;
     }
     setState(() => _subscriptionBusy = true);
     final subscribed = _subscribed == true;

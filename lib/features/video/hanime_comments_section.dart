@@ -128,9 +128,13 @@ class _HanimeCommentsSectionState extends State<HanimeCommentsSection> {
 
   Future<void> _refresh() async {
     final future = _load();
-    setState(() {
-      _future = future;
-    });
+    // 调用方常在 await 之后重新加载（发表评论、点赞），此时页面可能已经关闭；
+    // 只跳过 setState，仍然 await 结果，让异常照旧抛给调用方的 catch。
+    if (mounted) {
+      setState(() {
+        _future = future;
+      });
+    }
     await future;
   }
 
@@ -159,6 +163,8 @@ class _HanimeCommentsSectionState extends State<HanimeCommentsSection> {
   Future<void> _submit() async {
     final text = _composerController.text.trim();
     if (text.isEmpty || _submitting || !await _ensureLogin()) return;
+    // 登录页是模态路由，等待期间本页可能已被弹出。
+    if (!mounted) return;
     final target = _replyTarget;
     final root = _replyRoot;
     setState(() => _submitting = true);

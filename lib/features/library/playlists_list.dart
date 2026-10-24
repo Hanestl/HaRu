@@ -63,9 +63,11 @@ class _PlaylistsListState extends State<PlaylistsList>
 
   Future<void> _reload() async {
     final future = widget.api.loadMyPlaylists(force: true);
-    setState(() {
-      _future = future;
-    });
+    if (mounted) {
+      setState(() {
+        _future = future;
+      });
+    }
     try {
       await future;
     } on Object {

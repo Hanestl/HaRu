@@ -117,9 +117,13 @@ class _Rule34CommentsSectionState extends State<Rule34CommentsSection> {
 
   Future<void> _refresh() async {
     final future = _load();
-    setState(() {
-      _future = future;
-    });
+    // 发表评论后会在 await 之后重新加载，此时页面可能已经关闭；
+    // 只跳过 setState，仍然 await 结果，让异常照旧抛给调用方的 catch。
+    if (mounted) {
+      setState(() {
+        _future = future;
+      });
+    }
     await future;
   }
 
