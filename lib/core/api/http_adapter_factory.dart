@@ -93,7 +93,9 @@ void closeSharedHttpAdapters({bool force = false}) {
   for (final adapter in _sharedAdapters.values) {
     try {
       adapter.close(force: force);
-    } catch (_) {}
+    } catch (_) {
+      // 单个适配器关闭失败不应影响其余适配器；底层句柄会随进程退出释放。
+    }
   }
   _sharedAdapters.clear();
 

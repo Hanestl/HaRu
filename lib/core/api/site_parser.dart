@@ -669,7 +669,9 @@ class SiteParser {
             }
           }
         }
-      } catch (_) {}
+      } catch (_) {
+        // 错误体不是合法 JSON 时忽略，下面退回 HTML 里的错误文案。
+      }
     }
     final document = html_parser.parse(source);
     return _clean(document.querySelector('error')?.text) ??

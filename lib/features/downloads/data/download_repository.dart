@@ -503,6 +503,18 @@ final class DownloadRepository {
     return separator <= 0 ? value : value.substring(separator + 1);
   }
 
+  /// 把"数据库里还在下载、系统里已经没有这个任务"的记录标成失败。
+  ///
+  /// 时机在 [DownloadPlatformService.initialize] 之后、插件的"5 秒后重排被杀任务"
+  /// 之前，所以这里先标失败的记录不会被插件重新入队（重排只挑仍在
+  /// enqueued/running/waitingToRetry 的记录）。
+  ///
+  /// 已知残余窗口：进程恰好在"文件已移入 Download/Flule34"与"完成态落库"之间被杀
+  /// 时，记录仍显示下载中，而私有目录里的源文件已被移走。此处无法确认文件是否
+  /// 已落位——公共目录只给出 content URI，没有任何公开接口能按文件名反查，需要在
+  /// 原生侧新增 MediaStore 查询才能覆盖。当前策略是如实标失败，让用户自己核对；
+  /// 若插件后续又发出完成事件，[BackgroundDownloadPlatformService] 的重入守卫会
+  /// 给出"可能已保存到 Download/Flule34"的提示。
   Future<void> _reconcileActiveDownloads() async {
     final records = await _database.activeDownloads(_deviceOwnerId);
     for (final record in records) {
