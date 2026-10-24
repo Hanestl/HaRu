@@ -79,6 +79,10 @@ final class BackgroundDownloadPlatformService
         );
     await _downloader.trackTasksInGroup(_group);
     await _downloader.resumeFromBackground();
+    // 只跑一次、且延迟 5 秒：与上游 FileDownloader.start() 的做法一致（等原生
+    // 任务队列先回报一轮状态，再把"数据库里有、原生队列里没有"的任务重排）。
+    // 进程被系统杀掉后重新进入应用会走这里；进程一直存活时不会再重排，属于
+    // 上游既定行为，不要改成周期轮询（会反复删除并重排同一条记录）。
     _rescheduleTimer = Timer(const Duration(seconds: 5), () {
       unawaited(_rescheduleKilledTasks());
     });
