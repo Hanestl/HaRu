@@ -1744,6 +1744,18 @@ final class _HanimeCommentsCacheEntry {
   final DateTime createdAt;
 }
 
+/// 把浏览器侧的 `name=value; name2=value2` 串转换成站点 Cookie。
+///
+/// **不要试图在这里恢复 HttpOnly / SameSite / Expires / Max-Age。** 两个来源都拿不到
+/// 这些属性：Android 的 `CookieManager.getCookie(url)` 只返回 name=value（HttpOnly 会
+/// 包含在内，属性不会），WebView 里的 `document.cookie` 更严格——它连 HttpOnly Cookie
+/// 都不返回，因此只作为平台通道失败时的兜底。
+///
+/// 所以 domain / path / secure 只能按请求来源推断，过期时间只能交给
+/// `PersistCookieJar(persistSession: true)`（lib/app/providers.dart）当作会话 Cookie 持久化。
+/// 这也意味着本地持有的 Cookie 寿命与浏览器里的真实属性不等价：会话是否仍然有效，
+/// 最终只能由服务端响应（403 / 跳转登录页）判定，见 [Hanime1Api] 的 Cloudflare 与
+/// 会话过期处理。
 List<Cookie> parseBrowserCookieHeader(String header, Uri origin) {
   final cookies = <Cookie>[];
   for (final part in header.split(';')) {
