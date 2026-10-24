@@ -30,9 +30,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get ui0be8a2c8 => '60분 이상';
 
   @override
-  String get ui5756c92c => '<html 조각>';
-
-  @override
   String get ui6e93de1b => '===== 최근 7일간의 로그 =====';
 
   @override
@@ -89,6 +86,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get ui2dff86e7 => 'Hanime 좋아요 작업';
+
+  @override
+  String get ui5db4a68e => '하니메 로그인 상태가 만료되었습니다. 웹 페이지에서 다시 로그인한 후 다시 시도해 주세요.';
 
   @override
   String ui15642644(String p0) {
@@ -823,9 +823,6 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get ui73f2614f => '이름';
-
-  @override
-  String get ui06e91ae0 => '백스테이지/프런트스테이지';
 
   @override
   String get ui3a38a6d4 => '백그라운드 작업 진행 중';
@@ -2115,7 +2112,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get ui1e85b6dc => '미디어 재생 중';
 
   @override
-  String get ui3dcae6c0 => '확인 결과를 기다리는 중입니다... 오랫동안 응답이 없으면 재시도를 클릭해 주세요.';
+  String get ui1a19f33c => '하니메 페이지를 불러오는 중입니다... 오랫동안 응답이 없으면 재시도를 눌러 주세요.';
 
   @override
   String get ui37674019 => '모든 동영상 로드 중…';
@@ -2522,9 +2519,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get ui1becc780 => '사이트 서비스를 일시적으로 사용할 수 없습니다. 잠시 후 다시 시도하세요.';
 
   @override
-  String get ui6fe1719c => '쿠키를 기다릴 수 없습니다 → 새로 고침 → 다시 도전';
-
-  @override
   String get ui2ced8087 => '다운로드 대기 중';
 
   @override
@@ -2811,6 +2805,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String get ui4fbae4c2 => '동영상 저장 위치: Download/Flule34';
 
   @override
+  String get ui1f59ee3b =>
+      '동영상이 Download/Flule34에 저장되었을 수 있지만 앱이 위치를 확인하지 못했습니다. 파일 관리자에서 확인해 주세요.';
+
+  @override
   String get ui538cdd02 =>
       '동영상 URL을 여러 번 새로고침했지만 여전히 재생할 수 없습니다. 잠시 후 직접 다시 시도하세요.';
 
@@ -2904,6 +2902,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get ui139f12da => '클라이언트가 종료되어 요청을 시작할 수 없습니다.';
 
   @override
+  String get ui13ecda96 => '해당 재생목록이 더 이상 존재하지 않습니다. 다시 선택해 주세요.';
+
+  @override
+  String get ui17f975b3 => '해당 로컬 라이브러리가 더 이상 존재하지 않습니다. 다시 선택해 주세요.';
+
+  @override
   String get ui6ebae107 => '이 버전에는 다운로드 가능한 설치 패키지가 없습니다.';
 
   @override
@@ -2958,6 +2962,19 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get ui3a579d8a => '요청 시간이 초과되었습니다. 다시 시도하세요.';
+
+  @override
+  String ui17d9c651(String p0) {
+    return '요청이 너무 많습니다. 서버 권장 대기 시간은 $p0분입니다.';
+  }
+
+  @override
+  String ui72adb9a6(String p0) {
+    return '요청이 너무 많습니다. 서버 권장 대기 시간은 $p0초입니다.';
+  }
+
+  @override
+  String get ui43188d72 => '요청이 너무 많습니다. 잠시 후 다시 시도하세요.';
 
   @override
   String get ui61ca1aa4 => '2자 이상 입력해주세요.';

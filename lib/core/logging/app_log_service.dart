@@ -46,6 +46,12 @@ final class AppLogService {
   var _cleared = false;
   String? _lastPurgeDateKey;
   int? _approximateTotalBytes;
+  // 同一天的连续写入复用同一个目标文件与其已知大小，避免每条日志都做
+  // create/exists/length 三次系统调用。所有写入都串在 [_writeChain] 上，
+  // 因此这份缓存不需要加锁。
+  String? _currentFileDateKey;
+  File? _currentFile;
+  int _currentFileBytes = 0;
   final Future<Directory> Function() _supportDirectory;
   final DateTime Function() _clock;
   // 测试环境（flutter test）下全局单例直接跳过磁盘写入：真实文件 IO
@@ -110,9 +116,9 @@ final class AppLogService {
           _cleared = false;
           _lastPurgeDateKey = null;
           _approximateTotalBytes = null;
+          _resetCurrentFile();
         }
         final directory = await _directory();
-        await directory.create(recursive: true);
         final now = _clock();
         final currentDateKey = _dateKey(now);
         if (_approximateTotalBytes == null ||
@@ -120,24 +126,7 @@ final class AppLogService {
           await _purge(directory);
           _lastPurgeDateKey = currentDateKey;
         }
-        var targetFile = File(
-          '${directory.path}${Platform.pathSeparator}$_filePrefix$currentDateKey$_fileSuffix',
-        );
-        if (await targetFile.exists() &&
-            await targetFile.length() >= _maxFileBytes) {
-          var index = 1;
-          while (true) {
-            final nextFile = File(
-              '${directory.path}${Platform.pathSeparator}$_filePrefix$currentDateKey.$index$_fileSuffix',
-            );
-            if (!await nextFile.exists() ||
-                await nextFile.length() < _maxFileBytes) {
-              targetFile = nextFile;
-              break;
-            }
-            index++;
-          }
-        }
+        final targetFile = await _resolveTargetFile(directory, currentDateKey);
         final safeMessage = redactSensitiveText(
           message,
           maxLength: maxMessageLength,
@@ -151,6 +140,7 @@ final class AppLogService {
           mode: FileMode.append,
           encoding: utf8,
         );
+        _currentFileBytes += lineBytes;
         _approximateTotalBytes = (_approximateTotalBytes ?? 0) + lineBytes;
         if (_approximateTotalBytes! > _maxTotalBytes) {
           await _purge(directory);
@@ -160,6 +150,47 @@ final class AppLogService {
       }
     });
     return operation;
+  }
+
+  /// 解析当天要写入的日志文件，并在同一天的连续写入之间复用结果。
+  Future<File> _resolveTargetFile(Directory directory, String dateKey) async {
+    final cached = _currentFile;
+    if (cached != null &&
+        _currentFileDateKey == dateKey &&
+        _currentFileBytes < _maxFileBytes) {
+      return cached;
+    }
+    await directory.create(recursive: true);
+    final separator = Platform.pathSeparator;
+    var targetFile = File(
+      '${directory.path}$separator$_filePrefix$dateKey$_fileSuffix',
+    );
+    var size = await targetFile.exists() ? await targetFile.length() : 0;
+    if (size >= _maxFileBytes) {
+      var index = 1;
+      while (true) {
+        final nextFile = File(
+          '${directory.path}$separator$_filePrefix$dateKey.$index$_fileSuffix',
+        );
+        final nextSize = await nextFile.exists() ? await nextFile.length() : 0;
+        if (nextSize < _maxFileBytes) {
+          targetFile = nextFile;
+          size = nextSize;
+          break;
+        }
+        index++;
+      }
+    }
+    _currentFileDateKey = dateKey;
+    _currentFile = targetFile;
+    _currentFileBytes = size;
+    return targetFile;
+  }
+
+  void _resetCurrentFile() {
+    _currentFileDateKey = null;
+    _currentFile = null;
+    _currentFileBytes = 0;
   }
 
   Future<List<File>> _logFiles() async {
@@ -217,6 +248,7 @@ final class AppLogService {
       }
     }
     _approximateTotalBytes = totalBytes;
+    _resetCurrentFile();
   }
 
   Future<LogStorageInfo> storageInfo() async {
@@ -239,8 +271,9 @@ final class AppLogService {
     for (final file in files) {
       buffer.writeln('===== ${file.uri.pathSegments.last} =====');
       final stored = await file.readAsString(encoding: utf8);
-      buffer.write(stored.replaceAll(r'\n', '\n'));
-      if (!buffer.toString().endsWith('\n')) {
+      final restored = stored.replaceAll(r'\n', '\n');
+      buffer.write(restored);
+      if (!restored.endsWith('\n')) {
         buffer.writeln();
       }
     }
@@ -274,6 +307,7 @@ final class AppLogService {
     await _clearExportFiles();
     _cleared = true;
     _approximateTotalBytes = 0;
+    _resetCurrentFile();
   }
 
   Future<void> _clearExportFiles() async {

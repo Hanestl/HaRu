@@ -705,6 +705,97 @@ void main() {
     expect(requests, 3);
   });
 
+  test('Retry-After 支持秒数与 HTTP-date，非法值回退为 null', () {
+    final now = DateTime.utc(2026, 1, 1, 12);
+
+    expect(parseRetryAfter('120', now), const Duration(seconds: 120));
+    expect(parseRetryAfter(' 3 ', now), const Duration(seconds: 3));
+    expect(parseRetryAfter('0', now), isNull);
+    expect(parseRetryAfter('-5', now), isNull);
+    expect(parseRetryAfter('', now), isNull);
+    expect(parseRetryAfter(null, now), isNull);
+    expect(parseRetryAfter('soon', now), isNull);
+
+    final future = now.add(const Duration(seconds: 30));
+    expect(
+      parseRetryAfter(HttpDate.format(future), now),
+      const Duration(seconds: 30),
+    );
+
+    final past = now.subtract(const Duration(seconds: 30));
+    expect(parseRetryAfter(HttpDate.format(past), now), isNull);
+  });
+
+  test('Retry-After 超出重试预算时不重试，并把建议等待交给调用方', () async {
+    final harness = TestSessionHarness.create();
+    addTearDown(harness.dispose);
+    await harness.sessionStore.load();
+    var requests = 0;
+    final api = Rule34VideoApi(
+      sessionStore: harness.sessionStore,
+      httpClientAdapter: _TestAdapter((_) {
+        requests += 1;
+        return ResponseBody.fromString(
+          'Too Many Requests',
+          429,
+          headers: {
+            'retry-after': ['30'],
+          },
+        );
+      }),
+    );
+    addTearDown(api.close);
+
+    await expectLater(
+      api.loadFeed(FeedKind.newest, 1),
+      throwsA(
+        isA<HttpStatusException>()
+            .having((error) => error.statusCode, 'statusCode', 429)
+            .having(
+              (error) => error.retryAfter,
+              'retryAfter',
+              const Duration(seconds: 30),
+            ),
+      ),
+    );
+    expect(requests, 1);
+  });
+
+  test('瞬时 429 遵循 Retry-After 重试，耗尽后异常携带该值', () async {
+    final harness = TestSessionHarness.create();
+    addTearDown(harness.dispose);
+    await harness.sessionStore.load();
+    var requests = 0;
+    final api = Rule34VideoApi(
+      sessionStore: harness.sessionStore,
+      httpClientAdapter: _TestAdapter((_) {
+        requests += 1;
+        return ResponseBody.fromString(
+          'Too Many Requests',
+          429,
+          headers: {
+            'retry-after': ['1'],
+          },
+        );
+      }),
+    );
+    addTearDown(api.close);
+
+    await expectLater(
+      api.loadFeed(FeedKind.newest, 1),
+      throwsA(
+        isA<HttpStatusException>()
+            .having((error) => error.statusCode, 'statusCode', 429)
+            .having(
+              (error) => error.retryAfter,
+              'retryAfter',
+              const Duration(seconds: 1),
+            ),
+      ),
+    );
+    expect(requests, 3);
+  });
+
   test('Rule34Video 首页相同并发请求合并且后续命中缓存', () async {
     final harness = TestSessionHarness.create();
     addTearDown(harness.dispose);

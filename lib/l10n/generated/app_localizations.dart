@@ -144,12 +144,6 @@ abstract class AppLocalizations {
   /// **'60 分钟以上'**
   String get ui0be8a2c8;
 
-  /// HaRu UI: <html片段>
-  ///
-  /// In zh, this message translates to:
-  /// **'<html片段>'**
-  String get ui5756c92c;
-
   /// HaRu UI: ===== 最近 7 天日志 =====
   ///
   /// In zh, this message translates to:
@@ -263,6 +257,12 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'Hanime 点赞操作'**
   String get ui2dff86e7;
+
+  /// HaRu UI: Hanime 登录状态已失效，请在网页中重新登录后再试。
+  ///
+  /// In zh, this message translates to:
+  /// **'Hanime 登录状态已失效，请在网页中重新登录后再试。'**
+  String get ui5db4a68e;
 
   /// HaRu UI: Hanime 登录请求失败：{p0}
   ///
@@ -1494,12 +1494,6 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'名称'**
   String get ui73f2614f;
-
-  /// HaRu UI: 后台/前台
-  ///
-  /// In zh, this message translates to:
-  /// **'后台/前台'**
-  String get ui06e91ae0;
 
   /// HaRu UI: 后台任务进行中
   ///
@@ -3829,11 +3823,11 @@ abstract class AppLocalizations {
   /// **'正在播放媒体'**
   String get ui1e85b6dc;
 
-  /// HaRu UI: 正在等待验证结果…如果长时间无反应，请点重试。
+  /// HaRu UI: 正在等待 Hanime 页面加载…如果长时间无反应，请点重试。
   ///
   /// In zh, this message translates to:
-  /// **'正在等待验证结果…如果长时间无反应，请点重试。'**
-  String get ui3dcae6c0;
+  /// **'正在等待 Hanime 页面加载…如果长时间无反应，请点重试。'**
+  String get ui1a19f33c;
 
   /// HaRu UI: 正在读取全部视频…
   ///
@@ -4588,12 +4582,6 @@ abstract class AppLocalizations {
   /// **'站点服务暂时不可用，请稍后重试'**
   String get ui1becc780;
 
-  /// HaRu UI: 等不到 cookie → 重刷 → 再挑战
-  ///
-  /// In zh, this message translates to:
-  /// **'等不到 cookie → 重刷 → 再挑战'**
-  String get ui6fe1719c;
-
   /// HaRu UI: 等待下载
   ///
   /// In zh, this message translates to:
@@ -5134,6 +5122,12 @@ abstract class AppLocalizations {
   /// **'视频保存路径：Download/Flule34'**
   String get ui4fbae4c2;
 
+  /// HaRu UI: 视频可能已保存到 Download/Flule34，但应用未能确认其位置，请在系统文件管理器中查看。
+  ///
+  /// In zh, this message translates to:
+  /// **'视频可能已保存到 Download/Flule34，但应用未能确认其位置，请在系统文件管理器中查看。'**
+  String get ui1f59ee3b;
+
   /// HaRu UI: 视频地址已连续刷新多次仍无法播放，请稍后手动重试。
   ///
   /// In zh, this message translates to:
@@ -5314,6 +5308,18 @@ abstract class AppLocalizations {
   /// **'该客户端已被关闭，无法发起请求。'**
   String get ui139f12da;
 
+  /// HaRu UI: 该播放列表已不存在，请重新选择。
+  ///
+  /// In zh, this message translates to:
+  /// **'该播放列表已不存在，请重新选择。'**
+  String get ui13ecda96;
+
+  /// HaRu UI: 该本地库已不存在，请重新选择。
+  ///
+  /// In zh, this message translates to:
+  /// **'该本地库已不存在，请重新选择。'**
+  String get ui17f975b3;
+
   /// HaRu UI: 该版本没有可下载的安装包。
   ///
   /// In zh, this message translates to:
@@ -5421,6 +5427,24 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'请求超时，请重试'**
   String get ui3a579d8a;
+
+  /// HaRu UI: 请求过于频繁，服务器建议 {p0} 分钟后再试
+  ///
+  /// In zh, this message translates to:
+  /// **'请求过于频繁，服务器建议 {p0} 分钟后再试'**
+  String ui17d9c651(String p0);
+
+  /// HaRu UI: 请求过于频繁，服务器建议 {p0} 秒后再试
+  ///
+  /// In zh, this message translates to:
+  /// **'请求过于频繁，服务器建议 {p0} 秒后再试'**
+  String ui72adb9a6(String p0);
+
+  /// HaRu UI: 请求过于频繁，请稍后重试
+  ///
+  /// In zh, this message translates to:
+  /// **'请求过于频繁，请稍后重试'**
+  String get ui43188d72;
 
   /// HaRu UI: 请至少输入 2 个字符。
   ///

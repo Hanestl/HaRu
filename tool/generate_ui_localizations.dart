@@ -105,6 +105,7 @@ Future<List<String>> _collectSources() async {
   for (final file in files) {
     final path = file.path.replaceAll('\\', '/');
     var contents = await file.readAsString();
+    contents = _stripComments(contents);
     // 过滤开发者日志调用，避免将内部排障日志串误识别为用户 UI 文案。
     // 这里必须用 `(?:.|\n)*?` 而不是 `[^;]*?`：日志串本身常含 ASCII 分号
     //（例如 `attempt=${attempt + 1};`），用 `[^;]` 会让整条调用匹配失败，
@@ -162,6 +163,122 @@ Future<List<String>> _collectSources() async {
   return result;
 }
 
+/// 剥离 Dart 注释后再抽取字面量。
+///
+/// 中文注释里常用 ASCII 引号强调术语（例如 `把"容器在不在"当成结果`），
+/// 注释不是用户可见文案，若不剥离，这些词会被当成待翻译的 UI 文案，
+/// 让 `--check` 因为一段注释而失败。
+String _stripComments(String contents) {
+  final buffer = StringBuffer();
+  var index = 0;
+  while (index < contents.length) {
+    final char = contents[index];
+    // 原始字符串（r'...' / r"..." / r'''...''' / r"""..."""）：不处理转义。
+    if ((char == 'r' || char == 'R') &&
+        index + 1 < contents.length &&
+        (contents[index + 1] == "'" || contents[index + 1] == '"')) {
+      final end = _skipStringLiteral(contents, index + 1, raw: true);
+      buffer.write(contents.substring(index, end));
+      index = end;
+      continue;
+    }
+    if (char == "'" || char == '"') {
+      final end = _skipStringLiteral(contents, index, raw: false);
+      buffer.write(contents.substring(index, end));
+      index = end;
+      continue;
+    }
+    if (char == '/' && index + 1 < contents.length) {
+      final next = contents[index + 1];
+      if (next == '/') {
+        final end = contents.indexOf('\n', index);
+        // 保留换行，避免把注释上下两行粘成一行。
+        buffer.write('\n');
+        if (end < 0) return buffer.toString();
+        index = end + 1;
+        continue;
+      }
+      if (next == '*') {
+        final end = contents.indexOf('*/', index + 2);
+        buffer.write('\n');
+        if (end < 0) return buffer.toString();
+        index = end + 2;
+        continue;
+      }
+    }
+    buffer.write(char);
+    index++;
+  }
+  return buffer.toString();
+}
+
+/// 返回字符串字面量结束后的下标；未闭合时返回文档末尾。
+///
+/// 必须跳过 `${...}` 插值：插值内部可以再嵌字符串字面量
+/// （例如 `'失败：${foo ?? '未知错误'}'`），若在第一个内层引号处收尾，
+/// 后半截代码会被当成注释或字符串，可能误删同一行的真实 UI 文案。
+int _skipStringLiteral(String contents, int start, {required bool raw}) {
+  final quote = contents[start];
+  final isTriple = contents.startsWith(quote * 3, start);
+  final terminator = isTriple ? quote * 3 : quote;
+  var index = start + terminator.length;
+  while (index < contents.length) {
+    final char = contents[index];
+    if (!raw && char == '\\') {
+      index += 2;
+      continue;
+    }
+    if (!raw && char == r'$') {
+      index = _skipInterpolation(contents, index);
+      continue;
+    }
+    if (contents.startsWith(terminator, index)) {
+      return index + terminator.length;
+    }
+    // 单行字符串遇到换行即视为结束，避免把后续代码当成字符串吞掉。
+    if (!isTriple && char == '\n') return index;
+    index++;
+  }
+  return contents.length;
+}
+
+/// 跳过一个 `$name` 或 `${...}` 插值，返回其结束后的下标。
+int _skipInterpolation(String contents, int start) {
+  var index = start + 1;
+  if (index >= contents.length) return index;
+  if (contents[index] != '{') {
+    // `$identifier`：只跳过标识符与属性访问。
+    while (index < contents.length) {
+      final char = contents[index];
+      final isPart =
+          RegExp(r'[A-Za-z0-9_]').hasMatch(char) ||
+          (char == '.' &&
+              index + 1 < contents.length &&
+              RegExp(r'[A-Za-z_]').hasMatch(contents[index + 1]));
+      if (!isPart) break;
+      index++;
+    }
+    return index;
+  }
+  index++; // 跳过 '{'
+  var depth = 1;
+  while (index < contents.length) {
+    final char = contents[index];
+    if (char == "'" || char == '"') {
+      index = _skipStringLiteral(contents, index, raw: false);
+      continue;
+    }
+    if (char == '{') {
+      depth++;
+    } else if (char == '}') {
+      depth--;
+      if (depth == 0) return index + 1;
+    }
+    index++;
+  }
+  return contents.length;
+}
+
 bool _isUiSource(String path) {
   if (path.startsWith('lib/features/') || path.startsWith('lib/shared/')) {
     return true;
@@ -189,6 +306,14 @@ bool _isUiSource(String path) {
 /// 这些字面量虽然含中文，但只发给翻译服务或用于校验模型返回值，
 /// 永远不会渲染到界面上，若不过滤会被误当成用户可见文案。
 final _nonUiSectionPatterns = <String, List<RegExp>>{
+  // HanimeDocumentInspection.reason 只拼进 AppLogService 日志，从不渲染到界面。
+  'lib/core/api/hanime1_parser.dart': [
+    RegExp(r"""reason:\s*'(?:[^'\\]|\\.)*'"""),
+  ],
+  // CancelToken.cancel 的说明串只用于日志与异常调试信息。
+  'lib/core/api/hanime1_api.dart': [
+    RegExp(r"""\.cancel\(\s*'(?:[^'\\]|\\.)*'\s*\)"""),
+  ],
   'lib/core/services/translation_provider_router.dart': [
     // DeepL 的上下文与指令构造方法。
     RegExp(r'static String _deepLContext\([\s\S]*?\n  \}'),

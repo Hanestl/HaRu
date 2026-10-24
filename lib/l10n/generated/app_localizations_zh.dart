@@ -30,9 +30,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get ui0be8a2c8 => '60 分钟以上';
 
   @override
-  String get ui5756c92c => '<html片段>';
-
-  @override
   String get ui6e93de1b => '===== 最近 7 天日志 =====';
 
   @override
@@ -88,6 +85,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get ui2dff86e7 => 'Hanime 点赞操作';
+
+  @override
+  String get ui5db4a68e => 'Hanime 登录状态已失效，请在网页中重新登录后再试。';
 
   @override
   String ui15642644(String p0) {
@@ -812,9 +812,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get ui73f2614f => '名称';
-
-  @override
-  String get ui06e91ae0 => '后台/前台';
 
   @override
   String get ui3a38a6d4 => '后台任务进行中';
@@ -2099,7 +2096,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get ui1e85b6dc => '正在播放媒体';
 
   @override
-  String get ui3dcae6c0 => '正在等待验证结果…如果长时间无反应，请点重试。';
+  String get ui1a19f33c => '正在等待 Hanime 页面加载…如果长时间无反应，请点重试。';
 
   @override
   String get ui37674019 => '正在读取全部视频…';
@@ -2505,9 +2502,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get ui1becc780 => '站点服务暂时不可用，请稍后重试';
 
   @override
-  String get ui6fe1719c => '等不到 cookie → 重刷 → 再挑战';
-
-  @override
   String get ui2ced8087 => '等待下载';
 
   @override
@@ -2791,6 +2785,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get ui4fbae4c2 => '视频保存路径：Download/Flule34';
 
   @override
+  String get ui1f59ee3b => '视频可能已保存到 Download/Flule34，但应用未能确认其位置，请在系统文件管理器中查看。';
+
+  @override
   String get ui538cdd02 => '视频地址已连续刷新多次仍无法播放，请稍后手动重试。';
 
   @override
@@ -2882,6 +2879,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get ui139f12da => '该客户端已被关闭，无法发起请求。';
 
   @override
+  String get ui13ecda96 => '该播放列表已不存在，请重新选择。';
+
+  @override
+  String get ui17f975b3 => '该本地库已不存在，请重新选择。';
+
+  @override
   String get ui6ebae107 => '该版本没有可下载的安装包。';
 
   @override
@@ -2936,6 +2939,19 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get ui3a579d8a => '请求超时，请重试';
+
+  @override
+  String ui17d9c651(String p0) {
+    return '请求过于频繁，服务器建议 $p0 分钟后再试';
+  }
+
+  @override
+  String ui72adb9a6(String p0) {
+    return '请求过于频繁，服务器建议 $p0 秒后再试';
+  }
+
+  @override
+  String get ui43188d72 => '请求过于频繁，请稍后重试';
 
   @override
   String get ui61ca1aa4 => '请至少输入 2 个字符。';

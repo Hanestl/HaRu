@@ -30,9 +30,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get ui0be8a2c8 => '60分以上';
 
   @override
-  String get ui5756c92c => '<htmlフラグメント>';
-
-  @override
   String get ui6e93de1b => '===== 過去7日間のログ =====';
 
   @override
@@ -89,6 +86,9 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get ui2dff86e7 => 'Hanime 高評価操作';
+
+  @override
+  String get ui5db4a68e => 'ハニメのログイン状態が無効になりました。Webページで再度ログインしてからお試しください。';
 
   @override
   String ui15642644(String p0) {
@@ -822,9 +822,6 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get ui73f2614f => '名前';
-
-  @override
-  String get ui06e91ae0 => 'バックステージ/フロントステージ';
 
   @override
   String get ui3a38a6d4 => 'バックグラウンドタスクが進行中です';
@@ -2113,7 +2110,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get ui1e85b6dc => 'メディアを再生中';
 
   @override
-  String get ui3dcae6c0 => '検証結果を待っています... 長時間応答がない場合は、「再試行」をクリックしてください。';
+  String get ui1a19f33c => 'ハニメのページを読み込み中です... 長時間反応がない場合は、「再試行」をタップしてください。';
 
   @override
   String get ui37674019 => 'すべての動画を読み込んでいます…';
@@ -2519,9 +2516,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get ui1becc780 => 'サイトのサービスは一時的に利用できません。しばらくしてから再試行してください。';
 
   @override
-  String get ui6fe1719c => 'クッキーが待ちきれない → 更新 → 再チャレンジ';
-
-  @override
   String get ui2ced8087 => 'ダウンロードを待っています';
 
   @override
@@ -2808,6 +2802,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get ui4fbae4c2 => '動画の保存先：Download/Flule34';
 
   @override
+  String get ui1f59ee3b =>
+      '動画はDownload/Flule34に保存された可能性がありますが、アプリが場所を確認できませんでした。ファイルマネージャーでご確認ください。';
+
+  @override
   String get ui538cdd02 => '動画URLを複数回更新しましたが、再生できませんでした。しばらくしてから手動で再試行してください。';
 
   @override
@@ -2900,6 +2898,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get ui139f12da => 'クライアントはすでに閉じられているため、リクエストを開始できません。';
 
   @override
+  String get ui13ecda96 => 'そのプレイリストはもう存在しません。選び直してください。';
+
+  @override
+  String get ui17f975b3 => 'そのローカルライブラリはもう存在しません。選び直してください。';
+
+  @override
   String get ui6ebae107 => 'このバージョンにはダウンロード可能なインストール パッケージはありません。';
 
   @override
@@ -2955,6 +2959,19 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get ui3a579d8a => 'リクエストがタイムアウトしました。再試行してください。';
+
+  @override
+  String ui17d9c651(String p0) {
+    return 'リクエストが多すぎます。サーバーの指示では$p0分後に再試行してください。';
+  }
+
+  @override
+  String ui72adb9a6(String p0) {
+    return 'リクエストが多すぎます。サーバーの指示では$p0秒後に再試行してください。';
+  }
+
+  @override
+  String get ui43188d72 => 'リクエストが多すぎます。しばらくしてから再試行してください。';
 
   @override
   String get ui61ca1aa4 => '少なくとも 2 文字を入力してください。';

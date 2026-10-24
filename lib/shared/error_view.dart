@@ -25,6 +25,9 @@ String friendlyErrorMessage(Object? error, {String fallback = '出错了，请�
   }
   if (error is HttpStatusException) {
     final status = error.statusCode;
+    if (status == 429) {
+      return _rateLimitedMessage(error.retryAfter);
+    }
     if (status == 500 || status == 502 || status == 503 || status == 504) {
       return '站点服务暂时不可用，请稍后重试';
     }
@@ -57,6 +60,7 @@ String friendlyErrorMessage(Object? error, {String fallback = '出错了，请�
       DioExceptionType.badResponse => switch (error.response?.statusCode) {
         403 => '访问受限，可能需要安全验证',
         404 => '请求的内容不存在或已被删除',
+        429 => '请求过于频繁，请稍后重试',
         500 || 502 || 503 || 504 => '站点服务暂时不可用，请稍后重试',
         _ => '服务器响应异常 (${error.response?.statusCode ?? '未知'})',
       },
@@ -124,6 +128,20 @@ String friendlyErrorMessage(Object? error, {String fallback = '出错了，请�
   }
 
   return redactSensitiveText(fallback);
+}
+
+/// 429 的提示文案：服务器给出 Retry-After 时明确告知建议等待时长，
+/// 避免用户立刻重试又被拒。
+String _rateLimitedMessage(Duration? retryAfter) {
+  if (retryAfter == null || retryAfter <= Duration.zero) {
+    return '请求过于频繁，请稍后重试';
+  }
+  final seconds = retryAfter.inSeconds < 1 ? 1 : retryAfter.inSeconds;
+  if (seconds < 60) {
+    return '请求过于频繁，服务器建议 $seconds 秒后再试';
+  }
+  final minutes = (seconds + 59) ~/ 60;
+  return '请求过于频繁，服务器建议 $minutes 分钟后再试';
 }
 
 /// 判断异常或错误提示是否属于网络相关问题。

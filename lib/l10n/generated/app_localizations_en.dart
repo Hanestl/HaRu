@@ -30,9 +30,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ui0be8a2c8 => '60+ minutes';
 
   @override
-  String get ui5756c92c => '<html fragment>';
-
-  @override
   String get ui6e93de1b => '===== Logs from the Last 7 Days =====';
 
   @override
@@ -90,6 +87,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ui2dff86e7 => 'Hanime like action';
+
+  @override
+  String get ui5db4a68e =>
+      'Your Hanime session has expired. Sign in again on the web page and try again.';
 
   @override
   String ui15642644(String p0) {
@@ -842,9 +843,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ui73f2614f => 'Name';
-
-  @override
-  String get ui06e91ae0 => 'Backstage/Frontstage';
 
   @override
   String get ui3a38a6d4 => 'Background task in progress';
@@ -2186,8 +2184,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ui1e85b6dc => 'Playing media';
 
   @override
-  String get ui3dcae6c0 =>
-      'Waiting for verification results... If there is no response for a long time, please click Retry.';
+  String get ui1a19f33c =>
+      'Waiting for the Hanime page to load... If nothing happens for a long time, tap Retry.';
 
   @override
   String get ui37674019 => 'Loading all videos…';
@@ -2612,10 +2610,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Site service is temporarily unavailable. Try again later.';
 
   @override
-  String get ui6fe1719c =>
-      'Can\'t wait for cookies → Refresh → Challenge again';
-
-  @override
   String get ui2ced8087 => 'Waiting for download';
 
   @override
@@ -2919,6 +2913,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ui4fbae4c2 => 'Video save location: Download/Flule34';
 
   @override
+  String get ui1f59ee3b =>
+      'The video may already be saved in Download/Flule34, but the app could not confirm its location. Check it in your file manager.';
+
+  @override
   String get ui538cdd02 =>
       'The video URL was refreshed several times, but playback still failed. Try again manually later.';
 
@@ -3019,6 +3017,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'The client has been closed; cannot initiate requests.';
 
   @override
+  String get ui13ecda96 =>
+      'That playlist no longer exists. Choose another one.';
+
+  @override
+  String get ui17f975b3 =>
+      'That local library no longer exists. Choose another one.';
+
+  @override
   String get ui6ebae107 =>
       'There is no downloadable installation package for this version.';
 
@@ -3077,6 +3083,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ui3a579d8a => 'Request timed out. Please try again.';
+
+  @override
+  String ui17d9c651(String p0) {
+    return 'Too many requests. The server suggests waiting $p0 minutes.';
+  }
+
+  @override
+  String ui72adb9a6(String p0) {
+    return 'Too many requests. The server suggests waiting $p0 seconds.';
+  }
+
+  @override
+  String get ui43188d72 => 'Too many requests. Try again later.';
 
   @override
   String get ui61ca1aa4 => 'Please enter at least 2 characters.';

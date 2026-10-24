@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 
+import '../config/app_build_config.dart';
 import '../logging/app_log_service.dart';
 import '../models/account_models.dart';
 import '../models/content_source.dart';
@@ -21,18 +23,26 @@ import 'parse_isolate.dart';
 import 'site_parser.dart';
 
 class ApiException implements Exception {
-  const ApiException(this.message, {this.statusCode});
+  const ApiException(this.message, {this.statusCode, this.retryAfter});
 
   final String message;
   final int? statusCode;
+
+  /// 服务端通过 `Retry-After` 建议的最短等待时间；响应未给出或无法解析
+  /// 时为 null，此时调用方使用默认退避。
+  final Duration? retryAfter;
 
   @override
   String toString() => message;
 }
 
 final class HttpStatusException extends ApiException {
-  const HttpStatusException(int statusCode)
-    : super('服务器返回了 HTTP $statusCode。', statusCode: statusCode);
+  const HttpStatusException(int statusCode, {Duration? retryAfter})
+    : super(
+        '服务器返回了 HTTP $statusCode。',
+        statusCode: statusCode,
+        retryAfter: retryAfter,
+      );
 
   @override
   int get statusCode => super.statusCode!;
@@ -46,6 +56,28 @@ final class RequestCancelledException extends ApiException {
   const RequestCancelledException() : super('后台预加载已让位于当前操作。');
 }
 
+/// 解析 `Retry-After` 响应头，同时支持 RFC 9110 允许的"延迟秒数"与
+/// HTTP-date 两种形式。
+///
+/// 无法解析、为空或已经过期时返回 null，由调用方回退到默认退避。
+/// [now] 用于让调用方与测试注入时钟。
+Duration? parseRetryAfter(String? value, DateTime now) {
+  final raw = value?.trim();
+  if (raw == null || raw.isEmpty) {
+    return null;
+  }
+  final seconds = int.tryParse(raw);
+  if (seconds != null) {
+    return seconds > 0 ? Duration(seconds: seconds) : null;
+  }
+  try {
+    final wait = HttpDate.parse(raw).difference(now.toUtc());
+    return wait > Duration.zero ? wait : null;
+  } on Object {
+    return null;
+  }
+}
+
 class Rule34VideoApi {
   static const _videoDetailsCacheTtl = Duration(minutes: 5);
   static const _videoPageCacheTtl = Duration(minutes: 5);
@@ -54,7 +86,11 @@ class Rule34VideoApi {
   static const _entityAvatarCacheLimit = 500;
   static const _accountPaginationLimit = 50;
   static const _accountPaginationNoProgressLimit = 3;
-  static const appUserAgent = 'HaRu Android/2.0.1';
+
+  /// 自动重试能接受的 Retry-After 上限。超过预算就结束本次请求并把
+  /// 服务器建议的等待时间带回给界面提示用户稍后重试，不擅自缩短等待。
+  static const _retryAfterBudget = Duration(seconds: 2);
+  static final _retryJitter = Random();
 
   Rule34VideoApi({
     required this.sessionStore,
@@ -77,11 +113,11 @@ class Rule34VideoApi {
       _publicDio.httpClientAdapter = httpClientAdapter;
     } else {
       _dio.httpClientAdapter = getOrCreateSharedHttpAdapter(
-        userAgent: appUserAgent,
+        userAgent: AppBuildConfig.appUserAgent,
         component: 'rule34video_api_auth',
       );
       _publicDio.httpClientAdapter = getOrCreateSharedHttpAdapter(
-        userAgent: appUserAgent,
+        userAgent: AppBuildConfig.appUserAgent,
         component: 'rule34video_api_public',
       );
     }
@@ -2284,18 +2320,33 @@ class Rule34VideoApi {
         rethrow;
       } on HttpStatusException catch (error) {
         if (!_isTransientStatus(error.statusCode) || attempt >= 2) rethrow;
-        await _delayNetworkRetry(path, attempt, cancelToken);
+        final canRetry = await _delayNetworkRetry(
+          path,
+          attempt,
+          cancelToken,
+          retryAfter: error.retryAfter,
+        );
+        if (!canRetry) rethrow;
       } on DioException catch (error) {
         if (CancelToken.isCancel(error)) {
           throw const RequestCancelledException();
         }
         final status = error.response?.statusCode;
+        final retryAfter = parseRetryAfter(
+          error.response?.headers.value('retry-after'),
+          DateTime.now(),
+        );
         if (status != null && _isTransientStatus(status) && attempt < 2) {
-          await _delayNetworkRetry(path, attempt, cancelToken);
-          continue;
+          final canRetry = await _delayNetworkRetry(
+            path,
+            attempt,
+            cancelToken,
+            retryAfter: retryAfter,
+          );
+          if (canRetry) continue;
         }
         if (status != null) {
-          throw HttpStatusException(status);
+          throw HttpStatusException(status, retryAfter: retryAfter);
         }
         if (attempt < 2) {
           await _delayNetworkRetry(path, attempt, cancelToken);
@@ -2314,12 +2365,33 @@ class Rule34VideoApi {
       status == 503 ||
       status == 504;
 
-  Future<void> _delayNetworkRetry(
+  /// 等待后返回是否应该继续重试。
+  ///
+  /// 服务器通过 Retry-After 要求的等待超过 [_retryAfterBudget] 时返回 false：
+  /// 宁可让上层提示用户稍后再试，也不在服务器明确要求等待时提前重试。
+  Future<bool> _delayNetworkRetry(
     String path,
     int attempt,
-    CancelToken? cancelToken,
-  ) async {
-    final delay = Duration(milliseconds: 300 * (attempt + 1));
+    CancelToken? cancelToken, {
+    Duration? retryAfter,
+  }) async {
+    if (retryAfter != null && retryAfter > _retryAfterBudget) {
+      unawaited(
+        AppLogService.instance.info(
+          'Retry-After 超出重试预算，交由用户稍后重试；path=$path;'
+          'retryAfterMs=${retryAfter.inMilliseconds}',
+          component: 'network_retry',
+        ),
+      );
+      return false;
+    }
+    var delayMs = 300 * (attempt + 1);
+    if (retryAfter != null && retryAfter.inMilliseconds > delayMs) {
+      delayMs = retryAfter.inMilliseconds;
+    }
+    // 加 0–25% 抖动：启动时多个列表并行加载，避免它们在同一时刻一起重试。
+    delayMs += _retryJitter.nextInt(delayMs ~/ 4 + 1);
+    final delay = Duration(milliseconds: delayMs);
     unawaited(
       AppLogService.instance.info(
         'Rule34Video 请求短暂失败，准备重试；path=$path；attempt=${attempt + 1};'
@@ -2329,6 +2401,7 @@ class Rule34VideoApi {
     );
     await Future<void>.delayed(delay);
     _throwIfCancelled(cancelToken);
+    return true;
   }
 
   Future<String> _getPublic(
@@ -2351,7 +2424,13 @@ class Rule34VideoApi {
       );
       final status = resolved.statusCode ?? 0;
       if (status < 200 || status >= 300) {
-        throw HttpStatusException(status);
+        throw HttpStatusException(
+          status,
+          retryAfter: parseRetryAfter(
+            resolved.headers.value('retry-after'),
+            DateTime.now(),
+          ),
+        );
       }
       return resolved.data ?? '';
     } on DioException catch (error) {
@@ -2576,7 +2655,13 @@ class Rule34VideoApi {
       throw const SessionExpiredException();
     }
     if (status < 200 || status >= 300) {
-      throw HttpStatusException(status);
+      throw HttpStatusException(
+        status,
+        retryAfter: parseRetryAfter(
+          response.headers.value('retry-after'),
+          DateTime.now(),
+        ),
+      );
     }
     return response.data ?? '';
   }
@@ -2757,7 +2842,7 @@ class Rule34VideoApi {
       responseType: ResponseType.plain,
       followRedirects: false,
       headers: const {
-        'User-Agent': appUserAgent,
+        'User-Agent': AppBuildConfig.appUserAgent,
         'Accept':
             'text/html,application/xhtml+xml,application/json;q=0.9,*/*;q=0.8',
       },

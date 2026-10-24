@@ -37,11 +37,6 @@ const uiTranslations = <String, Map<String, String>>{
     'ja': "60分以上",
     'ko': "60분 이상",
   },
-  "<html片段>": <String, String>{
-    'en': "<html fragment>",
-    'ja': "<htmlフラグメント>",
-    'ko': "<html 조각>",
-  },
   "===== 最近 7 天日志 =====": <String, String>{
     'en': "===== Logs from the Last 7 Days =====",
     'ja': "===== 過去7日間のログ =====",
@@ -136,6 +131,11 @@ const uiTranslations = <String, Map<String, String>>{
     'en': "Hanime like action",
     'ja': "Hanime 高評価操作",
     'ko': "Hanime 좋아요 작업",
+  },
+  "Hanime 登录状态已失效，请在网页中重新登录后再试。": <String, String>{
+    'en': "Your Hanime session has expired. Sign in again on the web page and try again.",
+    'ja': "ハニメのログイン状態が無効になりました。Webページで再度ログインしてからお試しください。",
+    'ko': "하니메 로그인 상태가 만료되었습니다. 웹 페이지에서 다시 로그인한 후 다시 시도해 주세요.",
   },
   "Hanime 登录请求失败：{p0}": <String, String>{
     'en': "Hanime login request failed: {p0}",
@@ -1161,11 +1161,6 @@ const uiTranslations = <String, Map<String, String>>{
     'en': "Name",
     'ja': "名前",
     'ko': "이름",
-  },
-  "后台/前台": <String, String>{
-    'en': "Backstage/Frontstage",
-    'ja': "バックステージ/フロントステージ",
-    'ko': "백스테이지/프런트스테이지",
   },
   "后台任务进行中": <String, String>{
     'en': "Background task in progress",
@@ -3107,10 +3102,10 @@ const uiTranslations = <String, Map<String, String>>{
     'ja': "メディアを再生中",
     'ko': "미디어 재생 중",
   },
-  "正在等待验证结果…如果长时间无反应，请点重试。": <String, String>{
-    'en': "Waiting for verification results... If there is no response for a long time, please click Retry.",
-    'ja': "検証結果を待っています... 長時間応答がない場合は、「再試行」をクリックしてください。",
-    'ko': "확인 결과를 기다리는 중입니다... 오랫동안 응답이 없으면 재시도를 클릭해 주세요.",
+  "正在等待 Hanime 页面加载…如果长时间无反应，请点重试。": <String, String>{
+    'en': "Waiting for the Hanime page to load... If nothing happens for a long time, tap Retry.",
+    'ja': "ハニメのページを読み込み中です... 長時間反応がない場合は、「再試行」をタップしてください。",
+    'ko': "하니메 페이지를 불러오는 중입니다... 오랫동안 응답이 없으면 재시도를 눌러 주세요.",
   },
   "正在读取全部视频…": <String, String>{
     'en': "Loading all videos…",
@@ -3737,11 +3732,6 @@ const uiTranslations = <String, Map<String, String>>{
     'ja': "サイトのサービスは一時的に利用できません。しばらくしてから再試行してください。",
     'ko': "사이트 서비스를 일시적으로 사용할 수 없습니다. 잠시 후 다시 시도하세요.",
   },
-  "等不到 cookie → 重刷 → 再挑战": <String, String>{
-    'en': "Can't wait for cookies → Refresh → Challenge again",
-    'ja': "クッキーが待ちきれない → 更新 → 再チャレンジ",
-    'ko': "쿠키를 기다릴 수 없습니다 → 새로 고침 → 다시 도전",
-  },
   "等待下载": <String, String>{
     'en': "Waiting for download",
     'ja': "ダウンロードを待っています",
@@ -4192,6 +4182,11 @@ const uiTranslations = <String, Map<String, String>>{
     'ja': "動画の保存先：Download/Flule34",
     'ko': "동영상 저장 위치: Download/Flule34",
   },
+  "视频可能已保存到 Download/Flule34，但应用未能确认其位置，请在系统文件管理器中查看。": <String, String>{
+    'en': "The video may already be saved in Download/Flule34, but the app could not confirm its location. Check it in your file manager.",
+    'ja': "動画はDownload/Flule34に保存された可能性がありますが、アプリが場所を確認できませんでした。ファイルマネージャーでご確認ください。",
+    'ko': "동영상이 Download/Flule34에 저장되었을 수 있지만 앱이 위치를 확인하지 못했습니다. 파일 관리자에서 확인해 주세요.",
+  },
   "视频地址已连续刷新多次仍无法播放，请稍后手动重试。": <String, String>{
     'en': "The video URL was refreshed several times, but playback still failed. Try again manually later.",
     'ja': "動画URLを複数回更新しましたが、再生できませんでした。しばらくしてから手動で再試行してください。",
@@ -4342,6 +4337,16 @@ const uiTranslations = <String, Map<String, String>>{
     'ja': "クライアントはすでに閉じられているため、リクエストを開始できません。",
     'ko': "클라이언트가 종료되어 요청을 시작할 수 없습니다.",
   },
+  "该播放列表已不存在，请重新选择。": <String, String>{
+    'en': "That playlist no longer exists. Choose another one.",
+    'ja': "そのプレイリストはもう存在しません。選び直してください。",
+    'ko': "해당 재생목록이 더 이상 존재하지 않습니다. 다시 선택해 주세요.",
+  },
+  "该本地库已不存在，请重新选择。": <String, String>{
+    'en': "That local library no longer exists. Choose another one.",
+    'ja': "そのローカルライブラリはもう存在しません。選び直してください。",
+    'ko': "해당 로컬 라이브러리가 더 이상 존재하지 않습니다. 다시 선택해 주세요.",
+  },
   "该版本没有可下载的安装包。": <String, String>{
     'en': "There is no downloadable installation package for this version.",
     'ja': "このバージョンにはダウンロード可能なインストール パッケージはありません。",
@@ -4431,6 +4436,21 @@ const uiTranslations = <String, Map<String, String>>{
     'en': "Request timed out. Please try again.",
     'ja': "リクエストがタイムアウトしました。再試行してください。",
     'ko': "요청 시간이 초과되었습니다. 다시 시도하세요.",
+  },
+  "请求过于频繁，服务器建议 {p0} 分钟后再试": <String, String>{
+    'en': "Too many requests. The server suggests waiting {p0} minutes.",
+    'ja': "リクエストが多すぎます。サーバーの指示では{p0}分後に再試行してください。",
+    'ko': "요청이 너무 많습니다. 서버 권장 대기 시간은 {p0}분입니다.",
+  },
+  "请求过于频繁，服务器建议 {p0} 秒后再试": <String, String>{
+    'en': "Too many requests. The server suggests waiting {p0} seconds.",
+    'ja': "リクエストが多すぎます。サーバーの指示では{p0}秒後に再試行してください。",
+    'ko': "요청이 너무 많습니다. 서버 권장 대기 시간은 {p0}초입니다.",
+  },
+  "请求过于频繁，请稍后重试": <String, String>{
+    'en': "Too many requests. Try again later.",
+    'ja': "リクエストが多すぎます。しばらくしてから再試行してください。",
+    'ko': "요청이 너무 많습니다. 잠시 후 다시 시도하세요.",
   },
   "请至少输入 2 个字符。": <String, String>{
     'en': "Please enter at least 2 characters.",

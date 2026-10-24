@@ -28,10 +28,6 @@
   "@ui0be8a2c8": {
     "description": "HaRu UI: 60 分钟以上"
   },
-  "ui5756c92c": "<html片段>",
-  "@ui5756c92c": {
-    "description": "HaRu UI: <html片段>"
-  },
   "ui6e93de1b": "===== 最近 7 天日志 =====",
   "@ui6e93de1b": {
     "description": "HaRu UI: ===== 最近 7 天日志 ====="
@@ -107,6 +103,10 @@
   "ui2dff86e7": "Hanime 点赞操作",
   "@ui2dff86e7": {
     "description": "HaRu UI: Hanime 点赞操作"
+  },
+  "ui5db4a68e": "Hanime 登录状态已失效，请在网页中重新登录后再试。",
+  "@ui5db4a68e": {
+    "description": "HaRu UI: Hanime 登录状态已失效，请在网页中重新登录后再试。"
   },
   "ui15642644": "Hanime 登录请求失败：{p0}",
   "@ui15642644": {
@@ -1236,10 +1236,6 @@
   "ui73f2614f": "名称",
   "@ui73f2614f": {
     "description": "HaRu UI: 名称"
-  },
-  "ui06e91ae0": "后台/前台",
-  "@ui06e91ae0": {
-    "description": "HaRu UI: 后台/前台"
   },
   "ui3a38a6d4": "后台任务进行中",
   "@ui3a38a6d4": {
@@ -3089,9 +3085,9 @@
   "@ui1e85b6dc": {
     "description": "HaRu UI: 正在播放媒体"
   },
-  "ui3dcae6c0": "正在等待验证结果…如果长时间无反应，请点重试。",
-  "@ui3dcae6c0": {
-    "description": "HaRu UI: 正在等待验证结果…如果长时间无反应，请点重试。"
+  "ui1a19f33c": "正在等待 Hanime 页面加载…如果长时间无反应，请点重试。",
+  "@ui1a19f33c": {
+    "description": "HaRu UI: 正在等待 Hanime 页面加载…如果长时间无反应，请点重试。"
   },
   "ui37674019": "正在读取全部视频…",
   "@ui37674019": {
@@ -3672,10 +3668,6 @@
   "@ui1becc780": {
     "description": "HaRu UI: 站点服务暂时不可用，请稍后重试"
   },
-  "ui6fe1719c": "等不到 cookie → 重刷 → 再挑战",
-  "@ui6fe1719c": {
-    "description": "HaRu UI: 等不到 cookie → 重刷 → 再挑战"
-  },
   "ui2ced8087": "等待下载",
   "@ui2ced8087": {
     "description": "HaRu UI: 等待下载"
@@ -4066,6 +4058,10 @@
   "@ui4fbae4c2": {
     "description": "HaRu UI: 视频保存路径：Download/Flule34"
   },
+  "ui1f59ee3b": "视频可能已保存到 Download/Flule34，但应用未能确认其位置，请在系统文件管理器中查看。",
+  "@ui1f59ee3b": {
+    "description": "HaRu UI: 视频可能已保存到 Download/Flule34，但应用未能确认其位置，请在系统文件管理器中查看。"
+  },
   "ui538cdd02": "视频地址已连续刷新多次仍无法播放，请稍后手动重试。",
   "@ui538cdd02": {
     "description": "HaRu UI: 视频地址已连续刷新多次仍无法播放，请稍后手动重试。"
@@ -4186,6 +4182,14 @@
   "@ui139f12da": {
     "description": "HaRu UI: 该客户端已被关闭，无法发起请求。"
   },
+  "ui13ecda96": "该播放列表已不存在，请重新选择。",
+  "@ui13ecda96": {
+    "description": "HaRu UI: 该播放列表已不存在，请重新选择。"
+  },
+  "ui17f975b3": "该本地库已不存在，请重新选择。",
+  "@ui17f975b3": {
+    "description": "HaRu UI: 该本地库已不存在，请重新选择。"
+  },
   "ui6ebae107": "该版本没有可下载的安装包。",
   "@ui6ebae107": {
     "description": "HaRu UI: 该版本没有可下载的安装包。"
@@ -4262,6 +4266,28 @@
   "ui3a579d8a": "请求超时，请重试",
   "@ui3a579d8a": {
     "description": "HaRu UI: 请求超时，请重试"
+  },
+  "ui17d9c651": "请求过于频繁，服务器建议 {p0} 分钟后再试",
+  "@ui17d9c651": {
+    "description": "HaRu UI: 请求过于频繁，服务器建议 {p0} 分钟后再试",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
+  "ui72adb9a6": "请求过于频繁，服务器建议 {p0} 秒后再试",
+  "@ui72adb9a6": {
+    "description": "HaRu UI: 请求过于频繁，服务器建议 {p0} 秒后再试",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
+  "ui43188d72": "请求过于频繁，请稍后重试",
+  "@ui43188d72": {
+    "description": "HaRu UI: 请求过于频繁，请稍后重试"
   },
   "ui61ca1aa4": "请至少输入 2 个字符。",
   "@ui61ca1aa4": {

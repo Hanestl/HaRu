@@ -396,9 +396,11 @@ final class _HanimeCloudflarePageState extends State<HanimeCloudflarePage> {
         const interactive = selectors.some((selector) =>
           Array.from(document.querySelectorAll(selector)).some(visible)
         );
-        // 这里只取"轻量快照"用于提示文案与挑战识别；文档身份与业务结构
-        // 一律交给 HanimePageParser.inspectBrowserDocument 在完整 DOM 上判断
-        // （字符串 contains 会被脚本里的类名、注释、隐藏模板骗过）。
+        // Only take a lightweight snapshot here, for status text and challenge
+        // detection. Document identity and business structure are judged by
+        // HanimePageParser.inspectBrowserDocument on the full DOM instead,
+        // because plain string "contains" checks can be fooled by class names,
+        // comments, and hidden templates inside scripts.
         return JSON.stringify({
           title: document.title || '',
           bodyText: (document.body?.innerText || '').slice(0, 4000),
