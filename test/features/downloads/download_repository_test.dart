@@ -287,6 +287,48 @@ void main() {
     expect(record?.completedAt, isNotNull);
   });
 
+  test('关闭仓库时先等平台服务收尾，收尾期间到达的完成事件仍会落库', () async {
+    final harness = TestSessionHarness.create();
+    addTearDown(harness.dispose);
+    await harness.sessionStore.load();
+    final platform = _FakeDownloadPlatformService();
+    final settings = await _createSettings();
+    final repository = DownloadRepository(
+      harness.database,
+      _FakeRule34VideoApi(harness.sessionStore),
+      platform,
+      settings,
+    );
+    addTearDown(repository.dispose);
+    addTearDown(settings.dispose);
+    await repository.initialize();
+    final id = await repository.enqueueVideo(
+      details: _details,
+      source: _details.sources.single,
+    );
+    final taskId = (await harness.database.findDownloadRecord(id))!.taskId!;
+
+    // 平台服务在 dispose 期间才把完成事件交出来（真实实现里是移入公共目录后
+    // 等落库再删记录）。如果仓库先取消订阅再关服务，这条事件会被静默丢掉。
+    platform.onDispose = () async {
+      await platform.emit(
+        DownloadStatusEvent(
+          taskId: taskId,
+          state: DownloadTaskState.complete,
+          filePath: _fileUri,
+          actualBytes: 4096,
+        ),
+      );
+    };
+
+    await repository.dispose();
+
+    final record = await harness.database.findDownloadRecord(id);
+    expect(record?.state, DownloadTaskState.complete.storageValue);
+    expect(record?.filePath, _fileUri);
+    expect(record?.bytesDownloaded, 4096);
+  });
+
   test('完成事件刷新进度失败时仍可写入终态且不会阻断后续事件链', () async {
     final db = _FaultInjectableDatabase();
     addTearDown(db.close);
@@ -924,7 +966,29 @@ final class _FakeDownloadPlatformService implements DownloadPlatformService {
   @override
   Stream<DownloadPlatformEvent> get events => _events.stream;
 
-  void emit(DownloadPlatformEvent event) => _events.add(event);
+  Future<void> Function(DownloadStatusEvent event)? completionSink;
+
+  /// 模拟生产实现"关闭时还有在途收尾"的情形：dispose 期间仍会投递事件。
+  Future<void> Function()? onDispose;
+
+  @override
+  void setCompletionSink(
+    Future<void> Function(DownloadStatusEvent event)? sink,
+  ) {
+    completionSink = sink;
+  }
+
+  /// 与生产实现一致：完成事件走 completionSink，其余走事件流。
+  Future<void> emit(DownloadPlatformEvent event) {
+    final sink = completionSink;
+    if (event is DownloadStatusEvent &&
+        event.state == DownloadTaskState.complete &&
+        sink != null) {
+      return sink(event);
+    }
+    _events.add(event);
+    return Future<void>.value();
+  }
 
   @override
   Future<void> initialize() async {}
@@ -993,8 +1057,12 @@ final class _FakeDownloadPlatformService implements DownloadPlatformService {
   }
 
   @override
-  void dispose() {
-    unawaited(_events.close());
+  Future<void> dispose() async {
+    final hook = onDispose;
+    if (hook != null) {
+      await hook();
+    }
+    await _events.close();
   }
 }
 

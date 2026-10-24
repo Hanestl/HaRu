@@ -218,7 +218,7 @@ final downloadRepositoryProvider = Provider<DownloadRepository>((ref) {
     ref.watch(downloadPlatformServiceProvider),
     ref.watch(appSettingsRepositoryProvider),
   );
-  ref.onDispose(repository.dispose);
+  ref.onDispose(() => unawaited(repository.dispose()));
   return repository;
 });
 

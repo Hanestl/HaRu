@@ -50,12 +50,14 @@ class ScrollToTopOverlay extends StatefulWidget {
 class _ScrollToTopOverlayState extends State<ScrollToTopOverlay> {
   ScrollPosition? _position;
   var _visible = false;
+  var _textFieldFocused = false;
 
   @override
   void initState() {
     super.initState();
     widget.controller.addListener(_onSuppressionChanged);
     FocusManager.instance.addListener(_onFocusChanged);
+    _textFieldFocused = _queryTextFieldFocused();
   }
 
   @override
@@ -80,8 +82,42 @@ class _ScrollToTopOverlayState extends State<ScrollToTopOverlay> {
     }
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // 依赖变化（路由切换、主题变更等）后焦点状态可能已不同。
+    // 这里静默刷新缓存，避免在 build 中对其它 Element 查询祖先。
+    _textFieldFocused = _queryTextFieldFocused();
+  }
+
   void _onFocusChanged() {
-    if (mounted) setState(() {});
+    if (!mounted) {
+      return;
+    }
+    final focused = _queryTextFieldFocused();
+    if (focused == _textFieldFocused) {
+      return;
+    }
+    setState(() => _textFieldFocused = focused);
+  }
+
+  /// 判断当前主焦点是否落在文本输入框上。
+  ///
+  /// 焦点节点的 Element 可能处于 deactivated 状态（例如所在路由正在退场），
+  /// 此时查询祖先会抛 FlutterError（"Looking up a deactivated widget's
+  /// ancestor is unsafe."）。这里按“不是输入框”处理：debug 下不再红屏，
+  /// release 下断言本就不存在，行为与之前一致。
+  bool _queryTextFieldFocused() {
+    final context = FocusManager.instance.primaryFocus?.context;
+    if (context == null) {
+      return false;
+    }
+    try {
+      return context.widget is EditableText ||
+          context.findAncestorWidgetOfExactType<EditableText>() != null;
+    } on FlutterError {
+      return false;
+    }
   }
 
   bool _onScroll(ScrollNotification notification) {
@@ -120,10 +156,7 @@ class _ScrollToTopOverlayState extends State<ScrollToTopOverlay> {
   }
 
   Future<void> _scrollToTop() async {
-    final focusContext = FocusManager.instance.primaryFocus?.context;
-    final inputFocused =
-        focusContext?.widget is EditableText ||
-        focusContext?.findAncestorWidgetOfExactType<EditableText>() != null;
+    final inputFocused = _textFieldFocused;
     unawaited(
       AppLogService.instance.info(
         '置顶按钮点击；visible=$_visible；suppressed=${widget.controller.suppressed};'
@@ -152,15 +185,11 @@ class _ScrollToTopOverlayState extends State<ScrollToTopOverlay> {
   @override
   Widget build(BuildContext context) {
     final keyboardVisible = MediaQuery.viewInsetsOf(context).bottom > 0;
-    final focusedContext = FocusManager.instance.primaryFocus?.context;
-    final inputFocused =
-        focusedContext?.widget is EditableText ||
-        focusedContext?.findAncestorWidgetOfExactType<EditableText>() != null;
     final show =
         _visible &&
         !widget.controller.suppressed &&
         !keyboardVisible &&
-        !inputFocused;
+        !_textFieldFocused;
     return NotificationListener<ScrollMetricsNotification>(
       onNotification: _onMetrics,
       child: NotificationListener<ScrollNotification>(

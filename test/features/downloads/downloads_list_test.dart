@@ -153,7 +153,12 @@ final class _FakeDownloadPlatformService implements DownloadPlatformService {
       const DownloadFileInspection(exists: false, readable: false);
 
   @override
-  void dispose() {}
+  void setCompletionSink(
+    Future<void> Function(DownloadStatusEvent event)? sink,
+  ) {}
+
+  @override
+  Future<void> dispose() async {}
 
   @override
   dynamic noSuchMethod(Invocation invocation) => null;

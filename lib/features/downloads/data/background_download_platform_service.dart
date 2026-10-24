@@ -37,12 +37,22 @@ final class BackgroundDownloadPlatformService
   final StreamController<DownloadPlatformEvent> _events =
       StreamController<DownloadPlatformEvent>.broadcast();
   final Set<String> _finalizing = {};
+  final Set<Future<void>> _pendingWork = <Future<void>>{};
+  Future<void> Function(DownloadStatusEvent event)? _completionSink;
   Timer? _rescheduleTimer;
   int _maxConcurrent;
   bool _initialized = false;
+  bool _disposed = false;
 
   @override
   Stream<DownloadPlatformEvent> get events => _events.stream;
+
+  @override
+  void setCompletionSink(
+    Future<void> Function(DownloadStatusEvent event)? sink,
+  ) {
+    _completionSink = sink;
+  }
 
   @override
   Future<void> initialize() async {
@@ -249,7 +259,38 @@ final class BackgroundDownloadPlatformService
   }
 
   void _onStatus(TaskStatusUpdate update) {
-    unawaited(_emitStatus(update));
+    _track(_emitStatus(update));
+  }
+
+  /// 记录在途事件处理的 Future，供 [dispose] 等待其收尾。
+  void _track(Future<void> future) {
+    _pendingWork.add(future);
+    unawaited(
+      future.then<void>(
+        (_) {
+          _pendingWork.remove(future);
+        },
+        onError: (Object error, StackTrace stackTrace) {
+          _pendingWork.remove(future);
+          unawaited(
+            AppLogService.instance.error(
+              error,
+              stackTrace,
+              component: 'download_event',
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  /// 投递事件；事件流已关闭时静默丢弃，避免 "Cannot add new events after
+  /// calling close" 从后台回调里冒出来。
+  void _emit(DownloadPlatformEvent event) {
+    if (_events.isClosed) {
+      return;
+    }
+    _events.add(event);
   }
 
   Future<void> _emitStatus(TaskStatusUpdate update) async {
@@ -267,7 +308,7 @@ final class BackgroundDownloadPlatformService
       return;
     }
     final exception = update.exception;
-    _events.add(
+    _emit(
       DownloadStatusEvent(
         taskId: taskId,
         state: state,
@@ -288,9 +329,28 @@ final class BackgroundDownloadPlatformService
           throw StateError('系统未授予公共下载目录写入权限。');
         }
         final sourceFile = File(await task.filePath());
-        if (await sourceFile.exists()) {
-          sourceBytes = await sourceFile.length();
+        if (!await sourceFile.exists()) {
+          // 私有目录里已经没有源文件：通常是上一次收尾已把文件移入公共目录，
+          // 进程在删除插件记录之前被系统杀掉。此时无法再拿到公共目录的
+          // content URI（DownloadTask 不保存它），只能如实告知用户去文件
+          // 管理器确认，并清理残留记录，避免插件把它当成"被杀任务"重新下载
+          // 一遍，在 Download/Flule34 里留下重复文件。
+          await AppLogService.instance.warning(
+            '下载收尾重入：私有目录已无源文件，清理残留记录；任务=$taskId',
+            component: 'download_finalize',
+          );
+          await _downloader.database.deleteRecordWithId(taskId);
+          _emit(
+            DownloadStatusEvent(
+              taskId: taskId,
+              state: DownloadTaskState.failed,
+              errorMessage:
+                  '视频可能已保存到 Download/Flule34，但应用未能确认其位置，请在系统文件管理器中查看。',
+            ),
+          );
+          return;
         }
+        sourceBytes = await sourceFile.length();
         finalUri = await _downloader.uri.moveToSharedStorage(
           task,
           SharedStorage.downloads,
@@ -304,8 +364,7 @@ final class BackgroundDownloadPlatformService
         throw StateError('无法将视频保存到 Download/Flule34。');
       }
       final inspection = await _inspectFinalizedFile(finalUri);
-      await _downloader.database.deleteRecordWithId(taskId);
-      _events.add(
+      await _publishCompleted(
         DownloadStatusEvent(
           taskId: taskId,
           state: DownloadTaskState.complete,
@@ -313,14 +372,37 @@ final class BackgroundDownloadPlatformService
           actualBytes: inspection.size ?? sourceBytes,
         ),
       );
+      // 先让 App 侧落库，再删插件记录：顺序反过来会留下
+      // "文件已在公共目录、App 里仍显示下载中" 的错位记录。
+      await _downloader.database.deleteRecordWithId(taskId);
     } catch (error) {
-      _events.add(
+      _emit(
         DownloadStatusEvent(
           taskId: taskId,
           state: DownloadTaskState.failed,
           errorMessage: redactSensitiveText(error),
         ),
       );
+    }
+  }
+
+  /// 投递完成事件。注册了 [setCompletionSink] 时先等 App 侧落库；
+  /// 落库失败则退回普通事件投递并记录原因，避免任务卡在插件数据库里。
+  Future<void> _publishCompleted(DownloadStatusEvent event) async {
+    final sink = _completionSink;
+    if (sink == null) {
+      _emit(event);
+      return;
+    }
+    try {
+      await sink(event);
+    } on Object catch (error, stackTrace) {
+      await AppLogService.instance.error(
+        error,
+        stackTrace,
+        component: 'download_completion',
+      );
+      _emit(event);
     }
   }
 
@@ -344,7 +426,7 @@ final class BackgroundDownloadPlatformService
   void _onProgress(TaskProgressUpdate update) {
     final event = progressEventForUpdate(update);
     if (event != null) {
-      _events.add(event);
+      _emit(event);
     }
   }
 
@@ -397,9 +479,26 @@ final class BackgroundDownloadPlatformService
   };
 
   @override
-  void dispose() {
+  Future<void> dispose() async {
+    if (_disposed) {
+      return;
+    }
+    _disposed = true;
+    _completionSink = null;
     _rescheduleTimer?.cancel();
     _downloader.unregisterCallbacks(group: _group);
-    unawaited(_events.close());
+    // 先等在途的收尾跑完（移入公共目录、落库、删记录），再关流；
+    // 否则后台回调可能在 close 之后继续 add，抛
+    // "Bad state: Cannot add new events after calling close"。
+    if (_pendingWork.isNotEmpty) {
+      try {
+        await Future.wait(
+          List<Future<void>>.of(_pendingWork),
+        ).timeout(const Duration(seconds: 10));
+      } on Object {
+        // 收尾超时或失败都不能阻止释放。
+      }
+    }
+    await _events.close();
   }
 }

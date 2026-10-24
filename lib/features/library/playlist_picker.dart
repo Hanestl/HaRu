@@ -77,13 +77,16 @@ Future<String?> manageVideoAccountPlaylists({
     if (created.isEmpty) {
       throw const ApiException('播放列表已创建，但未能读取新列表。');
     }
-    final playlist = created.where((item) => item.title == form.title).isEmpty
-        ? created.first
-        : created.firstWhere((item) => item.title == form.title);
+    final playlist =
+        created.where((item) => item.title == form.title).firstOrNull ??
+        created.first;
     await api.addVideoToPlaylist(video: video, playlistId: playlist.id);
     return '已新建并加入播放列表“${playlist.title}”。';
   }
-  final playlist = playlists.firstWhere((item) => item.id == selectedId);
+  final playlist = playlists.where((item) => item.id == selectedId).firstOrNull;
+  if (playlist == null) {
+    return '该播放列表已不存在，请重新选择。';
+  }
   if (containedIds.contains(playlist.id)) {
     await api.removeVideoFromPlaylist(video: video, playlistId: playlist.id);
     return '已从播放列表“${playlist.title}”移出。';

@@ -165,5 +165,20 @@ abstract interface class DownloadPlatformService {
     bool deleteExternalFile = true,
   });
 
-  void dispose();
+  /// 注册"完成事件已落库"的回调。
+  ///
+  /// 平台服务把下载结果移入公共目录后会先调用它，等 App 侧把完成态写进
+  /// 数据库，再删除插件侧的任务记录。这样即使进程在这两步之间被系统杀死，
+  /// 也不会出现"文件已在 Download/Flule34，App 里却仍显示下载中"的错位。
+  ///
+  /// 传 null 表示取消注册，此时完成事件改走 [events] 普通投递。
+  void setCompletionSink(
+    Future<void> Function(DownloadStatusEvent event)? sink,
+  );
+
+  /// 停止投递事件并释放底层资源。
+  ///
+  /// 返回的 Future 完成时，在途的收尾工作（移入公共目录、落库）已经结束，
+  /// 事件流也已关闭。调用方应先 await 它，再取消自己的事件订阅。
+  Future<void> dispose();
 }

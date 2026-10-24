@@ -1239,7 +1239,12 @@ final class _FakeDownloadPlatformService implements DownloadPlatformService {
   }) async => true;
 
   @override
-  void dispose() {}
+  void setCompletionSink(
+    Future<void> Function(DownloadStatusEvent event)? sink,
+  ) {}
+
+  @override
+  Future<void> dispose() async {}
 
   @override
   Future<bool> taskExists(String taskId) async => false;

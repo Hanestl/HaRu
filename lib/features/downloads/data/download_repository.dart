@@ -100,6 +100,8 @@ final class DownloadRepository {
     );
     _settingsRepository.addListener(_onSettingsChanged);
     _eventSubscription = _platformService.events.listen(_onPlatformEvent);
+    // 完成事件走专用回调：平台服务要等这里落库成功后才会删除插件记录。
+    _platformService.setCompletionSink(_persistCompletion);
     try {
       await _platformService.setMaxConcurrent(
         _settingsRepository.settings.downloadConcurrentTasks,
@@ -530,6 +532,23 @@ final class DownloadRepository {
     });
   }
 
+  /// 平台服务在把任务移入公共目录后调用：先落库完成态，返回后它才删除
+  /// 插件侧记录。串到 [_eventChain] 上，保证与进度事件的处理顺序一致。
+  Future<void> _persistCompletion(DownloadStatusEvent event) {
+    _eventChain = _eventChain.then((_) async {
+      try {
+        await _persistEvent(event);
+      } on Object catch (error, stackTrace) {
+        await AppLogService.instance.error(
+          error,
+          stackTrace,
+          component: 'download_completion',
+        );
+      }
+    });
+    return _eventChain;
+  }
+
   Future<void> _persistEvent(DownloadPlatformEvent event) async {
     final record = await _database.findDownloadRecordByTaskId(event.taskId);
     if (record == null) {
@@ -685,9 +704,21 @@ final class DownloadRepository {
     return '${shortened}_${sourceId}_$quality.mp4';
   }
 
-  void dispose() {
+  Future<void> dispose() async {
     _settingsRepository.removeListener(_onSettingsChanged);
-    unawaited(_eventSubscription?.cancel());
-    _platformService.dispose();
+    // 顺序很关键：先让平台服务停止投递并等在途收尾（它会先把完成态落库），
+    // 再取消订阅；反过来会让关闭瞬间到达的完成事件被静默丢弃，
+    // 留下"文件已下载完、列表里还显示下载中"的记录。
+    try {
+      await _platformService.dispose();
+    } on Object catch (error, stackTrace) {
+      await AppLogService.instance.error(
+        error,
+        stackTrace,
+        component: 'download_dispose',
+      );
+    }
+    await _eventSubscription?.cancel();
+    _eventSubscription = null;
   }
 }

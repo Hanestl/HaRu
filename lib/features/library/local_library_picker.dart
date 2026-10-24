@@ -26,9 +26,11 @@ Future<String?> manageVideoLocalLibraries({
     }
     final id = await repository.createLibrary(name);
     libraries = await repository.watchLibraries().first;
-    final library = libraries.firstWhere((item) => item.id == id);
+    // 刚创建的库理论上一定在列表里；万一被并发删除也不能抛 StateError
+    // （firstWhere 无 orElse 时会抛 "No element"），退回用输入的名字提示。
+    final library = libraries.where((item) => item.id == id).firstOrNull;
     await repository.addVideo(libraryId: id, video: video);
-    return '已加入“${library.name}”。';
+    return '已加入“${library?.name ?? name.trim()}”。';
   }
 
   final containedIds = repository is SourceAwareLocalLibraryRepository
@@ -91,7 +93,10 @@ Future<String?> manageVideoLocalLibraries({
     await repository.addVideo(libraryId: id, video: video);
     return '已加入“${name.trim()}”。';
   }
-  final library = libraries.firstWhere((item) => item.id == selected);
+  final library = libraries.where((item) => item.id == selected).firstOrNull;
+  if (library == null) {
+    return '该本地库已不存在，请重新选择。';
+  }
   if (containedIds.contains(library.id)) {
     if (repository is SourceAwareLocalLibraryRepository) {
       await (repository as SourceAwareLocalLibraryRepository).removeVideoItem(
