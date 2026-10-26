@@ -4,7 +4,7 @@ abstract final class AppBuildConfig {
   /// 版本号必须与 pubspec.yaml 的 version 保持一致。这里不读运行时版本号，
   /// 因为 HTTP 适配器需要在同步的构造阶段就拿到它；漂移由
   /// test/core/config/app_build_config_test.dart 在 CI 中拦截。
-  static const appUserAgent = 'HaRu Android/2.6.1';
+  static const appUserAgent = 'HaRu Android/2.6.2';
 
   static const updateApiUrl = String.fromEnvironment('FLULE34_UPDATE_API_URL');
   static const repositoryUrl = String.fromEnvironment('FLULE34_REPOSITORY_URL');
