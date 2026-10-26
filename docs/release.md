@@ -33,10 +33,12 @@ Set-Location android
 Set-Location ..
 ```
 
+以下示例以 2.6.2 / 构建号 51 为例；每次发布按 `pubspec.yaml` 的版本号与递增后的构建号替换（不要使用 ABI 偏移后的安装版本码）。
+
 ```powershell
 $flutter = 'D:\Programs\flutter\bin\flutter.bat'
-$version = '2.0.1'
-$buildNumber = '43'
+$version = '2.6.2'
+$buildNumber = '51'
 $commit = git rev-parse HEAD
 $buildTime = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ')
 
@@ -96,7 +98,7 @@ Windows 生成单行 Base64：
 ) | Set-Clipboard
 ```
 
-推送形如 `v2.0.1` 的已审核标签后，工作流会先校验标签版本与 `pubspec.yaml` 一致，再使用其中显式维护的构建号运行测试、只构建 arm64 APK、生成 SHA256、生成公开仓库构建证明并创建 GitHub Release。每次发布必须递增构建号，确保已安装用户可以覆盖升级。若 `docs/releases/<标签>.md` 存在，工作流会把它作为逐条 Release 说明。符号文件只作为 Actions artifact 保存，不上传到公开 Release。
+推送形如 `v2.6.2` 的已审核标签后，工作流会先校验标签版本与 `pubspec.yaml` 一致，再使用其中显式维护的构建号运行测试、只构建 arm64 APK、生成 SHA256、生成公开仓库构建证明并创建 GitHub Release。每次发布必须递增构建号，确保已安装用户可以覆盖升级。若 `docs/releases/<标签>.md` 存在，工作流会把它作为逐条 Release 说明。符号文件只作为 Actions artifact 保存，不上传到公开 Release。
 
 ## 5. 发布前验收
 
